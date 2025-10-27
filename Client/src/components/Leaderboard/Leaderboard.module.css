@@ -1,0 +1,65 @@
+/* components/Leaderboard/Leaderboard.module.css */
+.leaderboardPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  color: var(--secondary);
+  border-bottom: 1px solid var(--bg3_Dark);
+  padding-bottom: var(--space-2);
+}
+
+.title .icon-svg {
+  stroke: var(--secondary);
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.listItem {
+  display: grid;
+  grid-template-columns: 2em 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-1);
+  background: var(--bg2_Dark);
+}
+
+.listItem.user {
+  background: hsla(from var(--primary) h s l / 0.1);
+  border: 1px solid var(--primary);
+}
+
+.rank {
+  font-weight: bold;
+  color: var(--secondary);
+  text-align: center;
+}
+
+.listItem.user .rank {
+  color: var(--primary);
+}
+
+.name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.score {
+  font-size: var(--text-sm);
+  font-weight: bold;
+  color: var(--success);
+}

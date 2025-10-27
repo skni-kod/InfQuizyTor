@@ -1,0 +1,33 @@
+/* components/Dashboard/Dashboard.module.css */
+.dashboardLayout {
+  display: grid;
+  /* Minimalistyczny panel boczny, główna treść zajmuje resztę */
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  gap: var(--space-3);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3);
+  background-color: var(--bg0_Dark);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow-y: auto;
+  /* Ukrycie paska przewijania, ale zachowanie funkcjonalności */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.mainContent {
+  position: relative;
+  background: var(--bg1_Dark);
+  border-radius: var(--radius-3);
+  border: 1px solid var(--bg3_Dark);
+  overflow: hidden; /* Niezbędne dla D3/SVG */
+}

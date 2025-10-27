@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    /* ---- POPRAWKI ---- */
+    "composite": true,     // 1. To naprawi błędy 'tsBuildInfoFile'
+    "target": "ESNext",    // 2. To naprawi błąd 'target'
+    "lib": ["ESNext", "DOM"], // 3. To naprawi błąd 'lib'
+    /* ------------------ */
+
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["vite.config.ts"] // Upewnij się, że to wskazuje na Twój plik konfiguracyjny Vite
+}

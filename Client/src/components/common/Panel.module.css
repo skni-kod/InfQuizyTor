@@ -1,0 +1,7 @@
+/* components/common/Panel.module.css */
+.panel {
+  background: var(--bg1_Dark);
+  border-radius: var(--radius-3);
+  padding: var(--space-3);
+  border: 1px solid var(--bg3_Dark);
+}
