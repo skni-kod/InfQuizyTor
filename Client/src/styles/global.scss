@@ -1,0 +1,70 @@
+/* [cite: 133, 134, 135, 136, 137] */
+@import './_variables.scss';
+@import './_mixins.scss';    
+
+*, *::before, *::after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg0-dark);
+  color: var(--text-primary);
+  overflow: hidden; 
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  &:hover {
+    color: hsl(var(--hue), 70%, 65%);
+  }
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+button, input, select, textarea {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+}
+
+/* Global scrollbar styles */
+::-webkit-scrollbar { 
+  width: 8px; 
+}
+::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb { 
+  background-color: var(--tertiary); 
+  border-radius: 4px; 
+  border: 2px solid transparent; 
+  background-clip: content-box; 
+}
+html { 
+    scroll-behavior: smooth;
+    
+
+
+
+
+}

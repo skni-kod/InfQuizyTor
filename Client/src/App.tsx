@@ -1,27 +1,22 @@
 import { Routes, Route } from "react-router-dom";
-import { AppLayout } from "./components/layout/AppLayout";
-import { Pulpit } from "./pages/Pulpit"; // To będzie nasza główna strona
+import MainLayout from "./layouts/MainLayout"; // Poprawiona ścieżka
+import DashboardPage from "./pages/DashboardPage";
+import SubjectHubPage from "./pages/SubjectHubPage";
+//import NotFoundPage from "./pages/NotFoundPage";
 
-// Usuwamy SubjectGraphPage, ponieważ jest teraz częścią Pulpitu
-
-const CommunityPage = () => <div>Społeczność (w budowie)</div>;
-const ProfilePage = () => <div>Profil (w budowie)</div>;
-
-export const App = () => {
+function App() {
   return (
     <Routes>
-      <Route path="/" element={<AppLayout />}>
-        {/* Pulpit jest teraz jedyną główną stroną */}
-        <Route index element={<Pulpit />} />
-
-        {/* Ta ścieżka już nie jest potrzebna, graf jest na Pulpicie */}
-        {/* <Route path="przedmioty" element={<SubjectGraphPage />} /> */}
-
-        <Route path="spolecznosc" element={<CommunityPage />} />
-        <Route path="profil" element={<ProfilePage />} />
-
-        <Route path="*" element={<div>404 - Nie znaleziono strony</div>} />
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="przedmioty" element={<SubjectHubPage />} />
+        <Route path="przedmioty/:subjectId" element={<SubjectHubPage />} />
+        <Route path="community" element={<div>Community Page</div>} />
+        <Route path="profil" element={<div>Profile Page</div>} />
+        {/* <Route path="*" element={<NotFoundPage />} /> */}
       </Route>
     </Routes>
   );
-};
+}
+
+export default App;

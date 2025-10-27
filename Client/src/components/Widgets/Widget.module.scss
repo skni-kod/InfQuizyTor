@@ -1,0 +1,54 @@
+@import '../../styles/mixins';
+
+.widget {
+  @include glass-effect(8px, var(--glass-bg)); /* [cite: 112] */
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Ważne dla RGL */
+  transition: all var(--transition-medium);
+  box-shadow: var(--shadow-md);
+  
+  &:hover {
+    border-color: var(--glass-border);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.widgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.widgetTitle {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.widgetButton {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  transition: color var(--transition-fast);
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.widgetContent {
+  padding: var(--space-4);
+  flex-grow: 1;
+  overflow-y: auto;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+
+  /* Stylizacja paska przewijania wewnątrz widgetu */
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background-color: var(--tertiary); }
+}

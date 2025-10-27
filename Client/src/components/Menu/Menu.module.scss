@@ -1,0 +1,95 @@
+@import '../../styles/mixins';
+
+.gooeyContainer {
+  position: relative; 
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  z-index: 500;
+}
+
+.svgFilters {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.menu {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  pointer-events: all; 
+}
+
+.node {
+  @include glass-effect(5px, hsla(var(--hue), 12%, 10%, 0.8));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-full);
+  position: absolute;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  border: 2px solid var(--node-color, var(--primary));
+  transition: all var(--transition-slow) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  box-shadow: 0 0 5px var(--node-color, var(--primary)),
+              0 0 10px var(--node-color, var(--primary));
+
+  svg {
+    font-size: var(--text-xl);
+  }
+}
+
+.profileNode {
+  width: 100px;
+  height: 100px;
+  font-size: var(--text-4xl);
+  // --node-color jest teraz ustawiane dynamicznie w inline style
+}
+
+.subjectNode {
+  width: 80px;
+  height: 80px;
+}
+
+/* --- NOWE STYLE DLA LEVEL 2 --- */
+.quizNode {
+  width: 70px;
+  height: 70px;
+  font-size: 10px; // Mniejszy tekst
+  padding: var(--space-1);
+  text-align: center;
+
+  svg {
+    font-size: var(--text-lg); // Mniejsza ikona
+  }
+
+  /* Warianty statusu */
+  &.completed {
+    --node-color: var(--success);
+  }
+
+  &.available {
+    --node-color: var(--primary);
+  }
+
+  &.locked {
+    --node-color: var(--tertiary);
+    color: var(--text-muted);
+    background: var(--bg2-dark); // Mniej "szklany"
+    cursor: not-allowed;
+    box-shadow: none;
+
+    svg {
+      color: var(--text-muted);
+    }
+  }
+}

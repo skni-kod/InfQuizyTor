@@ -1,0 +1,170 @@
+@import '../styles/variables';
+@import '../styles/mixins';
+
+.dashboardContainer {
+  position: relative; // Needed for absolute positioning of children
+  width: 100%;
+  height: calc(100vh - 60px); // Full height minus header
+  overflow: hidden; // Prevent scrollbars if content overflows slightly
+}
+
+.menuContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100; // Menu is above widgets
+}
+
+.widgetWrapper {
+  position: absolute;
+  width: 300px; // Adjust width as needed
+  height: 250px; // Adjust height as needed
+  opacity: 1;
+  transform-origin: center center; // Scale animation from center
+  transition: opacity var(--transition-slow) ease, transform var(--transition-slow) ease;
+  z-index: 50; // Widgets are below menu
+
+  &.hidden {
+    opacity: 0;
+    // Fly away from the center
+    transform: translate(-50%, -50%) scale(0.5); // Combined with inline transform
+    pointer-events: none;
+  }
+}
+
+// --- Specific Widget Content Styles ---
+
+.eventList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+}
+
+.eventColor {
+  display: block;
+  width: 8px;
+  height: 32px; // Make it taller
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.eventDetails {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+
+  strong {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    margin-bottom: var(--space-1);
+  }
+  span {
+     color: var(--text-muted);
+  }
+}
+
+.widgetActions {
+  margin-top: auto; // Push buttons to bottom
+  padding-top: var(--space-4); // Add space above buttons
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+
+  button {
+    flex: 1;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-xs);
+    transition: background-color var(--transition-medium);
+
+    &:first-child { // Primary button style
+      background-color: var(--primary);
+      color: var(--bg0-dark);
+      &:hover { background-color: hsl(var(--hue), 70%, 65%);}
+    }
+    &:last-child { // Secondary button style
+      background-color: var(--bg3-dark);
+      color: var(--text-secondary);
+      &:hover { background-color: var(--tertiary); color: var(--text-primary);}
+    }
+  }
+}
+
+.progressDetails {
+   h3 {
+     color: var(--primary);
+     margin: var(--space-2) 0;
+   }
+   p { margin-bottom: var(--space-4); }
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 8px;
+  background-color: var(--bg3-dark);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--success);
+  border-radius: var(--radius-full);
+}
+
+.rankingContext {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.rankingList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-4) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background-color: transparent; // Default
+    transition: background-color var(--transition-fast);
+
+    span:last-child { font-weight: bold; }
+  }
+
+  .currentUser {
+    background-color: hsla(var(--hue), 50%, 40%, 0.3); // Highlight user
+    color: var(--primary);
+  }
+}
+
+.rankingAction {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  background-color: var(--warning);
+  color: var(--bg0-dark);
+  transition: background-color var(--transition-medium);
+  margin-top: auto;
+
+  &:hover { background-color: hsl(40, 90%, 70%); }
+}

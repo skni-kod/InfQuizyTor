@@ -1,18 +1,19 @@
 {
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
-    /* ---- POPRAWKI ---- */
-    "composite": true,     // 1. To naprawi błędy 'tsBuildInfoFile'
-    "target": "ESNext",    // 2. To naprawi błąd 'target'
-    "lib": ["ESNext", "DOM"], // 3. To naprawi błąd 'lib'
-    /* ------------------ */
-
+    "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noEmit": true
+
+    /* Poprawki */
+    "target": "ES2022", // Zmieniono z ES2023
+    "lib": ["ES2022", "DOM"], // Zmieniono z ES2023
+    "incremental": true, // Dodano, aby naprawić błąd 'tsBuildInfoFile'
+
+    /* Linting */
+    "strict": true // Warto też dodać tutaj
   },
-  "include": ["vite.config.ts"] // Upewnij się, że to wskazuje na Twój plik konfiguracyjny Vite
+  "include": ["vite.config.ts"]
 }

@@ -1,0 +1,19 @@
+/* [cite: 129, 130, 131, 132] */
+@mixin media-sm { @media (min-width: 640px) { @content; } }
+@mixin media-md { @media (min-width: 768px) { @content; } }
+@mixin media-lg { @media (min-width: 1024px) { @content; } }
+@mixin media-xl { @media (min-width: 1280px) { @content; } }
+
+@mixin neon-glow($color, $strength: 0.5, $offset-x: 0, $offset-y: 0) {
+  box-shadow: 
+    #{$offset-x}px #{$offset-y}px 5px rgba($color, $strength * 0.5),
+    #{$offset-x}px #{$offset-y}px 10px rgba($color, $strength * 0.7),
+    #{$offset-x}px #{$offset-y}px 15px rgba($color, $strength);
+}
+
+@mixin glass-effect($blur: 10px, $bg-color: var(--glass-bg)) {
+  background-color: $bg-color;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid var(--glass-border);
+}

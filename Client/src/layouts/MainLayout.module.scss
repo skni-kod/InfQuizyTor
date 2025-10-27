@@ -1,0 +1,14 @@
+.mainContent {
+  /* Kluczowa reguła: Odsunięcie treści o wysokość headera */
+  padding-top: 60px;
+  
+  /* Upewniamy się, że <main> wypełnia dostępną przestrzeń */
+  width: 100%;
+  height: 100vh; /* Pełna wysokość okna */
+  
+  /* Pozwalamy na scrollowanie samej strony, jeśli treść się nie mieści */
+  overflow: auto; 
+  
+  /* Ustawiamy box-sizing, aby padding nie powiększył kontenera */
+  box-sizing: border-box; 
+}
