@@ -287,6 +287,6 @@ export const useD3ForceGraph = (
       link.filter(".link-active").style("stroke-dasharray", "8 4");
     }
 
-    simulation.alpha(0.5).restart();
+    simulation.alpha(0.3).restart();
   }, [data, activeGalaxyId, onGalaxyClick, svgRef]);
 };

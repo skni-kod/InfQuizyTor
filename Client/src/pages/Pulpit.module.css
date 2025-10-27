@@ -1,0 +1,45 @@
+/* src/pages/Pulpit.module.css */
+.pulpitContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  .graphBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.5;
+  }
+
+  .widgetOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    padding: var(--space-3);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    .title {
+      font-size: var(--text-2xl);
+      font-weight: 500;
+      margin-bottom: var(--space-3);
+      color: #fff;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+    }
+
+    /* Targetowanie siatki wewnątrz overlay */
+    > .react-grid-layout {
+      flex-grow: 1;
+    }
+  }
+}

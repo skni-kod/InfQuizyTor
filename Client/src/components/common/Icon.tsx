@@ -1,9 +1,12 @@
-// np. w src/components/common/Icon.tsx
-
+// src/components/common/Icon.tsx
 import React from "react";
-import { cn } from "../../utils/cn"; // Upewnij się, że ścieżka jest poprawna
+import { cn } from "../../utils/cn";
 
-// Definiujemy bazowe propsy, które będą wspólne dla każdej ikony
+// Typ dla ikon (np. IconHome), które przyjmują tylko className
+export type SpecificIconProps = {
+  className?: string;
+};
+
 const iconBaseProps = {
   width: "1em",
   height: "1em",
@@ -15,17 +18,11 @@ const iconBaseProps = {
   strokeLinejoin: "round" as const,
 };
 
-// Nasz generyczny komponent-wrapper
-// Akceptuje wszystkie standardowe atrybuty SVG, aby umożliwić nadpisywanie
 type IconProps = React.SVGProps<SVGSVGElement>;
 
 export const Icon = ({ className, children, ...rest }: IconProps) => {
   return (
-    <svg
-      {...iconBaseProps} // 1. Zastosuj domyślne propsy
-      {...rest} // 2. Zastosuj wszelkie nadpisania (np. inny fill, strokeWidth)
-      className={cn("icon-svg", className)} // 3. Połącz bazową klasę z przekazaną
-    >
+    <svg {...iconBaseProps} {...rest} className={cn("icon-svg", className)}>
       {children}
     </svg>
   );

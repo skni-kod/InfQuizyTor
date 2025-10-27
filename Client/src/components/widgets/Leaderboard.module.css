@@ -1,0 +1,93 @@
+/* src/components/widgets/Leaderboard.module.css */
+.widgetCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  color: var(--secondary);
+  border-bottom: 1px solid var(--bg3_Dark);
+  padding-bottom: var(--space-2);
+
+  .icon-svg {
+    stroke: var(--secondary);
+  }
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  background: var(--bg2_Dark);
+  padding: var(--space-1);
+  border-radius: var(--radius-1);
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.listItem {
+  display: grid;
+  grid-template-columns: 2em 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-1);
+  background: var(--bg2_Dark);
+  border: 1px solid var(--bg2_Dark);
+
+  .rank {
+    font-weight: bold;
+    color: var(--secondary);
+    text-align: center;
+  }
+
+  .name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .score {
+    font-size: var(--text-sm);
+    font-weight: bold;
+    color: var(--success);
+  }
+
+  /* Zagnieżdżony styl dla aktywnego użytkownika */
+  &.user {
+    background: hsla(from var(--primary) h s l / 0.1);
+    border-color: var(--primary);
+
+    .rank {
+      color: var(--primary);
+    }
+  }
+}
+
+.actionButton {
+  background: var(--secondary);
+  color: #fff;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition_medium);
+  margin-top: var(--space-2);
+  text-align: center;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}

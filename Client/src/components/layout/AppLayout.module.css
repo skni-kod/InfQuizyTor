@@ -1,0 +1,20 @@
+/* src/components/layout/AppLayout.module.css */
+.appLayout {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg0_Dark);
+  overflow: hidden;
+
+  .content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: 70px; /* Miejsce na pływający header */
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+}

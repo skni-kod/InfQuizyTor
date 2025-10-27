@@ -1,0 +1,46 @@
+/* src/components/widgets/BadgeList.module.css */
+.widgetCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  color: var(--tertiary);
+  border-bottom: 1px solid var(--bg3_Dark);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-2);
+
+  .icon-svg {
+    stroke: var(--tertiary);
+    fill: var(--tertiary);
+  }
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.badgeItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--bg2_Dark);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+
+  .badgeIcon {
+    font-size: var(--text-lg);
+  }
+
+  .badgeName {
+    font-weight: 500;
+  }
+}

@@ -1,22 +1,27 @@
-// src/App.tsx
 import { Routes, Route } from "react-router-dom";
-import { Dashboard } from "./components/Dashboard/Dashboard";
-// W przyszłości możesz tu dodać inne widoki
-// import { LoginPage } from './components/Login/LoginPage';
-// import { ProfilePage } from './components/Profile/ProfilePage';
+import { AppLayout } from "./components/layout/AppLayout";
+import { Pulpit } from "./pages/Pulpit"; // To będzie nasza główna strona
+
+// Usuwamy SubjectGraphPage, ponieważ jest teraz częścią Pulpitu
+
+const CommunityPage = () => <div>Społeczność (w budowie)</div>;
+const ProfilePage = () => <div>Profil (w budowie)</div>;
 
 export const App = () => {
   return (
     <Routes>
-      {/* Główna i jedyna strona to nasz Dashboard */}
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/" element={<AppLayout />}>
+        {/* Pulpit jest teraz jedyną główną stroną */}
+        <Route index element={<Pulpit />} />
 
-      {/* Przykładowe przyszłe ścieżki */}
-      {/* <Route path="/login" element={<LoginPage />} /> */}
-      {/* <Route path="/profile/:userId" element={<ProfilePage />} /> */}
+        {/* Ta ścieżka już nie jest potrzebna, graf jest na Pulpicie */}
+        {/* <Route path="przedmioty" element={<SubjectGraphPage />} /> */}
 
-      {/* Ścieżka "catch-all" dla 404 */}
-      {/* <Route path="*" element={<div>404 - Not Found</div>} /> */}
+        <Route path="spolecznosc" element={<CommunityPage />} />
+        <Route path="profil" element={<ProfilePage />} />
+
+        <Route path="*" element={<div>404 - Nie znaleziono strony</div>} />
+      </Route>
     </Routes>
   );
 };

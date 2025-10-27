@@ -1,6 +1,6 @@
 // components/Dashboard/Dashboard.tsx
-import { Leaderboard } from "../Leaderboard/Leaderboard";
-import { BadgeList } from "../BadgeList/BadgeList";
+import { Leaderboard } from "../widgets/Leaderboard";
+import { BadgeList } from "../widgets/BadgeList";
 import { QuantumGraph } from "../QuantumGraph/QuantumGraph";
 import styles from "./Dashboard.module.css";
 

@@ -1,0 +1,82 @@
+/* src/components/layout/Header.module.css */
+:root {
+  --gradient-primary: linear-gradient(90deg, var(--primary) 0%, #ff4b2b 100%);
+  --gradient-secondary: linear-gradient(
+    90deg,
+    var(--secondary) 0%,
+    #ffc64d 100%
+  );
+  --gradient-tertiary: linear-gradient(90deg, var(--tertiary) 0%, #b37fff 100%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+
+  /* Szklany efekt */
+  background: rgba(19, 19, 19, 0.6);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--bg3-dark);
+
+  /* Pływający nagłówek */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: "Protest Guerrilla", system-ui;
+  font-size: var(--text-2xl);
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.navList {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Grupowanie wspólnych stylów dla .navLink i .profileLink */
+.navLink,
+.profileLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-base);
+  font-weight: 500;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-2);
+  transition: all var(--transition_medium) ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+}
+
+.navLink.active {
+  color: #fff;
+  font-weight: bold;
+  background: transparent;
+  border-color: var(--primary);
+  box-shadow: 0 0 10px -2px hsla(from var(--primary) h s l / 0.5);
+}
+
+.profileLink.active {
+  color: #fff;
+  background: transparent;
+  border-color: var(--tertiary);
+}
+
+.spacer {
+  flex: 1;
+}
