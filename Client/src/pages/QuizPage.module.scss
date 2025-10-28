@@ -1,0 +1,62 @@
+// Remove the @import or @use line for variables, as CSS variables are global.
+// @import '../styles/variables'; // REMOVE THIS LINE
+// @use '../styles/variables'; // OR REMOVE THIS LINE
+
+.quizContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-8);
+  background-color: var(--bg1-dark); // CSS variable works globally
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.backButton {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  background-color: var(--bg3-dark);
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--tertiary);
+    color: var(--text-primary);
+  }
+}
+
+h1 {
+  color: var(--primary);
+  margin-bottom: var(--space-6);
+}
+
+p {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-lg);
+
+  strong {
+    color: var(--warning);
+  }
+}
+
+.quizContent {
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+  background-color: var(--bg2-dark);
+  border-radius: var(--radius-lg);
+  min-width: 300px;
+  max-width: 600px;
+  border: 1px solid var(--bg3-dark);
+
+  p {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    margin: 0;
+  }
+}

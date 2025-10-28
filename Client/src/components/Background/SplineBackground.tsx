@@ -1,30 +1,31 @@
-import React, { Suspense } from "react";
+import React, { Suspense, lazy } from "react"; // Usunięto useState
 import styles from "./SplineBackground.module.scss";
+import placeholderImageUrl from "../../assets/Bez tytułu.webp"; // Lub ścieżka do SVG
 
-// 1. Change the import syntax like this:
-
-// Lazy loading for Spline
-const Spline = React.lazy(() => import("@splinetool/react-spline"));
+// Lazy loading dla Spline
+const Spline = lazy(() => import("@splinetool/react-spline"));
 
 const SPLINE_SCENE_URL =
-  "https://prod.spline.design/iXwpoFENb7cAd9e2/scene.splinecode"; // Make sure this is correct
+  "https://prod.spline.design/iXwpoFENb7cAd9e2/scene.splinecode";
 
 const SplineBackground = () => {
+  // Usunięto stan isSplineReady i handleSplineLoad
+
   return (
     <div className={styles.splineContainer}>
-      <Suspense
-        fallback={
-          <div className={styles.placeholderContainer}>
-            {/* 2. Use the imported URL in an <img> tag */}
-            <img
-              src={SPLINE_SCENE_URL} // Use the URL here
-              className={styles.placeholderSvg} // Apply class to the <img> tag
-              alt="Loading background placeholder" // Add alt text
-            />
-          </div>
-        }
-      >
-        <Spline scene={SPLINE_SCENE_URL} />
+      {/* 1. Obraz tła - zawsze widoczny pod spodem */}
+
+      {/* 2. Suspense dla kodu komponentu Spline */}
+      <Suspense fallback={null}>
+        {" "}
+        {/* Nie potrzebujemy fallbacku, bo obraz jest zawsze widoczny */}
+        {/* 3. Kontener dla płótna Spline - będzie nad obrazem */}
+        <div className={styles.splineCanvasContainer}>
+          <Spline
+            scene={SPLINE_SCENE_URL}
+            // Usunięto onLoad={handleSplineLoad}
+          />
+        </div>
       </Suspense>
     </div>
   );

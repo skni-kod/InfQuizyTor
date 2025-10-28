@@ -4,7 +4,7 @@ import Widget from "../components/Widgets/Widget";
 import styles from "./DashboardPage.module.scss"; // Create this SCSS file
 import { UpcomingEvent, RankingEntry, LearningProgress } from "../assets/types"; // Import new types
 import SplineBackground from "../components/Background/SplineBackground";
-
+import dashboardBackgroundUrl from "../assets/Bez tytułu.png";
 // --- Mock Data ---
 const mockEvents: UpcomingEvent[] = [
   {
@@ -94,8 +94,15 @@ const DashboardPage = () => {
   ];
 
   return (
-    <div className={styles.dashboardContainer}>
-      <SplineBackground />
+    <div
+      className={styles.dashboardContainer}
+      style={
+        {
+          "--bg-image-url": `url(${dashboardBackgroundUrl})`,
+        } as React.CSSProperties
+      }
+    >
+      {/* <SplineBackground /> */}
 
       {/* Central Menu */}
       <div className={styles.menuContainer}>

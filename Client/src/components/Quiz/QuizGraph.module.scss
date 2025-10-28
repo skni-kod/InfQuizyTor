@@ -1,0 +1,221 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+// Define HSL hue for completed items and line styles
+:root {
+  --hue-completed: 130; // Green for completed
+  --line-color: hsl(var(--hue), 20%, 35%); // Color for connecting lines
+  --line-width: 2px; // Thickness of lines
+}
+
+// Container for the entire quiz graph view
+.graphContainer {
+  width: 100%;
+  max-width: 800px; // Max width for readability
+  height: calc(100% - 40px); // Fill available height with some margin
+  margin: 20px auto; // Center horizontally with margin
+  padding: var(--space-6);
+  @include glass-effect(10px, var(--glass-bg)); // Apply glassmorphism
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.5s ease forwards; // Fade-in animation
+}
+
+// Keyframes for the fade-in animation
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+// Header styles
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--glass-border); // Use glass border color
+}
+
+// Back button styles
+.backButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    color: var(--primary);
+    background-color: var(--bg3-dark);
+  }
+}
+
+// Title styles
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xl);
+  color: var(--primary);
+  text-shadow: 0 0 4px hsla(var(--hue), 70%, 55%, 0.5); // Subtle glow
+  margin-left: auto; // Push title to the right
+}
+
+// Wrapper for the scrollable tree area
+.treeWrapper {
+  overflow-y: auto; // Enable vertical scrolling if tree is tall
+  flex-grow: 1; // Allow wrapper to take remaining vertical space
+  padding: var(--space-4); // Inner padding
+}
+
+// Base styles for UL elements (tree root and children lists)
+.treeRoot, .childrenList {
+  list-style: none;
+  padding-left: 0;
+  position: relative; // Needed for absolute positioning of connecting lines
+}
+
+// Indentation for nested lists (children)
+.childrenList {
+  padding-left: 40px;
+}
+
+// Styles for each LI (list item) representing a node
+.treeNode {
+  position: relative; // Needed for pseudo-element lines
+  padding-top: var(--space-4); // Vertical spacing between nodes
+
+  // --- Connecting Lines using Pseudo-elements ---
+
+  // Vertical line segment coming down from parent connection point
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; // Start from the top edge of the LI
+    left: -20px; // Position horizontally (aligned with horizontal line end)
+    width: var(--line-width);
+    height: 100%; // Extend down towards the node content
+    background-color: var(--line-color);
+    z-index: 0; // Ensure lines are behind content
+  }
+
+  // Horizontal line segment connecting vertical line to the node content
+  &::after {
+    content: '';
+    position: absolute;
+    top: 32px; // Vertical position (adjust to center with .nodeContent)
+    left: -20px; // Start from the vertical line
+    width: 20px; // Length of the horizontal line
+    height: var(--line-width);
+    background-color: var(--line-color);
+    z-index: 0;
+  }
+
+  // --- Line adjustments for specific nodes ---
+
+  // Remove lines above the very first node in the root list
+  .treeRoot > &:first-child::before,
+  .treeRoot > &:first-child::after {
+     display: none;
+  }
+
+   // Shorten the vertical line for the last child in any list
+  &:last-child::before {
+     height: 32px; // Stop the line at the height of the horizontal connector
+  }
+}
+
+
+// Styles for the visible content box of each node
+.nodeContent {
+  display: inline-flex; // Use inline-flex for better alignment and sizing
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--bg2-dark);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--bg3-dark);
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  min-width: 180px;
+  position: relative; // Keep content above lines
+  z-index: 1;
+
+  // Animation for node appearance
+  opacity: 0;
+  transform: translateX(-15px);
+  animation: nodeGrowIn 0.4s ease forwards;
+  animation-delay: var(--delay); // Use delay set in inline style
+
+  &:hover {
+    transform: translateX(5px) scale(1.03); // Hover effect
+    border-color: var(--primary); // Highlight border on hover
+    background-color: var(--bg3-dark); // Subtle background change
+  }
+}
+
+// Keyframes for node appearance animation
+@keyframes nodeGrowIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Style for the node title text
+.nodeTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap; // Prevent title wrapping
+  overflow: hidden; // Hide overflow
+  text-overflow: ellipsis; // Add ellipsis if too long
+}
+
+// Style for the status icon
+.nodeIcon {
+  margin-left: auto; // Push icon to the far right
+  font-size: var(--text-sm);
+  color: var(--text-muted); // Default color
+  flex-shrink: 0; // Prevent icon from shrinking
+}
+
+// --- Status-specific Styles ---
+.available {
+  border-color: var(--primary);
+  .nodeIcon { color: var(--primary); }
+  .nodeTitle { color: var(--primary); }
+   &:hover { background-color: hsla(var(--hue), 70%, 55%, 0.1); } // Subtle primary hover
+}
+
+.completed {
+  border-color: hsl(var(--hue-completed), 60%, 45%);
+  .nodeIcon { color: hsl(var(--hue-completed), 60%, 45%); }
+  .nodeTitle { color: hsl(var(--hue-completed), 60%, 65%); }
+   &:hover { background-color: hsla(var(--hue-completed), 60%, 45%, 0.1); } // Subtle green hover
+}
+
+.locked {
+  background-color: var(--bg1-dark); // Darker background
+  border-color: var(--bg2-dark);
+  cursor: not-allowed;
+  opacity: 0.6; // Fade out locked nodes
+
+  .nodeTitle { color: var(--text-muted); }
+  .nodeIcon { color: var(--text-muted); }
+
+  &:hover { // Disable hover effects for locked nodes
+    transform: none;
+    background-color: var(--bg1-dark);
+    border-color: var(--bg2-dark);
+  }
+}

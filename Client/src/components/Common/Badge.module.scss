@@ -1,0 +1,54 @@
+@import '../../styles/variables'; // We need access to color variables
+
+.badge {
+  display: inline-block; // Allows padding and respects text flow
+  padding: var(--space-1) var(--space-2); // Small padding
+  font-size: var(--text-xs); // Small font size
+  font-weight: 600; // Slightly bold
+  line-height: 1; // Prevent extra vertical space
+  text-align: center;
+  white-space: nowrap; // Prevent wrapping
+  vertical-align: baseline;
+  border-radius: var(--radius-full); // Pill shape
+  border: 1px solid transparent; // Base border
+}
+
+// --- Variant Colors ---
+// Using hsla for transparency based on the root HSL variables
+
+.default {
+  // Use a subtle gray based on the current hue's background colors
+  background-color: hsla(var(--hue), 10%, 30%, 0.5); // Semi-transparent tertiary/muted color
+  border-color: hsla(var(--hue), 10%, 40%, 0.7);
+  color: var(--text-secondary);
+}
+
+.primary {
+  background-color: hsla(var(--hue), 70%, 55%, 0.2); // Semi-transparent primary
+  border-color: hsla(var(--hue), 70%, 55%, 0.4);
+  color: var(--primary); // Use the primary color for text too
+}
+
+.success {
+  background-color: hsla(120, 60%, 45%, 0.2); // Semi-transparent success
+  border-color: hsla(120, 60%, 45%, 0.4);
+  color: var(--success);
+}
+
+.error {
+  background-color: hsla(0, 70%, 55%, 0.2); // Semi-transparent error
+  border-color: hsla(0, 70%, 55%, 0.4);
+  color: var(--error);
+}
+
+.warning {
+  background-color: hsla(40, 90%, 60%, 0.2); // Semi-transparent warning
+  border-color: hsla(40, 90%, 60%, 0.4);
+  color: var(--warning);
+}
+
+.info {
+  background-color: hsla(200, 70%, 50%, 0.2); // Semi-transparent info
+  border-color: hsla(200, 70%, 50%, 0.4);
+  color: var(--info);
+}

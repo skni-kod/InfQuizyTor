@@ -1,12 +1,25 @@
-@import '../../styles/mixins';
+@use '../../styles/mixins' as m;
+@import '../../styles/variables';
 
 .gooeyContainer {
-  position: relative; 
+  position: relative;
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
   z-index: 500;
+
+  // Optional: Overall large background blur (keep or remove)
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -50px;
+    background: conic-gradient(/* ... lighter colors ... */);
+    filter: blur(80px);
+    opacity: 0.3;
+    z-index: -1;
+    pointer-events: none;
+  }
 }
 
 .svgFilters {
@@ -17,15 +30,51 @@
 
 .menu {
   position: relative;
-  width: 100px;
+  width: 100px; // Size of the central node
   height: 100px;
   display: grid;
   place-items: center;
-  pointer-events: all; 
+  pointer-events: all;
+
+  // --- Blurred Background Swirls (Sized based on node radius) ---
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    // Size based on the radius variable passed from JS (--menu-radius = 2 * nodeRadius)
+    // plus some extra padding for the blur effect
+    width: calc(var(--menu-radius, 320px) + 60px); // Base size + blur padding
+    height: calc(var(--menu-radius, 320px) + 60px);
+    border-radius: 50%;
+    /* background: conic-gradient(
+      var(--primary), var(--success), var(--info), var(--warning),
+      hsl(280, 70%, 55%), hsl(30, 70%, 55%), hsl(180, 70%, 55%),
+      hsl(60, 70%, 55%), var(--primary)
+    ); */
+    opacity: 0;
+    transition: all var(--transition-slow) ease-in-out;
+  }
+
+  // First swirl (closer, less blur)
+  &::before {
+    filter: blur(20px);
+    z-index: 1; // Behind nodes
+  }
+
+  // Second swirl (further, more blur, optional rotation)
+  &::after {
+    background: conic-gradient(from 45deg, /* ... colors ... */); // Optional rotation
+    filter: blur(40px);
+    transition-delay: 0.1s; // Slight delay
+    z-index: 0; // Behind first swirl
+  }
+
+  // Show swirls when expanded
+  
 }
 
 .node {
-  @include glass-effect(5px, hsla(var(--hue), 12%, 10%, 0.8));
+  // Base styles (display, border-radius, position, cursor, font, transition, z-index etc.)
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,62 +83,103 @@
   border-radius: var(--radius-full);
   position: absolute;
   cursor: pointer;
-  color: var(--text-primary);
   font-weight: 600;
-  font-size: var(--text-xs);
-  border: 2px solid var(--node-color, var(--primary));
   transition: all var(--transition-slow) cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  
+  // Default background, border, shadow for SUBJECT/QUIZ nodes
+  background-color: var(--bg2-dark);
+  color: var(--text-primary);
+  border: 2px solid var(--node-color, var(--primary));
   box-shadow: 0 0 5px var(--node-color, var(--primary)),
               0 0 10px var(--node-color, var(--primary));
+              -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  z-index: 5; // Above background swirls
+}
 
-  svg {
-    font-size: var(--text-xl);
-  }
+// ALL NODES SAME SIZE
+.profileNode, .subjectNode, .quizNode {
+  width: 100px;
+  height: 100px;
 }
 
 .profileNode {
-  width: 100px;
-  height: 100px;
   font-size: var(--text-4xl);
-  // --node-color jest teraz ustawiane dynamicznie w inline style
-}
+  // Default state: Solid dark background
+  background-color: var(--bg2-dark);
+  color: var(--text-primary);
+  border: none; // No simple border by default
+  box-shadow: none; // No default shadow
+  z-index: 10; // Keep on top
 
+  // --- Styles when menu is expanded ---
+  .menu.isExpanded & {
+    position: relative; // Needed for pseudo-elements
+
+    // *** APPLY CONIC GRADIENT DIRECTLY TO THE NODE ***
+    background: conic-gradient(
+      var(--primary), var(--success), var(--info), var(--warning),
+      hsl(280, 70%, 55%), hsl(30, 70%, 55%), hsl(180, 70%, 55%),
+      hsl(60, 70%, 55%), var(--primary)
+    );
+    color: var(--text-primary); // Use dark text/icon on colorful background
+    // Optional: Animate the gradient rotation
+    animation: rotateBorder 10s linear infinite;
+
+    // *** PSEUDO-ELEMENT ::before FOR SOLID BACKGROUND BORDER ***
+    &::before {
+      content: '';
+      position: absolute;
+      // Slightly larger than the node to create border effect
+      inset: 3px; // Adjust thickness/gap
+      border-radius: inherit;
+      background: var(--bg2-dark); // Solid dark background color
+      z-index: -1; // Position behind the conic gradient
+      transition: all var(--transition-slow) ease-in-out;
+      opacity: 1; // Always visible when expanded
+      // Remove blur and animation from this layer
+      filter: none;
+      animation: none;
+    }
+
+    // *** PSEUDO-ELEMENT ::after FOR SUBTLE GLOW (Optional) ***
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -6px; // Slightly larger than ::before for glow effect
+      border-radius: inherit;
+       // Can use the same conic gradient or a simpler color
+      background: conic-gradient(
+        var(--primary), var(--success), var(--info), var(--warning),
+        hsl(280, 70%, 55%), hsl(30, 70%, 55%), hsl(180, 70%, 55%),
+        hsl(60, 70%, 55%), var(--primary)
+      );
+      filter: blur(10px); // Blur for the glow
+      z-index: -2; // Position behind ::before
+      transition: all var(--transition-slow) ease-in-out;
+      opacity: 0.5; // Adjust glow intensity
+      // Optional: Add rotation
+      // animation: rotateBorder 10s linear infinite reverse; // Rotate opposite direction?
+    }
+  }
+}
 .subjectNode {
-  width: 80px;
-  height: 80px;
+  font-size: var(--text-xs);
+  svg { font-size: var(--text-2xl); }
 }
 
-/* --- NOWE STYLE DLA LEVEL 2 --- */
 .quizNode {
-  width: 70px;
-  height: 70px;
-  font-size: 10px; // Mniejszy tekst
+  font-size: 10px;
   padding: var(--space-1);
   text-align: center;
+  svg { font-size: var(--text-lg); }
 
-  svg {
-    font-size: var(--text-lg); // Mniejsza ikona
-  }
-
-  /* Warianty statusu */
-  &.completed {
-    --node-color: var(--success);
-  }
-
-  &.available {
-    --node-color: var(--primary);
-  }
-
+  /* Status variants */
+  &.completed { background-color: var(--bg3-dark); }
+  &.available { background-color: var(--bg2-dark); }// Redundant but explicit
   &.locked {
-    --node-color: var(--tertiary);
-    color: var(--text-muted);
-    background: var(--bg2-dark); // Mniej "szklany"
-    cursor: not-allowed;
-    box-shadow: none;
-
+    background-color: var(--bg1-dark);
     svg {
-      color: var(--text-muted);
+      color: var(--text-muted); // Dim icon color
     }
   }
 }
