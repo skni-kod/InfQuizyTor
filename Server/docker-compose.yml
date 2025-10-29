@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15 # Use a specific version
+    container_name: infquizytor_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-usos_user} # Use .env variable or default
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-yoursecurepassword} # Use .env variable or default
+      POSTGRES_DB: ${DB_NAME:-usos_tokens_db} # Use .env variable or default
+    ports:
+      - "${DB_PORT:-5432}:5432" # Use .env variable or default
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Mount init script
+    networks:
+      - infquizytor-net
+
+  # Optional: Add your Go backend service here if you dockerize it
+  # backend:
+  #   build: .
+  #   container_name: infquizytor_backend
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     # Pass env vars from .env or define them here
+  #     - USOS_CONSUMER_KEY=${USOS_CONSUMER_KEY}
+  #     - USOS_CONSUMER_SECRET=${USOS_CONSUMER_SECRET}
+  #     # ... other env vars ...
+  #   networks:
+  #     - infquizytor-net
+
+volumes:
+  postgres_data:
+
+networks:
+  infquizytor-net:

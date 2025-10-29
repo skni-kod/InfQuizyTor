@@ -3,7 +3,7 @@ import Menu from "../components/Menu/Menu"; // Import the renamed Menu
 import Widget from "../components/Widgets/Widget";
 import styles from "./DashboardPage.module.scss"; // Create this SCSS file
 import { UpcomingEvent, RankingEntry, LearningProgress } from "../assets/types"; // Import new types
-import SplineBackground from "../components/Background/SplineBackground";
+//import SplineBackground from "../components/Background/SplineBackground";
 import dashboardBackgroundUrl from "../assets/Bez tytułu.png";
 // --- Mock Data ---
 const mockEvents: UpcomingEvent[] = [

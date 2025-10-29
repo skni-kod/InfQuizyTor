@@ -1,10 +1,10 @@
-import React from "react";
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import DashboardPage from "./pages/DashboardPage";
 import SubjectHubPage from "./pages/SubjectHubPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import QuizPage from "./pages/QuizPage"; // <-- Import the new page
+import CommunityPage from "./pages/CommunityPage";
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="przedmioty" element={<SubjectHubPage />} />
         <Route path="przedmioty/:subjectId" element={<SubjectHubPage />} />
-        <Route path="community" element={<div>Community Page</div>} />
+        <Route path="community" element={<CommunityPage />} />
         <Route path="profil" element={<div>Profile Page</div>} />
       </Route>
 

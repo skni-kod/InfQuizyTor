@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom"; // Import Link for navigation
 import styles from "./NotFoundPage.module.scss"; // Import styles
 

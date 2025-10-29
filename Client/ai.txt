@@ -1,0 +1,503 @@
+[{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/cmd/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"severity": 8,
+	"message": "expected ';', found 'EOF'",
+	"source": "syntax",
+	"startLineNumber": 1,
+	"startColumn": 1,
+	"endLineNumber": 1,
+	"endColumn": 1
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/config/config.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/spf13/viper (no required module provides package \"github.com/spf13/viper\")",
+	"source": "compiler",
+	"startLineNumber": 6,
+	"startColumn": 2,
+	"endLineNumber": 6,
+	"endColumn": 26
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/db/db.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/config (no required module provides package \"github.com/sebcyte/InfQuizyTor/config\")",
+	"source": "compiler",
+	"startLineNumber": 10,
+	"startColumn": 2,
+	"endLineNumber": 10,
+	"endColumn": 41
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/db/token_store.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/models (no required module provides package \"github.com/sebcyte/InfQuizyTor/models\")",
+	"source": "compiler",
+	"startLineNumber": 8,
+	"startColumn": 2,
+	"endLineNumber": 8,
+	"endColumn": 41
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/auth_handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-contrib/sessions (no required module provides package \"github.com/gin-contrib/sessions\")",
+	"source": "compiler",
+	"startLineNumber": 7,
+	"startColumn": 2,
+	"endLineNumber": 7,
+	"endColumn": 35
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/auth_handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-gonic/gin (no required module provides package \"github.com/gin-gonic/gin\")",
+	"source": "compiler",
+	"startLineNumber": 8,
+	"startColumn": 2,
+	"endLineNumber": 8,
+	"endColumn": 28
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/auth_handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/config (no required module provides package \"github.com/sebcyte/InfQuizyTor/config\")",
+	"source": "compiler",
+	"startLineNumber": 9,
+	"startColumn": 2,
+	"endLineNumber": 9,
+	"endColumn": 41
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/auth_handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/services (no required module provides package \"github.com/sebcyte/InfQuizyTor/services\")",
+	"source": "compiler",
+	"startLineNumber": 10,
+	"startColumn": 2,
+	"endLineNumber": 10,
+	"endColumn": 43
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/auth_handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "UnusedVar",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UnusedVar"
+		}
+	},
+	"severity": 8,
+	"message": "declared and not used: requestToken",
+	"source": "compiler",
+	"startLineNumber": 19,
+	"startColumn": 15,
+	"endLineNumber": 19,
+	"endColumn": 27
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/internal/api/router.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"severity": 8,
+	"message": "expected ';', found 'EOF'",
+	"source": "syntax",
+	"startLineNumber": 1,
+	"startColumn": 1,
+	"endLineNumber": 1,
+	"endColumn": 1
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-contrib/cors (no required module provides package \"github.com/gin-contrib/cors\")",
+	"source": "compiler",
+	"startLineNumber": 7,
+	"startColumn": 2,
+	"endLineNumber": 7,
+	"endColumn": 31
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-contrib/sessions (no required module provides package \"github.com/gin-contrib/sessions\")",
+	"source": "compiler",
+	"startLineNumber": 8,
+	"startColumn": 2,
+	"endLineNumber": 8,
+	"endColumn": 35
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-contrib/sessions/cookie (no required module provides package \"github.com/gin-contrib/sessions/cookie\")",
+	"source": "compiler",
+	"startLineNumber": 9,
+	"startColumn": 2,
+	"endLineNumber": 9,
+	"endColumn": 42
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-gonic/gin (no required module provides package \"github.com/gin-gonic/gin\")",
+	"source": "compiler",
+	"startLineNumber": 10,
+	"startColumn": 2,
+	"endLineNumber": 10,
+	"endColumn": 28
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/config (no required module provides package \"github.com/sebcyte/InfQuizyTor/config\")",
+	"source": "compiler",
+	"startLineNumber": 12,
+	"startColumn": 2,
+	"endLineNumber": 12,
+	"endColumn": 41
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/db (no required module provides package \"github.com/sebcyte/InfQuizyTor/db\")",
+	"source": "compiler",
+	"startLineNumber": 13,
+	"startColumn": 2,
+	"endLineNumber": 13,
+	"endColumn": 37
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/handlers (no required module provides package \"github.com/sebcyte/InfQuizyTor/handlers\")",
+	"source": "compiler",
+	"startLineNumber": 14,
+	"startColumn": 2,
+	"endLineNumber": 14,
+	"endColumn": 43
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/middleware (no required module provides package \"github.com/sebcyte/InfQuizyTor/middleware\")",
+	"source": "compiler",
+	"startLineNumber": 15,
+	"startColumn": 2,
+	"endLineNumber": 15,
+	"endColumn": 45
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"external": "https://pkg.go.dev/golang.org/x/tools/internal/typesinternal#BrokenImport",
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/services (no required module provides package \"github.com/sebcyte/InfQuizyTor/services\")",
+	"source": "compiler",
+	"startLineNumber": 16,
+	"startColumn": 2,
+	"endLineNumber": 16,
+	"endColumn": 43
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/middleware/auth_middleware.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-contrib/sessions (no required module provides package \"github.com/gin-contrib/sessions\")",
+	"source": "compiler",
+	"startLineNumber": 6,
+	"startColumn": 2,
+	"endLineNumber": 6,
+	"endColumn": 35
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/middleware/auth_middleware.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-gonic/gin (no required module provides package \"github.com/gin-gonic/gin\")",
+	"source": "compiler",
+	"startLineNumber": 7,
+	"startColumn": 2,
+	"endLineNumber": 7,
+	"endColumn": 28
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/usos_service.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/gin-gonic/gin (no required module provides package \"github.com/gin-gonic/gin\")",
+	"source": "compiler",
+	"startLineNumber": 15,
+	"startColumn": 2,
+	"endLineNumber": 15,
+	"endColumn": 28
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/usos_service.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/mrjones/oauth (no required module provides package \"github.com/mrjones/oauth\")",
+	"source": "compiler",
+	"startLineNumber": 16,
+	"startColumn": 2,
+	"endLineNumber": 16,
+	"endColumn": 28
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/usos_service.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/config (no required module provides package \"github.com/sebcyte/InfQuizyTor/config\")",
+	"source": "compiler",
+	"startLineNumber": 17,
+	"startColumn": 2,
+	"endLineNumber": 17,
+	"endColumn": 41
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/usos_service.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"external": "https://pkg.go.dev/golang.org/x/tools/internal/typesinternal#BrokenImport",
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/db (no required module provides package \"github.com/sebcyte/InfQuizyTor/db\")",
+	"source": "compiler",
+	"startLineNumber": 18,
+	"startColumn": 2,
+	"endLineNumber": 18,
+	"endColumn": 37
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/usos_service.go",
+	"owner": "_generated_diagnostic_collection_name_#11",
+	"code": {
+		"value": "BrokenImport",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "BrokenImport"
+		}
+	},
+	"severity": 8,
+	"message": "could not import github.com/sebcyte/InfQuizyTor/models (no required module provides package \"github.com/sebcyte/InfQuizyTor/models\")",
+	"source": "compiler",
+	"startLineNumber": 19,
+	"startColumn": 2,
+	"endLineNumber": 19,
+	"endColumn": 41
+}]

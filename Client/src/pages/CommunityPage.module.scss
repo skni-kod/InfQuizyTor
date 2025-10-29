@@ -1,0 +1,46 @@
+@use '../styles/variables'; // Import variables
+
+.communityContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px); // Fill height below header
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+h1 {
+  font-size: var(--text-4xl); // Large 404 text
+  color: var(--primary);
+  margin-bottom: var(--space-4);
+}
+
+h2 {
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+p {
+  max-width: 400px; // Limit text width
+  margin-bottom: var(--space-6);
+  line-height: 1.6;
+}
+
+.homeLink {
+  display: inline-block;
+  background-color: var(--primary);
+  color: var(--bg0-dark);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--transition-medium), transform var(--transition-fast);
+
+  &:hover {
+    background-color: hsl(var(--hue), 70%, 65%);
+    transform: translateY(-2px);
+  }
+}

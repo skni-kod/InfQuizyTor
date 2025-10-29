@@ -12,7 +12,6 @@ import {
   FaCheck,
   FaPlay,
   FaCode,
-  FaFlask,
   FaNetworkWired,
   FaAtom,
   FaMicrochip,
@@ -156,7 +155,6 @@ const Menu = () => {
   // Dynamic Render Variables
   const CentralIcon =
     level === 2 && activeSubject ? activeSubject.icon : FaUserCircle;
-  const centralNodeScale = level === 2 ? 0.7 : 1; // Keep central node slightly smaller on Level 2 if desired
   const centralNodeColor =
     level === 2 && activeSubject ? activeSubject.color : "var(--primary)"; // Background color still changes
 

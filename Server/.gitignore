@@ -1,0 +1,24 @@
+# .gitignore
+
+# Dependencies
+/node_modules
+/.pnpm-store
+
+# Build output
+/dist
+/build
+
+# Environment variables
+.env
+*.env.local
+*.env.*.local
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Go build executable
+infquizytor-backend # Or your executable name
