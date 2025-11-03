@@ -9,71 +9,66 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 
-	"github.com/skni-kod/InfQuizyTor/Server/config"     // Adjust path
-	"github.com/skni-kod/InfQuizyTor/Server/db"         // Adjust path
-	"github.com/skni-kod/InfQuizyTor/Server/handlers"   // Adjust path
-	"github.com/skni-kod/InfQuizyTor/Server/middleware" // Adjust path
-	"github.com/skni-kod/InfQuizyTor/Server/services"   // Adjust path
+	// Użyj poprawnej ścieżki modułu z go.mod
+	"github.com/skni-kod/InfQuizyTor/Server/config"
+	"github.com/skni-kod/InfQuizyTor/Server/db"
+	"github.com/skni-kod/InfQuizyTor/Server/handlers"
+	"github.com/skni-kod/InfQuizyTor/Server/middleware"
+	"github.com/skni-kod/InfQuizyTor/Server/services"
 )
 
 func main() {
-	// 1. Load Configuration
-	cfg, err := config.LoadConfig(".") // Load .env from current directory
+	// 1. Załaduj Konfigurację
+	cfg, err := config.LoadConfig(".")
 	if err != nil {
-		log.Fatalf("Could not load config: %v", err)
+		log.Fatalf("Nie można załadować konfiguracji: %v", err)
 	}
 
-	// 2. Initialize Database
+	// 2. Zainicjuj Bazę Danych
 	db.InitDB(cfg)
-	defer db.CloseDB() // Ensure DB pool is closed on exit
+	defer db.CloseDB()
 
-	// 3. Initialize USOS Service (OAuth Consumer)
+	// 3. Zainicjuj Serwis USOS (OAuth)
 	services.InitUsosService(cfg)
 
-	// 4. Setup Gin Router
+	// 4. Skonfiguruj Router Gin
 	router := gin.Default()
 
-	// 5. Setup CORS (Allow frontend to connect)
+	// 5. Skonfiguruj CORS
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{cfg.FrontendURL}         // Allow your frontend URL
-	corsConfig.AllowCredentials = true                          // Important for sessions/cookies
-	corsConfig.AddAllowHeaders("Authorization", "Content-Type") // Add headers if needed
+	corsConfig.AllowOrigins = []string{cfg.FrontendURL} // Pozwól na żądania z frontendu
+	corsConfig.AllowCredentials = true                  // Niezbędne do sesji
+	corsConfig.AddAllowHeaders("Authorization", "Content-Type")
 	router.Use(cors.New(corsConfig))
 
-	// 6. Setup Sessions
+	// 6. Skonfiguruj Sesje
 	store := cookie.NewStore([]byte(cfg.SessionSecret))
 	router.Use(sessions.Sessions("usos_session", store))
 
-	// 7. Define Routes
-	// --- Authentication Routes ---
+	// 7. Zdefiniuj Trasy
 	authGroup := router.Group("/auth/usos")
 	{
-		authGroup.GET("/login", handlers.HandleUsosLogin)       // Step 1: Redirect to USOS
-		authGroup.GET("/callback", handlers.HandleUsosCallback) // Step 2: Handle callback, get access token
-		// authGroup.POST("/logout", handlers.HandleLogout) // Optional logout
+		authGroup.GET("/login", handlers.HandleUsosLogin)
+		authGroup.GET("/callback", handlers.HandleUsosCallback)
+		// authGroup.POST("/logout", handlers.HandleLogout)
 	}
 
-	// --- API Proxy Routes ---
-	// All routes under /api/* require authentication
 	apiGroup := router.Group("/api")
-	apiGroup.Use(middleware.AuthRequired()) // Apply auth middleware
+	apiGroup.Use(middleware.AuthRequired()) // Zabezpiecz wszystkie trasy API
 	{
-		// Catch-all route for proxying
-		// Example: GET /api/calendar/user_events -> calls services/calendar/user_events
+		// Przechwytuje np. /api/services/calendar/user_events
 		apiGroup.GET("/*proxyPath", handlers.HandleApiProxy)
-		// Add POST, PUT, DELETE proxy routes if needed, modifying HandleApiProxy accordingly
-		// apiGroup.POST("/*proxyPath", handlers.HandleApiProxy)
+		// TODO: Dodaj obsługę POST/PUT/DELETE jeśli potrzebne
 	}
 
-	// --- Health Check ---
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
 	})
 
-	// 8. Start Server
-	listenAddr := ":8080" // Default port for backend
-	log.Printf("Starting server on %s", listenAddr)
+	// 8. Uruchom Serwer (na porcie 8080)
+	listenAddr := ":8080" // POPRAWKA: Użyj standardowego portu 8080
+	log.Printf("Serwer nasłuchuje na %s", listenAddr)
 	if err := router.Run(listenAddr); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		log.Fatalf("Nie udało się uruchomić serwera: %v", err)
 	}
 }

@@ -88,19 +88,29 @@ const UsosCalendar: React.FC = () => {
         // Handle HTTP errors from the backend proxy
         if (!response.ok) {
           let errorBody = `Backend error! Status: ${response.status}`;
-          // Read the body ONCE as text
+
+          // --- POPRAWKA ---
+          // Odczytaj odpowiedź jako ZWYKŁY TEKST, ponieważ może to być HTML
           const textError = await response.text();
+
+          // Spróbuj sparsować jako JSON na wypadek, gdyby backend *jednak* wysłał JSON
           try {
-            // TRY to parse the text as JSON
             const errorData = JSON.parse(textError);
             errorBody += ` - ${
               errorData.details || errorData.error || textError
-            }`; // Use textError as fallback
+            }`;
           } catch (e) {
-            // If JSON parsing failed, use the raw text
-            if (textError) errorBody += ` - ${textError}`;
+            // Jeśli parsowanie JSON się nie udało, po prostu dołącz tekst błędu (HTML)
+            // Usuń tagi HTML dla czytelności w konsoli (opcjonalne)
+            const cleanTextError = textError.replace(/<[^>]*>?/gm, "");
+            errorBody += ` - (Response was HTML/Text): ${cleanTextError.substring(
+              0,
+              100
+            )}...`; // Pokaż tylko fragment
           }
-          throw new Error(errorBody); // Throw the combined error message
+          // --- KONIEC POPRAWKI ---
+
+          throw new Error(errorBody); // Rzuć pełnym błędem
         }
 
         // If response IS ok, parse as JSON

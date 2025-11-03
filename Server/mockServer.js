@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid"); // Do generowania tokenów
 
 const app = express();
-const port = 8080; // Port, na którym będzie działał mock backend
+const port = 8081; // Port, na którym będzie działał mock backend
 
 // Prosta pamięć podręczna dla request tokenów i access tokenów
 // W prawdziwej aplikacji użyj bazy danych!

@@ -18,7 +18,6 @@ import (
 	"github.com/skni-kod/InfQuizyTor/Server/models"
 )
 
-// Global OAuth consumer instance
 var consumer *oauth.Consumer
 
 // InitUsosService inicjalizuje konsumenta OAuth
@@ -39,38 +38,41 @@ func InitUsosService(cfg config.Config) {
 // GetAuthorizationURLAndSecret rozpoczyna przepływ OAuth (Krok 1)
 func GetAuthorizationURLAndSecret(scopes []string) (string, string, string, error) {
 	callbackURL := config.AppConfig.AppBaseURL + "/auth/usos/callback"
-	scopeStr := strings.Join(scopes, "|")
 
-	extraParams := url.Values{}
-	extraParams.Set("oauth_callback", callbackURL)
-	if scopeStr != "" {
-		extraParams.Set("scopes", scopeStr)
-	}
+	log.Printf("Requesting token with callback: %s", callbackURL)
 
-	log.Printf("Requesting token with callback: %s and scopes: %s", callbackURL, scopeStr)
-
-	// --- POPRAWKA NAZWY METODY ---
-	// Użyj GetRequestTokens (liczba mnoga), aby przekazać dodatkowe parametry
-	requestToken, err := consumer.GetRequestTokens(extraParams)
+	// --- POPRAWKA: Użycie poprawnej nazwy metody ---
+	// Używamy GetRequestTokenAndUrl. Ta metoda NIE przyjmuje dodatkowych parametrów (jak 'scopes').
+	// Zwraca ona requestToken ORAZ gotowy authorizeURL (jako drugi argument).
+	requestToken, authorizeURL, err := consumer.GetRequestTokenAndUrl(callbackURL)
 	if err != nil {
-		log.Printf("Error getting USOS request token (consumer.GetRequestTokens): %v", err)
+		log.Printf("Error getting USOS request token (consumer.GetRequestTokenAndUrl): %v", err)
 		return "", "", "", fmt.Errorf("failed to get request token: %w", err)
-	}
-	// --- KONIEC POPRAWKI ---
-
-	// --- POPRAWKA NAZWY METODY ---
-	// Użyj GetAuthorizeURL (wielkie URL)
-	authorizeURL, err := consumer.GetAuthorizeURL(requestToken, nil) // Poprawna nazwa metody
-	if err != nil {
-		log.Printf("Error getting authorize URL: %v", err)
-		return "", "", "", fmt.Errorf("failed to get authorize URL: %w", err)
 	}
 	// --- KONIEC POPRAWKI ---
 
 	log.Printf("Got Request Token: %s", requestToken.Token)
 	log.Printf("Authorize URL from library: %s", authorizeURL)
 
-	return authorizeURL, requestToken.Token, requestToken.Secret, nil
+	// Zapisujemy URL do finalnej zmiennej
+	finalRedirectURL := authorizeURL
+
+	// --- POPRAWKA: Ręczne dodanie 'scopes' do URL autoryzacji ---
+	// Ponieważ GetRequestTokenAndUrl nie przyjmuje 'scopes',
+	// dodajemy je ręcznie do URL autoryzacji, który zwróciła biblioteka.
+	if len(scopes) > 0 {
+		scopeStr := strings.Join(scopes, "|")
+		// Sprawdź, czy URL już zawiera parametry
+		if strings.Contains(finalRedirectURL, "?") {
+			finalRedirectURL = fmt.Sprintf("%s&scopes=%s", finalRedirectURL, url.QueryEscape(scopeStr))
+		} else {
+			finalRedirectURL = fmt.Sprintf("%s?scopes=%s", finalRedirectURL, url.QueryEscape(scopeStr))
+		}
+		log.Printf("Appended scopes to Authorize URL: %s", finalRedirectURL)
+	}
+	// --- KONIEC POPRAWKI ---
+
+	return finalRedirectURL, requestToken.Token, requestToken.Secret, nil
 }
 
 // UsosUserInfo definiuje pola odpowiedzi z /services/users/user
