@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-// Import type for user-specific calendar events
 import {
   UsosCalendarEvent,
   UsosCalendarResponse,
-} from "../../assets/types.tsx"; // Correct path to types in assets
+} from "../../assets/types.tsx"; // Poprawna ścieżka
 import styles from "./UsosCalendar.module.scss";
+import { useAppContext } from "../../contexts/AppContext"; // Importuj kontekst
 
-// --- Helper Functions ---
-
-// Formats time (e.g., 10:00)
+// --- Funkcje pomocnicze (formatDateTime, formatDate, groupEventsByDate) ---
+// (Pozostają bez zmian, jak w poprzednich odpowiedziach)
 const formatDateTime = (isoString: string | null): string => {
   if (!isoString) return "";
   try {
@@ -22,8 +21,6 @@ const formatDateTime = (isoString: string | null): string => {
     return "Invalid Time";
   }
 };
-
-// Formats date (e.g., 29 października 2025)
 const formatDate = (isoString: string): string => {
   try {
     const date = new Date(isoString);
@@ -37,13 +34,11 @@ const formatDate = (isoString: string): string => {
     return "Invalid Date";
   }
 };
-
-// Groups events by their formatted date string
 const groupEventsByDate = (
   events: UsosCalendarEvent[]
 ): { [date: string]: UsosCalendarEvent[] } => {
   return events.reduce((acc, event) => {
-    const dateStr = formatDate(event.start_time); // Group by start_time
+    const dateStr = formatDate(event.start_time);
     if (!acc[dateStr]) {
       acc[dateStr] = [];
     }
@@ -55,100 +50,102 @@ const groupEventsByDate = (
     return acc;
   }, {} as { [date: string]: UsosCalendarEvent[] });
 };
+// --- Koniec Funkcji Pomocniczych ---
 
-// --- Main Calendar Component ---
-// Fetches the logged-in user's calendar events via the backend proxy
 const UsosCalendar: React.FC = () => {
   const [events, setEvents] = useState<UsosCalendarEvent[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true); // Domyślnie ładuje
   const [error, setError] = useState<string | null>(null);
 
+  // Pobierz status użytkownika i ładowania autoryzacji z kontekstu
+  const { user, authLoading } = useAppContext();
+  const groupEventsByDate = (
+    events: UsosCalendarEvent[]
+  ): { [date: string]: UsosCalendarEvent[] } => {
+    return events.reduce((acc, event) => {
+      const dateStr = formatDate(event.start_time);
+      if (!acc[dateStr]) {
+        acc[dateStr] = [];
+      }
+      acc[dateStr].push(event);
+      acc[dateStr].sort(
+        (a, b) =>
+          new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      );
+      return acc;
+    }, {} as { [date: string]: UsosCalendarEvent[] });
+  };
   useEffect(() => {
     const fetchEvents = async () => {
-      setLoading(true);
-      setError(null);
-      setEvents([]);
+      // Nie resetuj stanu tutaj, jeśli loading jest już true
 
       try {
         console.log("Fetching USOS User Calendar events via backend proxy...");
 
-        // --- API Call to Backend Proxy ---
-        // Define the backend endpoint that proxies to USOS API services/calendar/user_events
-        // The backend's AuthRequired middleware handles user identification via session.
-        const backendApiUrl = "/api/services/calendar/user_events"; // Relative URL to your Go backend proxy endpoint
-
-        // Add desired fields as query parameters for the backend proxy to forward
+        const backendApiUrl = "/api/services/tt/user";
         const fields = "id|name|type|start_time|end_time|url";
         const params = new URLSearchParams({ fields });
 
         const response = await fetch(`${backendApiUrl}?${params.toString()}`, {
-          /* ... */
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          credentials: "include", // *** NIEZBĘDNE DO WYSŁANIA CIASTECZKA SESJI ***
         });
 
-        // Handle HTTP errors from the backend proxy
         if (!response.ok) {
           let errorBody = `Backend error! Status: ${response.status}`;
-
-          // --- POPRAWKA ---
-          // Odczytaj odpowiedź jako ZWYKŁY TEKST, ponieważ może to być HTML
           const textError = await response.text();
-
-          // Spróbuj sparsować jako JSON na wypadek, gdyby backend *jednak* wysłał JSON
           try {
             const errorData = JSON.parse(textError);
             errorBody += ` - ${
               errorData.details || errorData.error || textError
             }`;
           } catch (e) {
-            // Jeśli parsowanie JSON się nie udało, po prostu dołącz tekst błędu (HTML)
-            // Usuń tagi HTML dla czytelności w konsoli (opcjonalne)
-            const cleanTextError = textError.replace(/<[^>]*>?/gm, "");
-            errorBody += ` - (Response was HTML/Text): ${cleanTextError.substring(
+            const cleanTextError = textError.replace(/<[^>]*>?/gm, "").trim();
+            errorBody = `Błąd ${response.status}: ${cleanTextError.substring(
               0,
-              100
-            )}...`; // Pokaż tylko fragment
+              150
+            )}...`;
           }
-          // --- KONIEC POPRAWKI ---
-
-          throw new Error(errorBody); // Rzuć pełnym błędem
+          throw new Error(errorBody);
         }
 
-        // If response IS ok, parse as JSON
         const data: UsosCalendarResponse = await response.json();
         setEvents(data);
-        // --- End API Call ---
       } catch (err) {
         console.error("Failed to fetch USOS user events:", err);
         setError(
           err instanceof Error ? err.message : "An unknown error occurred"
         );
       } finally {
-        setLoading(false);
+        setLoading(false); // Zakończ ładowanie
       }
     };
 
-    fetchEvents();
-  }, []); // Runs once on mount
+    // --- POPRAWIONA LOGIKA URUCHAMIANIA ---
+    if (authLoading) {
+      // Aplikacja wciąż sprawdza status logowania (w App.tsx)
+      setLoading(true); // Pokaż spinner
+    } else if (user) {
+      // Sprawdzanie zakończone, użytkownik jest zalogowany -> pobierz kalendarz
+      fetchEvents();
+    } else {
+      // Sprawdzanie zakończone, użytkownik NIE jest zalogowany
+      setError("Musisz być zalogowany, aby zobaczyć kalendarz.");
+      setLoading(false);
+    }
+  }, [user, authLoading]); // Uruchom ponownie, gdy zmieni się status użytkownika lub autoryzacji
 
-  // Group events by date for rendering
-  const groupedEvents = groupEventsByDate(events);
-  const sortedDates = Object.keys(groupedEvents).sort((a, b) => {
-    // Basic sort assuming consistent date format from formatDate
-    return (
-      new Date(groupedEvents[a][0].start_time).getTime() -
-      new Date(groupedEvents[b][0].start_time).getTime()
-    );
-  });
-
-  // --- Render Logic ---
+  // --- Render Logic (Bez zmian) ---
   if (loading) {
     return <div className={styles.loading}>Ładowanie kalendarza... ⏳</div>;
   }
   if (error) {
     return (
       <div className={styles.error}>
-        Błąd ładowania kalendarza: {error} 😥 <br /> Sprawdź połączenie lub
-        spróbuj ponownie później.
+        Błąd ładowania kalendarza: {error} 😥 <br /> Spróbuj ponownie później.
       </div>
     );
   }

@@ -1,4 +1,4 @@
-package handlers // Upewnij się, że ta linia to 'package handlers'
+package handlers
 
 import (
 	"log"
@@ -10,26 +10,35 @@ import (
 )
 
 func HandleApiProxy(c *gin.Context) {
-	log.Printf("DEBUG: HandleApiProxy called for path: %s", c.Request.URL.Path)
-	proxyPathParam := c.Param("proxyPath")
-	log.Printf("DEBUG: Extracted proxyPath parameter: %s", proxyPathParam)
+	log.Printf("DEBUG: HandleApiProxy called for raw path: %s", c.Request.URL.Path)
+
+	var targetPath string
+	if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+		targetPath = strings.TrimPrefix(c.Request.URL.Path, "/api/")
+	} else {
+		log.Printf("BŁĄD: HandleApiProxy otrzymał ścieżkę bez /api/: %s", c.Request.URL.Path)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid proxy path"})
+		return
+	}
+
+	cleanTargetPath := strings.TrimPrefix(targetPath, "/")
+	log.Printf("DEBUG: Poprawnie wyodrębniona ścieżka docelowa (cleanTargetPath): %s", cleanTargetPath)
 
 	userUsosIDValue, exists := c.Get("user_usos_id")
 	if !exists {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+		log.Println("BŁĄD: Brak user_usos_id w kontekście middleware")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context (proxy)"})
 		return
 	}
 	userUsosID, ok := userUsosIDValue.(string)
 	if !ok || userUsosID == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid User ID in context"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid User ID in context (proxy)"})
 		return
 	}
 
-	targetPath := proxyPathParam
-	cleanTargetPath := strings.TrimPrefix(targetPath, "/")
+	log.Printf("HandleApiProxy: User ID '%s' retrieved from context.", userUsosID)
 	queryParams := c.Request.URL.Query()
-
-	log.Printf("Proxying request for user %s to path: %s", userUsosID, cleanTargetPath)
+	log.Printf("HandleApiProxy: Proxying request for user %s to path %s with query %s", userUsosID, cleanTargetPath, queryParams.Encode())
 
 	statusCode, responseBody, responseHeaders, err := services.ProxyUsosApiRequest(c, userUsosID, cleanTargetPath, queryParams)
 

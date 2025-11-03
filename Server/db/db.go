@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/skni-kod/InfQuizyTor/Server/config" // Adjust import path
+	"github.com/skni-kod/InfQuizyTor/Server/config"
 )
 
 var Pool *pgxpool.Pool
@@ -23,7 +23,6 @@ func InitDB(cfg config.Config) {
 		os.Exit(1)
 	}
 
-	// Optional: Ping the database to verify connection
 	err = Pool.Ping(context.Background())
 	if err != nil {
 		log.Fatalf("Database ping failed: %v\n", err)
@@ -31,7 +30,6 @@ func InitDB(cfg config.Config) {
 	}
 
 	log.Println("Database connection established successfully.")
-	// Consider running migrations here if using a migration tool
 }
 
 func CloseDB() {

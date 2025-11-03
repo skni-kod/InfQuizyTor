@@ -1,0 +1,106 @@
+@import '../styles/variables';
+@import '../styles/mixins';
+
+.profileContainer {
+  padding: var(--space-8);
+  max-width: 800px;
+  margin: 0 auto;
+  color: var(--text-primary);
+}
+
+.loading {
+  text-align: center;
+  font-size: var(--text-xl);
+  color: var(--text-muted);
+  padding: var(--space-10);
+}
+
+.loginRequired {
+  text-align: center;
+  padding: var(--space-10);
+  background-color: var(--bg1-dark);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+
+  h1 {
+    color: var(--error);
+    margin-bottom: var(--space-4);
+  }
+  p {
+    margin-bottom: var(--space-6);
+    font-size: var(--text-lg);
+  }
+}
+
+.loginButton {
+  display: inline-block;
+  background-color: var(--primary);
+  color: var(--bg0-dark);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-medium);
+
+  &:hover {
+    background-color: hsl(var(--hue), 70%, 65%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: var(--space-8);
+  h1 {
+    color: var(--primary);
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-2);
+  }
+  p {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+  }
+}
+
+.profileDetails {
+  background-color: var(--bg1-dark);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  padding: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+  font-size: var(--text-base);
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--bg3-dark);
+  }
+}
+
+.detailLabel {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.detailValue {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.badgesSection {
+  h3 {
+    font-size: var(--text-xl);
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--bg3-dark);
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+  p {
+    color: var(--text-muted);
+  }
+}

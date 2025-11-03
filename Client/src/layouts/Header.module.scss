@@ -1,8 +1,7 @@
-/* 1. Replace @import with @use and give it a namespace (e.g., 'm') */
-@use '../styles/mixins' as m;
+@use '../styles/mixins' as m; // POPRAWIONA ŚCIEŻKA (tylko jedno '../')
+@import '../styles/variables'; // Importuj zmienne (może być potrzebne dla var())
 
 .header {
-  /* 2. Call the mixin using the namespace */
   @include m.glass-effect(10px, var(--glass-bg));
   position: fixed;
   top: 0;
@@ -21,12 +20,13 @@
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--primary);
-  text-shadow: 0 0 5px var(--primary);
+  text-shadow: 0 0 5px hsla(var(--hue), 70%, 55%, 0.7);
 }
 
 .nav {
   display: flex;
   height: 100%;
+  align-items: center;
 }
 
 .navLink {
@@ -36,15 +36,16 @@
   padding: 0 var(--space-4);
   color: var(--text-secondary);
   font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
   position: relative;
-  transition: color var(--transition-medium);
+  transition: color var(--transition-medium), border-bottom-color var(--transition-medium);
   border-bottom: 3px solid transparent;
   height: 100%;
 
   span {
     display: none;
-    /* 3. Also use the namespace for mixins called within nested rules */
-    @include m.media-md {
+    @include m.media-md { // Użyj przestrzeni nazw 'm'
       display: inline;
     }
   }
@@ -57,4 +58,53 @@
     color: var(--primary);
     border-bottom-color: var(--primary);
   }
+}
+
+// Styl dla przycisku wylogowania
+.logoutButton {
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  position: relative;
+  transition: color var(--transition-medium);
+  border-bottom: 3px solid transparent;
+  height: 100%;
+
+  &:hover {
+    color: var(--error); // Czerwony na hover
+  }
+
+  span {
+    display: none;
+    @include m.media-md { // Użyj przestrzeni nazw 'm'
+      display: inline;
+    }
+  }
+}
+
+// Styl dla przycisku (gdy jest nieaktywny, np. authLoading)
+.navButton {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  height: 100%;
+  opacity: 0.5;
+}
+.authControls {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  margin-left: auto; // Przesuń na prawo (jeśli .nav ma flex-grow)
+                   // lub po prostu pozwól im być na końcu .nav
 }

@@ -7,15 +7,17 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/skni-kod/InfQuizyTor/Server/config"
+	"github.com/skni-kod/InfQuizyTor/Server/db" // Dodaj import DB
 	"github.com/skni-kod/InfQuizyTor/Server/services"
 )
 
 const requestTokenSecretKey = "oauth_request_secret"
+const requestedScopesKey = "oauth_requested_scopes" // Klucz do zapisu scopes w sesji
 
 func HandleUsosLogin(c *gin.Context) {
-	requiredScopes := []string{"studies", "email", "grades", "crstests"} // Przykładowe scopes
+	// Poproś o uprawnienia 'studies', które były wymagane
+	requiredScopes := []string{"studies", "email", "grades", "crstests"}
 
-	// POPRAWKA: Użyj '_' aby zignorować nieużywaną zmienną 'requestToken'
 	redirectURL, _, requestSecret, err := services.GetAuthorizationURLAndSecret(requiredScopes)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate OAuth flow", "details": err.Error()})
@@ -24,8 +26,9 @@ func HandleUsosLogin(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Set(requestTokenSecretKey, requestSecret)
+	session.Set(requestedScopesKey, requiredScopes) // Zapisz scopes do sesji
 	if err := session.Save(); err != nil {
-		log.Printf("Failed to save request secret to session: %v", err)
+		log.Printf("Failed to save request secret/scopes to session: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 		return
 	}
@@ -44,6 +47,7 @@ func HandleUsosCallback(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
+
 	requestTokenSecretValue := session.Get(requestTokenSecretKey)
 	if requestTokenSecretValue == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Request token secret not found in session or session expired"})
@@ -54,12 +58,18 @@ func HandleUsosCallback(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid request token secret format in session"})
 		return
 	}
-	session.Delete(requestTokenSecretKey) // Usuń sekret z sesji
+
+	requestedScopesValue := session.Get(requestedScopesKey)
+	requestedScopes, _ := requestedScopesValue.([]string) // Odczytaj scopes
+
+	session.Delete(requestTokenSecretKey)
+	session.Delete(requestedScopesKey) // Wyczyść scopes z sesji
 
 	log.Println("Handling USOS callback, exchanging token...")
-	userToken, err := services.ExchangeTokenAndStore(c, requestTokenKey, requestTokenSecret, verifier)
+	// Przekaż scopes do funkcji wymiany
+	userToken, err := services.ExchangeTokenAndStore(c, requestTokenKey, requestTokenSecret, verifier, requestedScopes)
 	if err != nil {
-		session.Save() // Zapisz sesję (aby usunąć sekret) nawet przy błędzie
+		session.Save()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exchange token", "details": err.Error()})
 		return
 	}
@@ -70,14 +80,11 @@ func HandleUsosCallback(c *gin.Context) {
 		return
 	}
 
-	// Zapisz ID użytkownika w sesji backendu
 	session.Set("user_usos_id", userToken.UserUsosID)
 	session.Options(sessions.Options{
 		Path:     "/",
-		MaxAge:   3600 * 24 * 7, // 1 tydzień
+		MaxAge:   3600 * 24 * 7,
 		HttpOnly: true,
-		// Secure: true, // Włącz w produkcji (HTTPS)
-		// SameSite: http.SameSiteLaxMode,
 	})
 	if err := session.Save(); err != nil {
 		log.Printf("Failed to save user session after login: %v", err)
@@ -86,5 +93,37 @@ func HandleUsosCallback(c *gin.Context) {
 	}
 
 	log.Printf("User %s authenticated successfully via USOS. Redirecting to frontend.", userToken.UserUsosID)
-	c.Redirect(http.StatusFound, config.AppConfig.FrontendURL+"/dashboard") // Dostosuj ścieżkę frontendu
+	c.Redirect(http.StatusFound, config.AppConfig.FrontendURL+"/dashboard")
+}
+
+func HandleLogout(c *gin.Context) {
+	session := sessions.Default(c)
+	userUsosIDValue, exists := c.Get("user_usos_id")
+
+	if exists {
+		userUsosID, ok := userUsosIDValue.(string)
+		if ok {
+			err := db.DeleteUserToken(c.Request.Context(), userUsosID)
+			if err != nil {
+				log.Printf("Błąd podczas usuwania tokena użytkownika %s z bazy danych: %v", userUsosID, err)
+			} else {
+				log.Printf("Token dla użytkownika %s został usunięty z bazy danych.", userUsosID)
+			}
+		}
+
+		session.Delete("user_usos_id")
+		session.Options(sessions.Options{MaxAge: -1})
+
+		if err := session.Save(); err != nil {
+			log.Printf("Błąd podczas zapisywania zniszczonej sesji dla użytkownika %s: %v", userUsosID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
+			return
+		}
+
+		log.Printf("Użytkownik %s wylogowany (sesja zniszczona).", userUsosID)
+		c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+	} else {
+		log.Println("Wylogowanie wywołane dla użytkownika bez aktywnej sesji.")
+		c.JSON(http.StatusOK, gin.H{"message": "No active session found."})
+	}
 }

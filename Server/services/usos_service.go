@@ -32,6 +32,7 @@ func InitUsosService(cfg config.Config) {
 		},
 	)
 	log.Println("USOS OAuth Consumer Initialized.")
+	// Włącz debugowanie, jeśli potrzebujesz zobaczyć szczegóły podpisów OAuth
 	// consumer.Debug(true)
 }
 
@@ -41,7 +42,7 @@ func GetAuthorizationURLAndSecret(scopes []string) (string, string, string, erro
 
 	log.Printf("Requesting token with callback: %s", callbackURL)
 
-	// --- POPRAWKA: Użycie poprawnej nazwy metody ---
+	// --- POPRAWKA BŁĘDU METODY ---
 	// Używamy GetRequestTokenAndUrl. Ta metoda NIE przyjmuje dodatkowych parametrów (jak 'scopes').
 	// Zwraca ona requestToken ORAZ gotowy authorizeURL (jako drugi argument).
 	requestToken, authorizeURL, err := consumer.GetRequestTokenAndUrl(callbackURL)
@@ -54,15 +55,11 @@ func GetAuthorizationURLAndSecret(scopes []string) (string, string, string, erro
 	log.Printf("Got Request Token: %s", requestToken.Token)
 	log.Printf("Authorize URL from library: %s", authorizeURL)
 
-	// Zapisujemy URL do finalnej zmiennej
 	finalRedirectURL := authorizeURL
 
-	// --- POPRAWKA: Ręczne dodanie 'scopes' do URL autoryzacji ---
-	// Ponieważ GetRequestTokenAndUrl nie przyjmuje 'scopes',
-	// dodajemy je ręcznie do URL autoryzacji, który zwróciła biblioteka.
+	// Ręczne dodanie 'scopes' do URL autoryzacji (zgodnie z wymogiem USOS API)
 	if len(scopes) > 0 {
 		scopeStr := strings.Join(scopes, "|")
-		// Sprawdź, czy URL już zawiera parametry
 		if strings.Contains(finalRedirectURL, "?") {
 			finalRedirectURL = fmt.Sprintf("%s&scopes=%s", finalRedirectURL, url.QueryEscape(scopeStr))
 		} else {
@@ -70,23 +67,26 @@ func GetAuthorizationURLAndSecret(scopes []string) (string, string, string, erro
 		}
 		log.Printf("Appended scopes to Authorize URL: %s", finalRedirectURL)
 	}
-	// --- KONIEC POPRAWKI ---
 
 	return finalRedirectURL, requestToken.Token, requestToken.Secret, nil
 }
 
+// --- POPRAWKA BŁĘDU 400 ---
 // UsosUserInfo definiuje pola odpowiedzi z /services/users/user
 type UsosUserInfo struct {
-	ID        string            `json:"id"`
-	FirstName string            `json:"first_name"`
-	LastName  string            `json:"last_name"`
-	Email     string            `json:"email"`
-	Name      map[string]string `json:"name"`
+	ID        string `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	// USUNIĘTO: Name map[string]string `json:"name"` (To pole powodowało błąd 400)
 }
+
+// --- KONIEC POPRAWKI ---
 
 // GetUserInfo pobiera dane użytkownika
 func GetUserInfo(accessToken *oauth.AccessToken) (*UsosUserInfo, error) {
-	fields := "id|first_name|last_name|name|email"
+	// --- POPRAWKA BŁĘDU 400: Usunięto "name" z fields ---
+	fields := "id|first_name|last_name|email"
 	apiURL := fmt.Sprintf("%s/services/users/user?fields=%s", config.AppConfig.UsosApiBaseURL, url.QueryEscape(fields))
 
 	log.Printf("Requesting user info from: %s", apiURL)
@@ -114,7 +114,7 @@ func GetUserInfo(accessToken *oauth.AccessToken) (*UsosUserInfo, error) {
 		return nil, fmt.Errorf("GetUserInfo request failed with status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var userInfo UsosUserInfo
+	var userInfo UsosUserInfo // Użyj poprawionej struktury
 	if err := json.Unmarshal(bodyBytes, &userInfo); err != nil {
 		log.Printf("Error decoding user info JSON: %v. Body: %s", err, string(bodyBytes))
 		return nil, fmt.Errorf("error decoding user info JSON: %w", err)
@@ -129,7 +129,7 @@ func GetUserInfo(accessToken *oauth.AccessToken) (*UsosUserInfo, error) {
 }
 
 // ExchangeTokenAndStore wykonuje Krok 2 OAuth i zapisuje token
-func ExchangeTokenAndStore(ctx *gin.Context, requestTokenKey, requestTokenSecret, verifier string) (*models.UserToken, error) {
+func ExchangeTokenAndStore(ctx *gin.Context, requestTokenKey, requestTokenSecret, verifier string, requestedScopes []string) (*models.UserToken, error) {
 	if requestTokenSecret == "" {
 		return nil, fmt.Errorf("request token secret not provided")
 	}
@@ -144,7 +144,7 @@ func ExchangeTokenAndStore(ctx *gin.Context, requestTokenKey, requestTokenSecret
 	log.Printf("Successfully obtained Access Token: %s", accessToken.Token)
 
 	log.Println("Fetching user info using new Access Token...")
-	userInfo, err := GetUserInfo(accessToken)
+	userInfo, err := GetUserInfo(accessToken) // Wywołaj poprawioną funkcję
 	if err != nil {
 		log.Printf("Error fetching user info after token exchange: %v", err)
 		return nil, fmt.Errorf("obtained access token but failed to retrieve user info: %w", err)
@@ -153,16 +153,18 @@ func ExchangeTokenAndStore(ctx *gin.Context, requestTokenKey, requestTokenSecret
 		log.Printf("User info response missing 'id'. Response: %+v", userInfo)
 		return nil, fmt.Errorf("retrieved user info is invalid or missing ID")
 	}
+
+	// Loguj używając FirstName i LastName
 	log.Printf("Retrieved User Info: ID=%s, Name=%s %s", userInfo.ID, userInfo.FirstName, userInfo.LastName)
 
 	userToken := models.UserToken{
 		UserUsosID:        userInfo.ID,
 		AccessToken:       accessToken.Token,
 		AccessTokenSecret: accessToken.Secret,
-		// Scopes: []string{}, // Placeholder
+		Scopes:            requestedScopes,
 	}
 
-	log.Printf("Saving token for user %s to database...", userInfo.ID)
+	log.Printf("Saving token for user %s to database (Scopes: %v)...", userInfo.ID, requestedScopes)
 	err = db.SaveUserToken(ctx.Request.Context(), userToken)
 	if err != nil {
 		log.Printf("Database error saving token for user %s: %v", userInfo.ID, err)
@@ -199,7 +201,7 @@ func ProxyUsosApiRequest(ctx *gin.Context, userUsosID string, targetPath string,
 	}
 
 	log.Printf("Proxy: Making GET request for user %s to: %s", userUsosID, apiURL)
-	resp, err := client.Get(apiURL) // Zakłada GET
+	resp, err := client.Get(apiURL)
 	if err != nil {
 		log.Printf("Proxy: Error contacting USOS API at %s: %v", apiURL, err)
 		return http.StatusBadGateway, nil, nil, fmt.Errorf("error contacting USOS API: %w", err)

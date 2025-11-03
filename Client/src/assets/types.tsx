@@ -1,7 +1,8 @@
-import type ReactGridLayout from "react-grid-layout";
-import { type IconType } from "react-icons";
+import { IconType } from "react-icons";
+import ReactGridLayout from "react-grid-layout"; // Import typu z RGL
 
-// Dla Gooey Menu
+// 1. Typy dla Menu (Przedmioty i Quizy)
+
 export interface Subject {
   id: string;
   name: string;
@@ -13,34 +14,71 @@ export interface QuizNode {
   id: string;
   title: string;
   status: "locked" | "available" | "completed";
-  dependencies: string[];
+  dependencies: string[]; // Lista ID węzłów, które muszą być ukończone
 }
 
-// Dla react-grid-layout
+// 2. Typy dla Kalendarza (na podstawie services/calendar/user_events)
+
+export interface UsosCalendarEvent {
+  id: number;
+  name: { [lang: string]: string }; // np. { pl: "Egzamin", en: "Exam" }
+  type: string; // np. "exam", "test", "class", "meeting"
+  start_time: string; // ISO 8601 e.g., "2025-11-15T10:00:00+01:00"
+  end_time: string | null;
+  url?: string | null;
+}
+
+export type UsosCalendarResponse = UsosCalendarEvent[];
+
+// 3. Typy dla Kalendarza Instytucji (na podstawie services/calendar/search)
+
+export interface UsosInstitutionCalendarEvent {
+  id: number;
+  name: { [lang: string]: string };
+  start_date: string; // ISO 8601
+  end_date: string; // ISO 8601
+  type: string; // rector, dean, holidays, exam_session, etc.
+  is_day_off: boolean;
+  faculty?: {
+    faculty_id: string;
+  } | null;
+}
+
+export type UsosInstitutionCalendarSearchResponse =
+  UsosInstitutionCalendarEvent[];
+
+// 4. Typy dla Widgetów
+
 export type WidgetID = "upcoming" | "progress" | "leaderboard" | "achievements";
 
 export interface WidgetConfig {
   id: WidgetID;
   title: string;
   component: React.ComponentType;
-  defaultLayout: ReactGridLayout.Layout;
+  defaultLayout: ReactGridLayout.Layout; // Użyj typu z RGL
 }
 
-export interface QuizNode {
+// 5. Typy dla Użytkownika (z services/users/user) - BRAKUJĄCY TYP
+
+export interface UsosUserInfo {
   id: string;
-  title: string;
-  status: "locked" | "available" | "completed";
+  first_name: string; // Dopasowane do pól JSON (first_name)
+  last_name: string; // Dopasowane do pól JSON (last_name)
+  email: string; // Dopasowane do pól JSON (email)
+  // Pole 'name' (LangDict) zostało celowo usunięte, ponieważ powodowało błąd API 400
 }
+
+// 6. Typy dla Danych Mockowych (Hex Layout)
+
 export interface UpcomingEvent {
   id: string;
-  type: "Wykład" | "Wejściówka" | "Spotkanie" | "Nauka" | string; // Allow custom types
+  type: "Wykład" | "Wejściówka" | "Spotkanie" | "Nauka" | string;
   title: string;
   time: string;
-  source: string; // USOS, GRUPA C-1, SEKCJA AI, PRYWATNE
-  color: string; // e.g., 'var(--primary)', 'var(--error)'
+  source: string;
+  color: string;
 }
 
-// Type for Ranking Entry
 export interface RankingEntry {
   rank: number;
   name: string;
@@ -48,41 +86,9 @@ export interface RankingEntry {
   isCurrentUser?: boolean;
 }
 
-// Type for Learning Progress
 export interface LearningProgress {
   subject: string;
   topic: string;
-  progress: number; // Percentage
-  required?: number; // Optional required percentage
+  progress: number;
+  required?: number;
 }
-export interface UsosCalendarEvent {
-  id: number;
-  name: { [lang: string]: string }; // e.g., { pl: "Egzamin", en: "Exam" }
-  type: string; // e.g., "exam", "test", "class", "meeting"
-  start_time: string; // ISO 8601 format e.g., "2025-11-15T10:00:00+01:00"
-  end_time: string | null; // ISO 8601 format or null
-  url?: string | null; // Optional URL related to the event
-  // Add other relevant fields if needed (e.g., course_id, building_name, room_number)
-}
-
-// Type for the API response (array of events)
-export type UsosCalendarResponse = UsosCalendarEvent[];
-// Based on USOS API services/calendar/calendar_event and services/calendar/search
-export interface UsosInstitutionCalendarEvent {
-  id: number;
-  name: { [lang: string]: string };
-  start_date: string; // ISO 8601 format DateTime string
-  end_date: string; // ISO 8601 format DateTime string
-  type: string; // rector, dean, holidays, public_holidays, exam_session, etc.
-  is_day_off: boolean; // True if it's a day off from classes
-  faculty?: {
-    // Optional faculty details
-    faculty_id: string;
-    // Add other faculty subfields if requested via 'fields' parameter
-  } | null;
-  // Add url or other fields if you include them in the 'fields' parameter
-}
-
-// Type for the API response from 'search' (list of events)
-export type UsosInstitutionCalendarSearchResponse =
-  UsosInstitutionCalendarEvent[];

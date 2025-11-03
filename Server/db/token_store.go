@@ -5,11 +5,10 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/skni-kod/InfQuizyTor/Server/models" // Adjust import path
+	"github.com/skni-kod/InfQuizyTor/Server/models"
 )
 
 func SaveUserToken(ctx context.Context, token models.UserToken) error {
-	// Use ON CONFLICT for UPSERT functionality
 	query := `
         INSERT INTO user_tokens (user_usos_id, access_token, access_token_secret, scopes, created_at, updated_at)
         VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -23,7 +22,7 @@ func SaveUserToken(ctx context.Context, token models.UserToken) error {
 		token.UserUsosID,
 		token.AccessToken,
 		token.AccessTokenSecret,
-		token.Scopes, // pgx handles []string to TEXT[] mapping
+		token.Scopes, // Zapisz scopes
 	)
 	if err != nil {
 		log.Printf("Error saving user token for %s: %v", token.UserUsosID, err)
@@ -54,7 +53,7 @@ func GetUserToken(ctx context.Context, userUsosID string) (*models.UserToken, er
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			log.Printf("No token found for user %s", userUsosID)
-			return nil, nil // Return nil, nil if token not found
+			return nil, nil
 		}
 		log.Printf("Error getting user token for %s: %v", userUsosID, err)
 		return nil, err
