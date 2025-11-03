@@ -73,7 +73,6 @@ func main() {
 		// po podpisaniu żądania tokenem zalogowanego użytkownika.
 		// "*proxyPath" przechwytuje całą ścieżkę po /api/
 		apiGroup.GET("/*proxyPath", handlers.HandleApiProxy)
-
 		// TODO: Dodaj obsługę innych metod HTTP (POST, PUT, DELETE) jeśli potrzebujesz
 		// np. modyfikując HandleApiProxy lub tworząc osobne handlery.
 		// apiGroup.POST("/*proxyPath", handlers.HandleApiProxy)

@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from "react";
-// Use the original user event type
+// Import type for user-specific calendar events
 import {
   UsosCalendarEvent,
   UsosCalendarResponse,
-} from "../../assets/types.tsx"; // Adjust path if needed
+} from "../../assets/types.tsx"; // Correct path to types in assets
 import styles from "./UsosCalendar.module.scss";
-// Import the placeholder function for getting OAuth 1.0a headers (REPLACE WITH REAL IMPLEMENTATION)
-import getUsosAuthHeaders from "../../services/usosAuth"; // Adjust path if needed
-
-// Base URL for the USOS API instance
-const USOS_API_BASE_URL = "http://localhost:8080";
 
 // --- Helper Functions ---
 
@@ -43,9 +38,6 @@ const formatDate = (isoString: string): string => {
   }
 };
 
-// Formats date to YYYY-MM-DD for API parameters (if needed for user_events, check API docs)
-// const toApiDateString = (date: Date): string => { /* ... */ };
-
 // Groups events by their formatted date string
 const groupEventsByDate = (
   events: UsosCalendarEvent[]
@@ -56,7 +48,6 @@ const groupEventsByDate = (
       acc[dateStr] = [];
     }
     acc[dateStr].push(event);
-    // Sort events within each day by start_time
     acc[dateStr].sort(
       (a, b) =>
         new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
@@ -66,7 +57,7 @@ const groupEventsByDate = (
 };
 
 // --- Main Calendar Component ---
-// No props needed if fetching the logged-in user's calendar
+// Fetches the logged-in user's calendar events via the backend proxy
 const UsosCalendar: React.FC = () => {
   const [events, setEvents] = useState<UsosCalendarEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -79,46 +70,41 @@ const UsosCalendar: React.FC = () => {
       setEvents([]);
 
       try {
-        console.log("Fetching USOS User Calendar events...");
-        // Get OAuth 1.0a signed headers (REPLACE placeholder!)
-        const authHeaders = await getUsosAuthHeaders();
+        console.log("Fetching USOS User Calendar events via backend proxy...");
 
-        // --- Prepare API Call using 'user_events' endpoint ---
-        // Adjust fields as needed based on user_events documentation
+        // --- API Call to Backend Proxy ---
+        // Define the backend endpoint that proxies to USOS API services/calendar/user_events
+        // The backend's AuthRequired middleware handles user identification via session.
+        const backendApiUrl = "/api/services/calendar/user_events"; // Relative URL to your Go backend proxy endpoint
+
+        // Add desired fields as query parameters for the backend proxy to forward
         const fields = "id|name|type|start_time|end_time|url";
-        // Add date range parameters if supported/needed by user_events
-        // Example: const startDateStr = toApiDateString(new Date());
-        // Example: const endDate = new Date(); endDate.setDate(endDate.getDate() + 30);
-        // Example: const endDateStr = toApiDateString(endDate);
-        const params = new URLSearchParams({
-          fields: fields,
-          // start: startDateStr, // Add if API supports filtering by date
-          // end: endDateStr,   // Add if API supports filtering by date
+        const params = new URLSearchParams({ fields });
+
+        const response = await fetch(`${backendApiUrl}?${params.toString()}`, {
+          /* ... */
         });
 
-        const apiUrl = `${USOS_API_BASE_URL}/services/calendar/user_events?${params.toString()}`;
-
-        const response = await fetch(apiUrl, {
-          method: "GET",
-          headers: authHeaders, // Use the OAuth 1.0a headers
-        });
-
-        // Handle HTTP errors and specific USOS errors
+        // Handle HTTP errors from the backend proxy
         if (!response.ok) {
-          let errorBody = "";
+          let errorBody = `Backend error! Status: ${response.status}`;
+          // Read the body ONCE as text
+          const textError = await response.text();
           try {
-            const errorData = await response.json();
-            errorBody = errorData.message || JSON.stringify(errorData);
-            // Add specific error code checks if needed for user_events
+            // TRY to parse the text as JSON
+            const errorData = JSON.parse(textError);
+            errorBody += ` - ${
+              errorData.details || errorData.error || textError
+            }`; // Use textError as fallback
           } catch (e) {
-            errorBody = await response.text();
+            // If JSON parsing failed, use the raw text
+            if (textError) errorBody += ` - ${textError}`;
           }
-          throw new Error(
-            `HTTP error! Status: ${response.status} - ${errorBody}`
-          );
+          throw new Error(errorBody); // Throw the combined error message
         }
 
-        const data: UsosCalendarResponse = await response.json(); // Expecting array of events
+        // If response IS ok, parse as JSON
+        const data: UsosCalendarResponse = await response.json();
         setEvents(data);
         // --- End API Call ---
       } catch (err) {
@@ -136,16 +122,11 @@ const UsosCalendar: React.FC = () => {
 
   // Group events by date for rendering
   const groupedEvents = groupEventsByDate(events);
-  // Get sorted date keys
   const sortedDates = Object.keys(groupedEvents).sort((a, b) => {
     // Basic sort assuming consistent date format from formatDate
     return (
-      new Date(
-        events.find((e) => formatDate(e.start_time) === a)!.start_time
-      ).getTime() -
-      new Date(
-        events.find((e) => formatDate(e.start_time) === b)!.start_time
-      ).getTime()
+      new Date(groupedEvents[a][0].start_time).getTime() -
+      new Date(groupedEvents[b][0].start_time).getTime()
     );
   });
 
@@ -154,11 +135,10 @@ const UsosCalendar: React.FC = () => {
     return <div className={styles.loading}>Ładowanie kalendarza... ⏳</div>;
   }
   if (error) {
-    // Provide a more user-friendly error, maybe suggest re-authentication
     return (
       <div className={styles.error}>
-        Błąd ładowania kalendarza: {error} 😥 <br /> Spróbuj odświeżyć stronę
-        lub zaloguj się ponownie.
+        Błąd ładowania kalendarza: {error} 😥 <br /> Sprawdź połączenie lub
+        spróbuj ponownie później.
       </div>
     );
   }
@@ -185,7 +165,6 @@ const UsosCalendar: React.FC = () => {
           </h3>
           <ul className={styles.eventList}>
             {groupedEvents[dateStr].map((event) => (
-              // Use UsosCalendarEvent type here
               <li
                 key={event.id}
                 className={`${styles.eventItem} ${
@@ -202,8 +181,6 @@ const UsosCalendar: React.FC = () => {
                 <span className={styles.eventName}>
                   {event.name.pl || event.name.en || "Brak nazwy"}
                 </span>
-                {/* No is_day_off in user_events? Check API response if needed */}
-                {/* {event.is_day_off && <span className={styles.dayOffLabel}>Wolne</span>} */}
                 {event.url && (
                   <a
                     href={event.url}
