@@ -11,11 +11,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mrjones/oauth"
+
+	// Użyj poprawnej ścieżki modułu z go.mod
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/db"
 	"github.com/skni-kod/InfQuizyTor/Server/models"
 )
 
+// Global OAuth consumer instance
 var consumer *oauth.Consumer
 
 // InitUsosService inicjalizuje konsumenta OAuth
@@ -30,7 +33,7 @@ func InitUsosService(cfg config.Config) {
 		},
 	)
 	log.Println("USOS OAuth Consumer Initialized.")
-	// consumer.Debug(true) // Włącz dla debugowania podpisów OAuth
+	// consumer.Debug(true)
 }
 
 // GetAuthorizationURLAndSecret rozpoczyna przepływ OAuth (Krok 1)
@@ -38,49 +41,46 @@ func GetAuthorizationURLAndSecret(scopes []string) (string, string, string, erro
 	callbackURL := config.AppConfig.AppBaseURL + "/auth/usos/callback"
 	scopeStr := strings.Join(scopes, "|")
 
-	// Uwaga: Biblioteka mrjones/oauth może nie wspierać łatwego dodawania parametrów *przed* podpisaniem
-	requestUrlWithParams := config.AppConfig.UsosApiBaseURL + "/services/oauth/request_token"
+	extraParams := url.Values{}
+	extraParams.Set("oauth_callback", callbackURL)
 	if scopeStr != "" {
-		requestUrlWithParams = fmt.Sprintf("%s?scopes=%s", requestUrlWithParams, url.QueryEscape(scopeStr))
+		extraParams.Set("scopes", scopeStr)
 	}
-	// Próba ustawienia URL dynamicznie (może nie działać z tą biblioteką)
-	// originalRequestURL := consumer.RequestTokenUrl
-	// consumer.RequestTokenUrl = requestUrlWithParams
 
-	log.Printf("Requesting token with callback: %s", callbackURL)
-	requestToken, authorizeURLFragment, err := consumer.GetRequestTokenAndUrl(callbackURL)
-	// consumer.RequestTokenUrl = originalRequestURL // Przywróć, jeśli zmieniono
+	log.Printf("Requesting token with callback: %s and scopes: %s", callbackURL, scopeStr)
 
+	// --- POPRAWKA NAZWY METODY ---
+	// Użyj GetRequestTokens (liczba mnoga), aby przekazać dodatkowe parametry
+	requestToken, err := consumer.GetRequestTokens(extraParams)
 	if err != nil {
-		log.Printf("Error getting USOS request token: %v", err)
+		log.Printf("Error getting USOS request token (consumer.GetRequestTokens): %v", err)
 		return "", "", "", fmt.Errorf("failed to get request token: %w", err)
 	}
+	// --- KONIEC POPRAWKI ---
+
+	// --- POPRAWKA NAZWY METODY ---
+	// Użyj GetAuthorizeURL (wielkie URL)
+	authorizeURL, err := consumer.GetAuthorizeURL(requestToken, nil) // Poprawna nazwa metody
+	if err != nil {
+		log.Printf("Error getting authorize URL: %v", err)
+		return "", "", "", fmt.Errorf("failed to get authorize URL: %w", err)
+	}
+	// --- KONIEC POPRAWKI ---
 
 	log.Printf("Got Request Token: %s", requestToken.Token)
+	log.Printf("Authorize URL from library: %s", authorizeURL)
 
-	// Skonstruuj pełny URL autoryzacji
-	finalRedirectURL := authorizeURLFragment
-	if !strings.HasPrefix(finalRedirectURL, "http") {
-		finalRedirectURL = fmt.Sprintf("%s/services/oauth/authorize?oauth_token=%s", config.AppConfig.UsosApiBaseURL, requestToken.Token)
-		log.Printf("Constructed Authorize URL manually: %s", finalRedirectURL)
-	} else {
-		log.Printf("Authorize URL from library: %s", finalRedirectURL)
-	}
-
-	return finalRedirectURL, requestToken.Token, requestToken.Secret, nil
+	return authorizeURL, requestToken.Token, requestToken.Secret, nil
 }
 
-// --- POPRAWIONA STRUKTURA ---
 // UsosUserInfo definiuje pola odpowiedzi z /services/users/user
 type UsosUserInfo struct {
-	ID        string            `json:"id"`         // Upewnij się, że tag json jest poprawny
-	FirstName string            `json:"first_name"` // Upewnij się, że tag json jest poprawny
-	LastName  string            `json:"last_name"`  // Upewnij się, że tag json jest poprawny
-	Email     string            `json:"email"`      // Wymaga scope 'email'
-	Name      map[string]string `json:"name"`       // LangDict
+	ID        string            `json:"id"`
+	FirstName string            `json:"first_name"`
+	LastName  string            `json:"last_name"`
+	Email     string            `json:"email"`
+	Name      map[string]string `json:"name"`
 }
-
-// --- KONIEC POPRAWKI STRUKTURY ---
 
 // GetUserInfo pobiera dane użytkownika
 func GetUserInfo(accessToken *oauth.AccessToken) (*UsosUserInfo, error) {
@@ -112,18 +112,17 @@ func GetUserInfo(accessToken *oauth.AccessToken) (*UsosUserInfo, error) {
 		return nil, fmt.Errorf("GetUserInfo request failed with status %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var userInfo UsosUserInfo // Użyj POPRAWIONEJ struktury
+	var userInfo UsosUserInfo
 	if err := json.Unmarshal(bodyBytes, &userInfo); err != nil {
 		log.Printf("Error decoding user info JSON: %v. Body: %s", err, string(bodyBytes))
 		return nil, fmt.Errorf("error decoding user info JSON: %w", err)
 	}
 
-	// Sprawdź, czy ID zostało poprawnie odczytane
 	if userInfo.ID == "" {
 		log.Printf("Warning: User Info response parsed successfully but missing 'id' field. Response: %+v", userInfo)
 	}
 
-	log.Printf("Successfully decoded User Info for ID: %s", userInfo.ID) // Użyj poprawnej nazwy pola
+	log.Printf("Successfully decoded User Info for ID: %s", userInfo.ID)
 	return &userInfo, nil
 }
 
@@ -143,12 +142,11 @@ func ExchangeTokenAndStore(ctx *gin.Context, requestTokenKey, requestTokenSecret
 	log.Printf("Successfully obtained Access Token: %s", accessToken.Token)
 
 	log.Println("Fetching user info using new Access Token...")
-	userInfo, err := GetUserInfo(accessToken) // Użyj poprawionej funkcji
+	userInfo, err := GetUserInfo(accessToken)
 	if err != nil {
 		log.Printf("Error fetching user info after token exchange: %v", err)
 		return nil, fmt.Errorf("obtained access token but failed to retrieve user info: %w", err)
 	}
-	// Użyj POPRAWNYCH nazw pól
 	if userInfo == nil || userInfo.ID == "" {
 		log.Printf("User info response missing 'id'. Response: %+v", userInfo)
 		return nil, fmt.Errorf("retrieved user info is invalid or missing ID")
@@ -156,19 +154,19 @@ func ExchangeTokenAndStore(ctx *gin.Context, requestTokenKey, requestTokenSecret
 	log.Printf("Retrieved User Info: ID=%s, Name=%s %s", userInfo.ID, userInfo.FirstName, userInfo.LastName)
 
 	userToken := models.UserToken{
-		UserUsosID:        userInfo.ID, // Użyj poprawnej nazwy pola
+		UserUsosID:        userInfo.ID,
 		AccessToken:       accessToken.Token,
 		AccessTokenSecret: accessToken.Secret,
 		// Scopes: []string{}, // Placeholder
 	}
 
-	log.Printf("Saving token for user %s to database...", userInfo.ID) // Użyj poprawnej nazwy pola
+	log.Printf("Saving token for user %s to database...", userInfo.ID)
 	err = db.SaveUserToken(ctx.Request.Context(), userToken)
 	if err != nil {
 		log.Printf("Database error saving token for user %s: %v", userInfo.ID, err)
 		return nil, fmt.Errorf("failed to save token to database: %w", err)
-	} // Użyj poprawnej nazwy pola
-	log.Printf("Token for user %s saved successfully.", userInfo.ID) // Użyj poprawnej nazwy pola
+	}
+	log.Printf("Token for user %s saved successfully.", userInfo.ID)
 
 	return &userToken, nil
 }
