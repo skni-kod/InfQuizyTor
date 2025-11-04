@@ -1,0 +1,135 @@
+.pageContainer {
+    max-width: 1400px; // Zwiększamy nieco szerokość dla 3 kolumn
+    margin: 2rem auto;
+    padding: 0 1rem;
+  
+    h1 {
+      font-size: 2rem;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+  }
+  
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    font-size: 1.2rem;
+    color: #555;
+  }
+  
+  .dashboardGrid {
+    display: grid;
+    // Definiujemy 3 równe kolumny
+    grid-template-columns: repeat(3, 1fr);
+    // Definiujemy wysokość rzędów, aby dopasowały się do treści
+    grid-auto-rows: minmax(250px, auto); 
+    gap: 1.5rem;
+  }
+  
+  .gridItem {
+    // Domyślnie każda karta zajmuje 1 komórkę
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  
+  /* --- Specjalne układy dla poszczególnych kart --- */
+  
+  .calendarCard {
+    // Kalendarz jest duży, niech zajmie 2 kolumny
+    grid-column: span 2;
+    // Niech zajmie też 2 rzędy (będzie wyższy)
+    grid-row: span 2; 
+  
+    // Wymuszenie, aby komponent kalendarza rozciągnął się na 100%
+    // Może wymagać dostosowania stylów w samym UsosCalendar.module.scss
+    > div {
+      height: 100%;
+    }
+  }
+  
+  .userCard {
+    // Karta użytkownika na górze, w ostatniej kolumnie
+    grid-row: 1;
+    grid-column: 3;
+  }
+  
+  .gradesCard {
+    // Karta ocen pod kartą użytkownika
+    grid-column: 3;
+    grid-row: 2;
+  }
+  
+  .testsCard {
+    // Karta sprawdzianów w pierwszej kolumnie, pod kalendarzem
+    grid-column: 1;
+    grid-row: 3; 
+    // Możesz też chcieć, aby zajęła 2 kolumny, jeśli będzie pusto:
+    // grid-column: span 2;
+  }
+  
+  
+  /* --- Responsywność (dla tabletów i telefonów) --- */
+  
+  @media (max-width: 992px) {
+    .dashboardGrid {
+      // 2 kolumny na tabletach
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    // Resetujemy układy specjalne
+    .gridItem,
+    .calendarCard,
+    .userCard,
+    .gradesCard,
+    .testsCard {
+      grid-column: span 1;
+      grid-row: auto;
+    }
+  
+    .calendarCard {
+      grid-column: span 2; // Kalendarz na całą szerokość
+    }
+  }
+  /* */
+.pageContainer {
+  max-width: 1400px;
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-4);
+
+  h1 {
+    font-size: var(--text-3xl);
+    color: var(--text-primary); // Użyj koloru tekstu ze zmiennych
+    margin-bottom: var(--space-6);
+  }
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  font-size: var(--text-lg);
+  color: var(--text-secondary); // Użyj koloru tekstu ze zmiennych
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(250px, auto); 
+  gap: var(--space-6);
+}
+
+  @media (max-width: 768px) {
+    .dashboardGrid {
+      // 1 kolumna na telefonach
+      grid-template-columns: 1fr;
+    }
+    
+    .calendarCard {
+      grid-column: span 1; // Wszystko na 1 kolumnę
+    }
+  }

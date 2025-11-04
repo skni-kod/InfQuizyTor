@@ -17,7 +17,6 @@ const requestedScopesKey = "oauth_requested_scopes" // Klucz do zapisu scopes w 
 func HandleUsosLogin(c *gin.Context) {
 	// Poproś o uprawnienia 'studies', które były wymagane
 	requiredScopes := []string{"studies", "email", "grades", "crstests"}
-
 	redirectURL, _, requestSecret, err := services.GetAuthorizationURLAndSecret(requiredScopes)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate OAuth flow", "details": err.Error()})

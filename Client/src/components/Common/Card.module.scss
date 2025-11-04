@@ -1,0 +1,78 @@
+/* */
+@import '../../styles/_variables.scss'; // Zaimportuj swoje zmienne
+@import '../../styles/_mixins.scss';     // Zaimportuj swoje mixiny
+
+.card {
+  // Używamy kolorów tła z Twoich zmiennych
+  background-color: var(--bg1-dark); 
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--bg3-dark);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all var(--transition-fast);
+
+  // Używamy mixinu "glass" (opcjonalnie, możesz to odkomentować)
+  // @include glass-effect(10px, var(--glass-bg));
+  
+  &.clickable {
+    cursor: pointer;
+    &:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+  }
+}
+
+.cardTitle {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  color: var(--primary); // Używamy koloru podstawowego
+  border-bottom: 2px solid var(--bg3-dark);
+  padding-bottom: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.cardContent {
+  flex-grow: 1;
+  color: var(--text-secondary); // Domyślny kolor tekstu w karcie
+
+  // Poprawia czytelność tekstu w akapitach
+  p {
+    line-height: 1.6;
+    margin-bottom: var(--space-3);
+  }
+
+  // Listy
+  ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  li {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--bg3-dark);
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  // Pogrubienia powinny być w głównym kolorze tekstu
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  small {
+    color: var(--text-muted);
+  }
+
+  // Klasa dla błędów
+  .error {
+    color: var(--error);
+    font-weight: 500;
+  }
+}
