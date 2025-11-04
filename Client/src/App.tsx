@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import DashboardPage from "./pages/DashboardPage";
@@ -9,6 +9,7 @@ import CommunityPage from "./pages/CommunityPage";
 import ProfilePage from "./pages/ProfilePage";
 import { useAppContext } from "./contexts/AppContext";
 import { UsosUserInfo } from "./assets/types.tsx"; // Upewnij się, że ścieżka do typów jest poprawna
+import ApiPage from "./pages/ApiPage.tsx";
 
 function App() {
   const { setUser, setAuthLoading } = useAppContext();
@@ -57,6 +58,8 @@ function App() {
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<DashboardPage />} />
+        <Route path="tests" element={<ApiPage />} />
+
         <Route path="przedmioty" element={<SubjectHubPage />} />
         <Route path="przedmioty/:subjectId" element={<SubjectHubPage />} />
         <Route path="community" element={<CommunityPage />} />

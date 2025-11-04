@@ -92,3 +92,33 @@ export interface LearningProgress {
   progress: number;
   required?: number;
 }
+export interface UsosGrade {
+  course_id: string;
+  course_name: {
+    pl: string;
+    en: string;
+  };
+  term_id: string;
+  value_symbol: string; // Np. "5.0"
+  value_description: {
+    pl: string;
+    en: string;
+  }; // Np. "bardzo dobry"
+}
+
+/**
+ * Przykładowa struktura dla Sprawdzianu (z services/crstests/user_tests)
+ * !! DO WERYFIKACJI !!
+ */
+export interface UsosTest {
+  course_id: string;
+  course_name: {
+    pl: string;
+    en: string;
+  };
+  name: string; // Nazwa sprawdzianu
+  start_time: string;
+  end_time: string;
+  result?: string; // Może być opcjonalne
+  url: string;
+}
