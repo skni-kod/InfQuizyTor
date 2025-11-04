@@ -1,4 +1,4 @@
-module github.com/skni-kod/InfQuizyTor/backend
+module github.com/skni-kod/InfQuizyTor/Server
 
 go 1.23.0
 
