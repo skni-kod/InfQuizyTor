@@ -18,15 +18,13 @@ function App() {
     const checkAuthStatus = async () => {
       try {
         // --- POCZĄTEK POPRAWKI ---
-        const response = await fetch(
-          "/api/services/users/user?fields=id|first_name|last_name|email",
-          {
-            credentials: "include", // *** TO JEST KLUCZOWA ZMIANA ***
-            headers: {
-              Accept: "application/json",
-            },
-          }
-        );
+        const response = await fetch("/api/services/users/user", {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        });
         // --- KONIEC POPRAWKI ---
 
         if (response.ok) {

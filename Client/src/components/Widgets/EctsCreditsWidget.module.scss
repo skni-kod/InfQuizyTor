@@ -1,0 +1,28 @@
+/* Używamy zmiennych globalnych z _variables.scss */
+
+.error {
+    color: var(--error);
+  }
+  
+  .creditsWidget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4) 0; // Dodatkowy padding w pionie
+    text-align: center;
+  }
+  
+  .creditsValue {
+    font-size: var(--text-4xl); // Duża czcionka
+    font-weight: 700;
+    color: var(--primary); // Używamy koloru akcentu
+    line-height: 1.1;
+  }
+  
+  .creditsLabel {
+    font-size: var(--text-base); // Standardowa czcionka
+    color: var(--text-secondary);
+    font-weight: 500;
+  }

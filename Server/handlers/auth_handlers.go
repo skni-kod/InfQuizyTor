@@ -16,7 +16,7 @@ const requestedScopesKey = "oauth_requested_scopes" // Klucz do zapisu scopes w 
 
 func HandleUsosLogin(c *gin.Context) {
 	// Poproś o uprawnienia 'studies', które były wymagane
-	requiredScopes := []string{"studies", "email", "grades", "crstests"}
+	requiredScopes := []string{"studies", "email", "grades", "crstests", "cards"}
 	redirectURL, _, requestSecret, err := services.GetAuthorizationURLAndSecret(requiredScopes)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate OAuth flow", "details": err.Error()})
@@ -92,7 +92,7 @@ func HandleUsosCallback(c *gin.Context) {
 	}
 
 	log.Printf("User %s authenticated successfully via USOS. Redirecting to frontend.", userToken.UserUsosID)
-	c.Redirect(http.StatusFound, config.AppConfig.FrontendURL+"/dashboard")
+	c.Redirect(http.StatusFound, config.AppConfig.FrontendURL+"/")
 }
 
 func HandleLogout(c *gin.Context) {

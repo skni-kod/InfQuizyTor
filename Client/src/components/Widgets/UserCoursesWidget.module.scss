@@ -1,0 +1,121 @@
+/* Usunięto lokalne zmienne :root, ponieważ są teraz globalne */
+
+.error {
+    color: var(--error);
+  }
+  
+  .courseWidget {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4); // Używa globalnej zmiennej
+  }
+  
+  .termNav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--bg3-dark); // Używa globalnej zmiennej
+  }
+  
+  .termButton {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm); // Używa globalnej skali
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--bg1-dark); // Używa globalnej zmiennej
+    border: 1px solid var(--bg1-dark);
+    border-radius: var(--radius-sm); // Używa globalnej zmiennej
+    cursor: pointer;
+    transition: all var(--transition-fast); // Używa globalnej zmiennej
+  
+    &:hover {
+      background-color: var(--bg2-dark); // Używa globalnej zmiennej
+    }
+  
+    &.active {
+      color: var(--text-primary);
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+  }
+  
+  .courseList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .courseItem {
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--bg1-dark); // Używa globalnej zmiennej
+    border-radius: var(--radius-sm); // Używa globalnej zmiennej
+    transition: background-color var(--transition-fast);
+  
+    &:hover {
+      background-color: var(--bg2-dark); // Używa globalnej zmiennej
+    }
+  }
+  
+  .courseInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+  
+  .courseName {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1); // Używa globalnej zmiennej
+  
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  
+  .linkIcon {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+  }
+  
+  .statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm); // Używa globalnej skali
+    font-weight: 500;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-lg); // Używa globalnej zmiennej
+    white-space: nowrap;
+  
+    svg {
+      font-size: 0.8em;
+    }
+  
+    &.passed {
+      color: var(--success);
+      background-color: hsla(120, 60%, 45%, 0.15); // Dopasowane do var(--success)
+    }
+    &.failed {
+      color: var(--error);
+      background-color: hsla(0, 70%, 55%, 0.15); // Dopasowane do var(--error)
+    }
+    &.pending {
+      color: var(--text-secondary);
+      background-color: hsla(var(--hue), 5%, 70%, 0.15); // Dopasowane do var(--text-secondary)
+    }
+  }
+  
+  .noCourses {
+    color: var(--text-secondary);
+    padding: var(--space-4) 0;
+    text-align: center;
+  }

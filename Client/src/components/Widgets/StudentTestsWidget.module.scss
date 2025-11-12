@@ -1,0 +1,106 @@
+/* Bazuje na UserCoursesWidget.module.scss i globalnych zmiennych */
+
+.error {
+    color: var(--error);
+  }
+  
+  .widgetContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  
+  .termNav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--bg3-dark);
+  }
+  
+  .termButton {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: var(--bg1-dark);
+    border: 1px solid var(--bg1-dark);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  
+    &:hover {
+      background-color: var(--bg2-dark);
+    }
+  
+    &.active {
+      color: var(--text-primary);
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+  }
+  
+  .testList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3); /* Trochę większy odstęp */
+  }
+  
+  .testItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--bg1-dark);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+  
+    &:hover {
+      background-color: var(--bg2-dark);
+    }
+  }
+  
+  .testIcon {
+    font-size: var(--text-2xl); // Większa ikona
+    color: var(--secondary); // Używamy innego koloru
+    flex-shrink: 0;
+  }
+  
+  .testDetails {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    flex-grow: 1; /* Rozciąga się, aby zająć wolne miejsce */
+    overflow: hidden; /* Zapobiega "wylewaniu" się tekstu */
+  }
+  
+  .testName {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .courseName {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .visibility {
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  
+  .noItems {
+    color: var(--text-secondary);
+    padding: var(--space-4) 0;
+    text-align: center;
+  }

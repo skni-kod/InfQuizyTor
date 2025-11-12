@@ -1,0 +1,92 @@
+/* Usunięto lokalne zmienne :root, ponieważ są teraz globalne */
+
+.error {
+    color: var(--error); // Używa globalnej zmiennej
+  }
+  
+  .cardList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4); // Używa globalnej zmiennej
+  }
+  
+  .cardItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-md); // Używa globalnej zmiennej
+    background: var(--bg1-dark); // Używa globalnej zmiennej tła
+    border-left: 5px solid var(--primary);
+    transition: opacity var(--transition-medium); // Używa globalnej zmiennej
+  
+    /* Style dla konkretnych typów kart */
+    &.student {
+      border-color: var(--success);
+      .cardIcon {
+        color: var(--success);
+      }
+    }
+    &.phd {
+      border-color: var(--info);
+      .cardIcon {
+        color: var(--info);
+      }
+    }
+    &.staff,
+    &.academic_teacher {
+      border-color: var(--warning);
+      .cardIcon {
+        color: var(--warning);
+      }
+    }
+  
+    /* Style dla karty nieważnej */
+    &.expired {
+      border-color: var(--error);
+      opacity: 0.7;
+      background: var(--bg2-dark); // Ciemniejsze tło
+  
+      .cardDate strong {
+        color: var(--error);
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .cardIcon {
+    font-size: var(--text-4xl); // Używa globalnej skali typografii
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  
+  .cardDetails {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1); // Używa globalnej zmiennej
+    overflow: hidden;
+  }
+  
+  .cardType {
+    font-weight: bold;
+    font-size: var(--text-lg); // Używa globalnej skali
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  
+  .cardInfo {
+    font-family: "Courier New", Courier, monospace;
+    font-size: var(--text-sm); // Używa globalnej skali
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .cardDate {
+    font-size: var(--text-sm); // Używa globalnej skali
+    color: var(--text-muted);
+  }

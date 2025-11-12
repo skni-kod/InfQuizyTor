@@ -6,16 +6,30 @@ import { useAppContext } from "../contexts/AppContext";
 // Importowanie stylów dla siatki
 import styles from "./ApiPage.module.scss";
 
-// Importowanie istniejących komponentów (Widgetów)
-// Zakładam, że masz je w folderze 'src/components/Widgets'
-// import UsosCalendar from "../components/Calendar/UsosCalendar"; // Istniejący kalendarz
-import UserCard from "../components/Widgets/UserCard"; // Karta z danymi użytkownika
-import GradeCard from "../components/Widgets/GradeCard"; // Karta z ocenami
-import TestsCard from "../components/Widgets/TestsCard"; // Karta ze sprawdzianami
+// import all from widgets
+import UserCard from "../components/Widgets/UserCard";
+import StudentTestsWidget from "../components/Widgets/StudentTestsWidget";
+import UserCoursesWidget from "../components/Widgets/UserCoursesWidget";
+import IdCardsWidget from "../components/Widgets/IdCardsWidget";
+import EctsCreditsWidget from "../components/Widgets/EctsCreditsWidget";
+import UsosCalendar from "../components/Calendar/UsosCalendar";
+import LatestGradesWidget from "../components/Widgets/LatestGradesWidget";
 
+/**
 /**
  * Strona główna (Dashboard) wyświetlająca wszystkie dane pobrane z API USOS.
  */
+const widgets: React.FC[] = [
+  UserCard,
+  LatestGradesWidget,
+
+  StudentTestsWidget,
+  UserCoursesWidget,
+  IdCardsWidget,
+  EctsCreditsWidget,
+  UsosCalendar,
+];
+
 const ApiPage: React.FC = () => {
   const { user, authLoading } = useAppContext();
 
@@ -43,25 +57,9 @@ const ApiPage: React.FC = () => {
       <h1>Twój Panel USOS</h1>
 
       <div className={styles.dashboardGrid}>
-        {/* Karta z danymi użytkownika (zajmuje 1 komórkę) */}
-        <div className={`${styles.gridItem} ${styles.userCard}`}>
-          <UserCard />
-        </div>
-
-        {/* Karta z kalendarzem (zajmuje 2 komórki szerokości i 2 wysokości) */}
-        {/* <div className={`${styles.gridItem} ${styles.calendarCard}`}>
-          <UsosCalendar />
-        </div> */}
-
-        {/* Karta z ocenami (zajmuje 1 komórkę) */}
-        <div className={`${styles.gridItem} ${styles.gradesCard}`}>
-          <GradeCard />
-        </div>
-
-        {/* Karta ze sprawdzianami (zajmuje 1 komórkę) */}
-        <div className={`${styles.gridItem} ${styles.testsCard}`}>
-          <TestsCard />
-        </div>
+        {widgets.map((Widget, index) => (
+          <Widget key={index} />
+        ))}
       </div>
     </div>
   );

@@ -34,22 +34,7 @@ const formatDate = (isoString: string): string => {
     return "Invalid Date";
   }
 };
-const groupEventsByDate = (
-  events: UsosCalendarEvent[]
-): { [date: string]: UsosCalendarEvent[] } => {
-  return events.reduce((acc, event) => {
-    const dateStr = formatDate(event.start_time);
-    if (!acc[dateStr]) {
-      acc[dateStr] = [];
-    }
-    acc[dateStr].push(event);
-    acc[dateStr].sort(
-      (a, b) =>
-        new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-    );
-    return acc;
-  }, {} as { [date: string]: UsosCalendarEvent[] });
-};
+
 // --- Koniec Funkcji Pomocniczych ---
 
 const UsosCalendar: React.FC = () => {
@@ -83,7 +68,8 @@ const UsosCalendar: React.FC = () => {
         console.log("Fetching USOS User Calendar events via backend proxy...");
 
         const backendApiUrl = "/api/services/tt/user";
-        const fields = "id|name|type|start_time|end_time|url";
+        const fields =
+          "name|type|start_time|end_time|url|building_name|room_number|course_name|lecturer_ids|classtype_name";
         const params = new URLSearchParams({ fields });
 
         const response = await fetch(`${backendApiUrl}?${params.toString()}`, {
@@ -138,6 +124,11 @@ const UsosCalendar: React.FC = () => {
     }
   }, [user, authLoading]); // Uruchom ponownie, gdy zmieni się status użytkownika lub autoryzacji
 
+  const groupedEvents = groupEventsByDate(events);
+  const sortedDates = Object.keys(groupedEvents).sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  );
+
   // --- Render Logic (Bez zmian) ---
   if (loading) {
     return <div className={styles.loading}>Ładowanie kalendarza... ⏳</div>;
@@ -173,7 +164,7 @@ const UsosCalendar: React.FC = () => {
           <ul className={styles.eventList}>
             {groupedEvents[dateStr].map((event) => (
               <li
-                key={event.id}
+                key={`${event.start_time}-${event.name.pl || event.name.en}`}
                 className={`${styles.eventItem} ${
                   styles[event.type] || styles.default
                 }`}
@@ -185,9 +176,29 @@ const UsosCalendar: React.FC = () => {
                       formatDateTime(event.start_time) &&
                     ` - ${formatDateTime(event.end_time)}`}
                 </span>
-                <span className={styles.eventName}>
-                  {event.name.pl || event.name.en || "Brak nazwy"}
-                </span>
+
+                <div className={styles.eventDetails}>
+                  <span className={styles.eventName}>
+                    {event.course_name?.pl ||
+                      event.name.pl ||
+                      event.name.en ||
+                      "Brak nazwy"}
+                    {event.classtype_name?.pl && (
+                      <span className={styles.eventType}>
+                        {" "}
+                        ({event.classtype_name.pl})
+                      </span>
+                    )}
+                  </span>
+
+                  {/* DODANE INFORMACJE O SALI */}
+                  {(event.room_number || event.building_name) && (
+                    <span className={styles.eventLocation}>
+                      {event.room_number} {event.building_name?.pl}
+                    </span>
+                  )}
+                </div>
+
                 {event.url && (
                   <a
                     href={event.url}

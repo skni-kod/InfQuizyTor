@@ -1,7 +1,21 @@
 import { IconType } from "react-icons";
 import ReactGridLayout from "react-grid-layout"; // Import typu z RGL
 
+// =================================================================
+// 0. Typy Generyczne (Współdzielone)
+// =================================================================
+
+/**
+ * Standardowa odpowiedź USOS dla pól wielojęzycznych.
+ */
+export interface LangDict {
+  pl: string;
+  en: string;
+}
+
+// =================================================================
 // 1. Typy dla Menu (Przedmioty i Quizy)
+// =================================================================
 
 export interface Subject {
   id: string;
@@ -17,24 +31,37 @@ export interface QuizNode {
   dependencies: string[]; // Lista ID węzłów, które muszą być ukończone
 }
 
-// 2. Typy dla Kalendarza (na podstawie services/calendar/user_events)
+// =================================================================
+// 2. Typy dla Danych USOS
+// =================================================================
 
+/**
+ * Kalendarz osobisty użytkownika (z services/tt/user)
+ * To jest POPRAWNA, zaktualizowana definicja.
+ */
 export interface UsosCalendarEvent {
-  id: number;
-  name: { [lang: string]: string }; // np. { pl: "Egzamin", en: "Exam" }
-  type: string; // np. "exam", "test", "class", "meeting"
-  start_time: string; // ISO 8601 e.g., "2025-11-15T10:00:00+01:00"
+  type: string;
+  start_time: string;
   end_time: string | null;
-  url?: string | null;
+  name: LangDict;
+  url: string | null;
+
+  // --- DODANE OPCJONALNE POLA (zgodnie z poprzednią poprawką) ---
+  course_name?: LangDict;
+  classtype_name?: LangDict;
+  building_name?: LangDict;
+  room_number?: string;
+  lecturer_ids?: number[];
 }
 
 export type UsosCalendarResponse = UsosCalendarEvent[];
 
-// 3. Typy dla Kalendarza Instytucji (na podstawie services/calendar/search)
-
+/**
+ * Kalendarz instytucji (z services/calendar/search)
+ */
 export interface UsosInstitutionCalendarEvent {
   id: number;
-  name: { [lang: string]: string };
+  name: LangDict; // Używamy LangDict
   start_date: string; // ISO 8601
   end_date: string; // ISO 8601
   type: string; // rector, dean, holidays, exam_session, etc.
@@ -47,7 +74,43 @@ export interface UsosInstitutionCalendarEvent {
 export type UsosInstitutionCalendarSearchResponse =
   UsosInstitutionCalendarEvent[];
 
-// 4. Typy dla Widgetów
+/**
+ * Informacje o użytkowniku (z services/users/user)
+ */
+export interface UsosUserInfo {
+  id?: string; // Ustawiamy jako opcjonalne
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+/**
+ * Oceny (z services/grades/user)
+ */
+export interface UsosGrade {
+  course_id: string;
+  course_name: LangDict; // Używamy LangDict
+  term_id: string;
+  value_symbol: string; // Np. "5.0"
+  value_description: LangDict; // Używamy LangDict
+}
+
+/**
+ * Sprawdziany (z services/crstests/user_tests)
+ */
+export interface UsosTest {
+  course_id: string;
+  course_name: LangDict; // Używamy LangDict
+  name: string; // Nazwa sprawdzianu
+  start_time: string;
+  end_time: string;
+  result?: string; // Może być opcjonalne
+  url: string;
+}
+
+// =================================================================
+// 3. Typy dla Widgetów
+// =================================================================
 
 export type WidgetID = "upcoming" | "progress" | "leaderboard" | "achievements";
 
@@ -58,17 +121,9 @@ export interface WidgetConfig {
   defaultLayout: ReactGridLayout.Layout; // Użyj typu z RGL
 }
 
-// 5. Typy dla Użytkownika (z services/users/user) - BRAKUJĄCY TYP
-
-export interface UsosUserInfo {
-  id: string;
-  first_name: string; // Dopasowane do pól JSON (first_name)
-  last_name: string; // Dopasowane do pól JSON (last_name)
-  email: string; // Dopasowane do pól JSON (email)
-  // Pole 'name' (LangDict) zostało celowo usunięte, ponieważ powodowało błąd API 400
-}
-
-// 6. Typy dla Danych Mockowych (Hex Layout)
+// =================================================================
+// 4. Typy dla Danych Mockowych (Hex Layout)
+// =================================================================
 
 export interface UpcomingEvent {
   id: string;
@@ -92,33 +147,76 @@ export interface LearningProgress {
   progress: number;
   required?: number;
 }
-export interface UsosGrade {
-  course_id: string;
-  course_name: {
-    pl: string;
-    en: string;
-  };
-  term_id: string;
-  value_symbol: string; // Np. "5.0"
-  value_description: {
-    pl: string;
-    en: string;
-  }; // Np. "bardzo dobry"
+export interface UsosCard {
+  id: string;
+  type: "student" | "phd" | "staff" | "graduate" | "academic_teacher" | string;
+  barcode_number: string | null;
+  student_number: string | null;
+  expiration_date: string | null; // Data ISO, np. "2025-10-31"
+  date_of_issue: string | null; // Data ISO
+}
+export interface UsosTerm {
+  id: string;
+  name: LangDict;
+  // (API 'terms/term' zwraca więcej pól, ale 'courses/user' jest ograniczone)
 }
 
 /**
- * Przykładowa struktura dla Sprawdzianu (z services/crstests/user_tests)
- * !! DO WERYFIKACJI !!
+ * Reprezentuje jedną edycję kursu (przedmiot w semestrze)
+ * (na podstawie pól z 'services/courses/course_edition')
  */
-export interface UsosTest {
+export interface UsosCourseEdition {
   course_id: string;
-  course_name: {
-    pl: string;
-    en: string;
+  course_name: LangDict;
+  term_id: string;
+  profile_url: string | null;
+  passing_status: "passed" | "failed" | "not_yet_passed" | string;
+}
+
+/**
+ * Odpowiedź z endpointu 'services/courses/user'
+ */
+export interface UsosUserCoursesResponse {
+  terms: UsosTerm[];
+  course_editions: {
+    [term_id: string]: UsosCourseEdition[];
   };
-  name: string; // Nazwa sprawdzianu
-  start_time: string;
-  end_time: string;
-  result?: string; // Może być opcjonalne
-  url: string;
+}
+export interface UsosTestRoot {
+  node_id: string;
+  name: LangDict;
+  description: LangDict;
+  visible_for_students: boolean;
+  course_edition: {
+    // Obiekt z informacjami o przedmiocie
+    course_id: string;
+    course_name: LangDict;
+    term_id: string;
+    profile_url: string | null;
+  } | null; // Może być nullem, jeśli to szablon
+}
+
+/**
+ * Odpowiedź z endpointu 'services/crstests/participant'
+ */
+export interface UsosParticipantTestsResponse {
+  // UWAGA: API zwraca obiekty (mapy), a nie tablice
+  tests: {
+    [term_id: string]: UsosTestRoot[]; // Mapa [ID semestru] -> [Lista testów]
+  };
+  terms: {
+    [term_id: string]: UsosTerm; // Mapa [ID semestru] -> [Obiekt Semestru]
+  };
+}
+export interface UsosLatestGrade {
+  value_symbol: string; // Np. "5.0"
+  value_description: LangDict; // Np. { pl: "bardzo dobry" }
+  date_modified: string; // Data ostatniej modyfikacji
+  exam_id: string; // ID egzaminu/protokołu
+  exam_session_number: number; // Numer terminu
+
+  // Zagnieżdżony obiekt z informacją o przedmiocie
+  course_edition: {
+    course_name: LangDict;
+  };
 }

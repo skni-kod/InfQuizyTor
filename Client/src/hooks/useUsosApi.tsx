@@ -7,7 +7,7 @@ interface FetchState<T> {
   error: string | null;
 }
 
-export const useUsosApi = <T,>(apiPath: string, fields: string) => {
+export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
   const [fetchState, setFetchState] = useState<FetchState<T>>({
     data: null,
     loading: true,
@@ -18,7 +18,7 @@ export const useUsosApi = <T,>(apiPath: string, fields: string) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!apiPath || !fields) {
+      if (!apiPath) {
         setFetchState({
           data: null,
           loading: false,
@@ -31,9 +31,14 @@ export const useUsosApi = <T,>(apiPath: string, fields: string) => {
       try {
         console.log(`useUsosApi: Pobieranie ${apiPath}...`);
         const backendApiUrl = `/api/${apiPath}`;
-        const params = new URLSearchParams({ fields });
+        let fullUrl = backendApiUrl;
+        if (fields) {
+          const params = new URLSearchParams({ fields });
+          fullUrl += `?${params.toString()}`;
+        }
 
-        const response = await fetch(`${backendApiUrl}?${params.toString()}`, {
+        // Używamy 'fullUrl' zamiast starej logiki
+        const response = await fetch(fullUrl, {
           method: "GET",
           headers: { Accept: "application/json" },
           credentials: "include",
@@ -51,7 +56,6 @@ export const useUsosApi = <T,>(apiPath: string, fields: string) => {
           }
           throw new Error(errorBody);
         }
-
         const data: T = await response.json();
         setFetchState({ data, loading: false, error: null });
       } catch (err) {
@@ -75,7 +79,7 @@ export const useUsosApi = <T,>(apiPath: string, fields: string) => {
         error: "Użytkownik nie jest zalogowany.",
       });
     }
-  }, [apiPath, fields, user, authLoading]);
+  }, [apiPath, fields, user, authLoading]); // 'fields' jest już w zależnościach
 
   return fetchState;
 };
