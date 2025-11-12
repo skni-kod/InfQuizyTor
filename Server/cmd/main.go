@@ -11,8 +11,8 @@ import (
 
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/db"
-	"github.com/skni-kod/InfQuizyTor/Server/handlers"   // Zakładam, że tu są Twoje handlery
-	"github.com/skni-kod/InfQuizyTor/Server/middleware" // Zakładam, że tu jest middleware
+	"github.com/skni-kod/InfQuizyTor/Server/handlers"
+	"github.com/skni-kod/InfQuizyTor/Server/middleware"
 	"github.com/skni-kod/InfQuizyTor/Server/services"
 )
 
@@ -25,48 +25,43 @@ func main() {
 	db.InitDB(cfg)
 	defer db.CloseDB()
 
-	services.InitUsosService(cfg) // Ważne, aby zainicjować serwis
+	services.InitUsosService(cfg)
 
 	router := gin.Default()
 
 	router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
-	// --- CORS ---
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{cfg.FrontendURL} // np. "http://localhost:5173"
+	corsConfig.AllowOrigins = []string{cfg.FrontendURL}
 	corsConfig.AllowCredentials = true
 	corsConfig.AddAllowHeaders("Authorization", "Content-Type")
 	router.Use(cors.New(corsConfig))
 
-	// --- Sesje ---
 	store := cookie.NewStore([]byte(cfg.SessionSecret))
 	router.Use(sessions.Sessions("usos_session", store))
 
-	// --- Trasy Autoryzacji (Publiczne) ---
+	// Trasy Autoryzacji (Publiczne)
 	authGroup := router.Group("/auth/usos")
 	{
 		authGroup.GET("/login", handlers.HandleUsosLogin)
 		authGroup.GET("/callback", handlers.HandleUsosCallback)
-		// Użyj POST dla wylogowania, aby być RESTful
-		authGroup.POST("/logout", handlers.HandleLogout)
+		authGroup.POST("/logout", handlers.HandleLogout) // Przeniesione tutaj, publiczne
 	}
 
-	// --- Trasy API (Chronione) ---
+	// Trasy API (Chronione)
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.AuthRequired()) // Zabezpiecz wszystkie trasy /api
 	{
-		// --- POCZĄTEK POPRAWKI ---
-
-		// 1. DEDYKOWANA TRASA DLA /api/users/me
-		// Ta trasa MUSI być zdefiniowana PRZED ogólnym proxy.
-		// Używa handlera, który czyta z BAZY DANYCH (ten, który Ci wysłałem).
+		// --- POPRAWIONY ROUTING ---
+		// 1. Dedykowana trasa dla App.tsx (pobiera z DB)
+		// Musi być zdefiniowana PRZED trasą proxy.
 		apiGroup.GET("/users/me", handlers.HandleGetUserMe)
 
-		// 2. OGÓLNE PROXY DLA WSZYSTKICH INNYCH RZECZY Z USOS
-		// Zwróć uwagę na ścieżkę: "/services/*proxyPath"
-		// Przechwyci ona /api/services/tt/user, /api/services/grades/latest itp.
-		// ALE NIE PRZECHWYCI /api/users/me
+		// 2. Ogólne proxy dla wszystkich widgetów USOS (łączy się z USOS)
+		// Poprawka: Zmieniono z "/*proxyPath" na "/services/*proxyPath"
+		// Teraz będzie przechwytywać tylko /api/services/...
 		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
+		// --- KONIEC POPRAWKI ---
 	}
 
 	router.GET("/health", func(c *gin.Context) {

@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom"; // 1. Zaimportuj useNavigate
+import { NavLink, useNavigate } from "react-router-dom";
 import styles from "./Header.module.scss";
 import {
   FaChartPie,
@@ -8,38 +8,56 @@ import {
   FaSignInAlt,
   FaSignOutAlt,
 } from "react-icons/fa";
-import { useAppContext } from "../contexts/AppContext"; // Importuj kontekst
+import { useAppContext } from "../contexts/AppContext";
 
 const BACKEND_URL = "http://localhost:8080";
 
 const Header = () => {
-  // Poprawione, aby używać authState
   const { authState, setUser } = useAppContext();
-  const navigate = useNavigate(); // 2. Zainicjuj hook nawigacji
+  const navigate = useNavigate();
 
-  // Poprawiona funkcja wylogowywania
+  // --- POPRAWKA 1: Dodajemy funkcję handleLogin ---
+  const handleLogin = async () => {
+    try {
+      // 1. Wyślij żądanie do backendu
+      const response = await fetch(`${BACKEND_URL}/auth/usos/login`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // 2. Odbierz JSON (ten, który widziałeś na zrzucie ekranu)
+        const data = await response.json();
+
+        // 3. Sprawdź, czy JSON zawiera URL i przekieruj przeglądarkę
+        if (data.authorization_url) {
+          window.location.href = data.authorization_url;
+        } else {
+          console.error("Błąd: Backend nie zwrócił 'authorization_url'.");
+        }
+      } else {
+        console.error("Błąd serwera podczas inicjowania logowania.");
+      }
+    } catch (error) {
+      console.error("Błąd sieci:", error);
+    }
+  };
+  // --- KONIEC POPRAWKI 1 ---
+
   const handleLogout = async () => {
     try {
       await fetch(`${BACKEND_URL}/auth/usos/logout`, {
-        method: "POST", // Upewnij się, że jest POST
+        method: "POST",
         credentials: "include",
       });
-      // Nie obchodzi nas, czy odpowiedź to 200 OK, czy 401.
-      // Czekaliśmy na odpowiedź, więc serwer miał szansę wysłać polecenie usunięcia ciasteczka.
     } catch (error) {
       console.error("Błąd sieci podczas wylogowywania:", error);
-      // Jeśli serwer nie odpowiada, i tak wylogowujemy lokalnie.
     }
-
-    // --- POPRAWKA ---
-    // Te dwie linie są teraz wykonywane PO otrzymaniu odpowiedzi od serwera
-    setUser(null); // Wyczyść stan w React
-    navigate("/"); // 3. Użyj 'navigate' ZAMIAST 'window.location.reload()'
-    // --- KONIEC POPRAWKI ---
+    setUser(null);
+    navigate("/");
   };
 
   const renderAuthButton = () => {
-    // Użyj authState
     if (authState.authLoading) {
       return (
         <button className={styles.navButton} disabled>
@@ -48,7 +66,6 @@ const Header = () => {
       );
     }
 
-    // Użyj authState
     if (authState.user) {
       return (
         <>
@@ -72,13 +89,15 @@ const Header = () => {
       );
     }
 
+    // --- POPRAWKA 2: Zmieniamy <a> na <button> ---
     // Wylogowany
     return (
-      <a href={`${BACKEND_URL}/auth/usos/login`} className={styles.navLink}>
+      <button onClick={handleLogin} className={styles.navLink}>
         <FaSignInAlt />
         <span>Zaloguj się</span>
-      </a>
+      </button>
     );
+    // --- KONIEC POPRAWKI 2 ---
   };
 
   return (
