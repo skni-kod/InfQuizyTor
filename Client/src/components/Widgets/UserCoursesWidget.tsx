@@ -79,7 +79,7 @@ const UserCoursesWidget: React.FC = () => {
       <div className={styles.courseWidget}>
         {/* Pasek z przełącznikami semestrów */}
         <nav className={styles.termNav}>
-          {data.terms.map((term) => (
+          {data.terms.map((term: UsosTerm) => (
             <button
               key={term.id}
               className={`${styles.termButton} ${

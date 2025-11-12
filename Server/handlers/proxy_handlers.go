@@ -1,58 +1,53 @@
 package handlers
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/skni-kod/InfQuizyTor/Server/services"
+	"github.com/skni-kod/InfQuizyTor/Server/services" // Importuj pakiet services
 )
 
 func HandleApiProxy(c *gin.Context) {
-	log.Printf("DEBUG: HandleApiProxy called for raw path: %s", c.Request.URL.Path)
-
-	var targetPath string
-	if strings.HasPrefix(c.Request.URL.Path, "/api/") {
-		targetPath = strings.TrimPrefix(c.Request.URL.Path, "/api/")
-	} else {
-		log.Printf("BŁĄD: HandleApiProxy otrzymał ścieżkę bez /api/: %s", c.Request.URL.Path)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid proxy path"})
+	session := sessions.Default(c)
+	userUsosIDValue := session.Get("user_usos_id") // Klucz musi być zgodny z tym, co ustawiasz w AuthRequired
+	if userUsosIDValue == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Brak autoryzacji"})
 		return
 	}
+	userUsosID := userUsosIDValue.(string)
 
-	cleanTargetPath := strings.TrimPrefix(targetPath, "/")
-	log.Printf("DEBUG: Poprawnie wyodrębniona ścieżka docelowa (cleanTargetPath): %s", cleanTargetPath)
+	proxyPath := c.Param("proxyPath")
+	queryParams := c.Request.URL.RawQuery
 
-	userUsosIDValue, exists := c.Get("user_usos_id")
-	if !exists {
-		log.Println("BŁĄD: Brak user_usos_id w kontekście middleware")
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context (proxy)"})
-		return
-	}
-	userUsosID, ok := userUsosIDValue.(string)
-	if !ok || userUsosID == "" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid User ID in context (proxy)"})
-		return
-	}
+	// Wyczyść ścieżkę (usuń wiodący /)
+	cleanPath := strings.TrimPrefix(proxyPath, "/")
 
-	log.Printf("HandleApiProxy: User ID '%s' retrieved from context.", userUsosID)
-	queryParams := c.Request.URL.Query()
-	log.Printf("HandleApiProxy: Proxying request for user %s to path %s with query %s", userUsosID, cleanTargetPath, queryParams.Encode())
+	log.Printf("HandleApiProxy: Proxying request for user %s to path '%s'", userUsosID, cleanPath)
 
-	statusCode, responseBody, responseHeaders, err := services.ProxyUsosApiRequest(c, userUsosID, cleanTargetPath, queryParams)
-
+	// --- POPRAWKA ---
+	// Użyj publicznej, zainicjowanej zmiennej z pakietu services
+	resp, err := services.UsosService.MakeSignedRequest(userUsosID, cleanPath, queryParams)
 	if err != nil {
-		log.Printf("Error during API proxy for user %s, path %s: %v", userUsosID, cleanTargetPath, err)
-		c.JSON(statusCode, gin.H{"error": "Failed to proxy request to USOS API", "details": err.Error()})
+		log.Printf("HandleApiProxy: Error from MakeSignedRequest: %v", err)
+		// Sprawdź, czy odpowiedź nie jest nil, zanim zwrócisz status
+		statusCode := http.StatusInternalServerError
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+		c.JSON(statusCode, gin.H{"error": err.Error()})
 		return
 	}
+	defer resp.Body.Close()
 
-	contentType := responseHeaders.Get("Content-Type")
-	if contentType == "" {
-		contentType = "application/json"
-		log.Printf("Warning: Content-Type header missing from USOS API response for %s. Assuming JSON.", cleanTargetPath)
-	}
-	log.Printf("Proxy successful for user %s, path %s. Status: %d, Content-Type: %s", userUsosID, cleanTargetPath, statusCode, contentType)
-	c.Data(statusCode, contentType, responseBody)
+	// Przekaż odpowiedź z USOS (JSON, błąd, cokolwiek) z powrotem do frontendu
+	// Kopiujemy nagłówki i treść
+	c.Status(resp.StatusCode)
+	// Ustawiamy Content-Type, ponieważ GIN lubi go nadpisywać
+	c.Header("Content-Type", resp.Header.Get("Content-Type"))
+
+	io.Copy(c.Writer, resp.Body)
 }

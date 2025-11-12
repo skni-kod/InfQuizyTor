@@ -1,0 +1,37 @@
+/* Plik: src/components/Widgets/UserCard.module.scss */
+
+.userCard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4); /* Używa globalnej zmiennej */
+  }
+  
+  .userIcon {
+    font-size: var(--text-4xl); /* Używa globalnej skali */
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  
+  .userInfo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    overflow: hidden; /* Zapobiega "wylewaniu się" tekstu */
+  }
+  
+  .userName {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  
+  .userEmail {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }

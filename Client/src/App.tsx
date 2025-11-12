@@ -18,7 +18,7 @@ function App() {
     const checkAuthStatus = async () => {
       try {
         // --- POCZĄTEK POPRAWKI ---
-        const response = await fetch("/api/services/users/user", {
+        const response = await fetch("/api/users/me", {
           method: "GET",
           credentials: "include",
           headers: {

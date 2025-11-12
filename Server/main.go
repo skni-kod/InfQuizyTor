@@ -48,9 +48,19 @@ func main() {
 	}
 
 	apiGroup := router.Group("/api")
-	apiGroup.Use(middleware.AuthRequired())
+	apiGroup.Use(middleware.AuthRequired()) // Zabezpiecz wszystkie trasy /api
 	{
-		apiGroup.GET("/*proxyPath", handlers.HandleApiProxy)
+		// --- POCZĄTEK POPRAWKI ---
+
+		// 1. DEDYKOWANA TRASA DLA /api/users/me
+		// (Handler, który czyta z BAZY DANYCH)
+		apiGroup.GET("/users/me", handlers.HandleGetUserMe)
+
+		// 2. OGÓLNE PROXY DLA WSZYSTKICH INNYCH RZECZY Z USOS
+		// (Handler, który łączy się z USOS)
+		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
+
+		// --- KONIEC POPRAWKI ---
 	}
 
 	router.GET("/health", func(c *gin.Context) {

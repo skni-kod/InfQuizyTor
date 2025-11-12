@@ -5,12 +5,14 @@ go 1.23.0
 toolchain go1.24.9
 
 require (
+	github.com/dghubble/oauth1 v0.7.3
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/sessions v1.0.4
 	github.com/gin-gonic/gin v1.11.0
-	github.com/jackc/pgx/v5 v5.6.0
-	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450
+	github.com/jackc/pgx/v5 v5.6.0 // indirect
 	github.com/spf13/viper v1.21.0
+	gorm.io/driver/postgres v1.6.0
+	gorm.io/gorm v1.25.12
 )
 
 require (
@@ -32,6 +34,8 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect

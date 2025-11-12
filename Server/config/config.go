@@ -1,59 +1,78 @@
 package config
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/spf13/viper"
 )
 
+// Config przechowuje całą konfigurację
 type Config struct {
+	// USOS API Credentials
 	UsosConsumerKey    string `mapstructure:"USOS_CONSUMER_KEY"`
 	UsosConsumerSecret string `mapstructure:"USOS_CONSUMER_SECRET"`
-	AppBaseURL         string `mapstructure:"APP_BASE_URL"`
-	FrontendURL        string `mapstructure:"FRONTEND_URL"`
-	UsosApiBaseURL     string `mapstructure:"USOS_API_BASE_URL"`
-	DBHost             string `mapstructure:"DB_HOST"`
-	DBPort             string `mapstructure:"DB_PORT"`
-	DBUser             string `mapstructure:"DB_USER"`
-	DBPassword         string `mapstructure:"DB_PASSWORD"`
-	DBName             string `mapstructure:"DB_NAME"`
-	DBSSLMode          string `mapstructure:"DB_SSLMODE"`
-	SessionSecret      string `mapstructure:"SESSION_SECRET"`
+
+	// Application URLs
+	AppBaseURL     string `mapstructure:"APP_BASE_URL"`      // http://localhost:8080
+	FrontendURL    string `mapstructure:"FRONTEND_URL"`      // http://localhost:5173
+	UsosApiBaseURL string `mapstructure:"USOS_API_BASE_URL"` // https://usosapps.prz.edu.pl
+
+	// Database Connection
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     string `mapstructure:"DB_PORT"`
+	DBUser     string `mapstructure:"DB_USER"`
+	DBPassword string `mapstructure:"DB_PASSWORD"`
+	DBName     string `mapstructure:"DB_NAME"`
+	DBSslMode  string `mapstructure:"DB_SSLMODE"`
+
+	// Session Secret
+	SessionSecret string `mapstructure:"SESSION_SECRET"`
+
+	// Złożone adresy URL (zostaną zbudowane automatycznie)
+	DatabaseURL         string
+	UsosCallbackURL     string
+	UsosRequestTokenURL string
+	UsosAuthorizeURL    string
+	UsosAccessTokenURL  string
 }
 
-var AppConfig Config
-
+// LoadConfig wczytuje konfigurację z pliku .env w danym folderze
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
+
+	// --- POPRAWKA TUTAJ ---
+	// Szukamy pliku o nazwie ".env"
 	viper.SetConfigName(".env")
+	// --- KONIEC POPRAWKI ---
+
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			log.Printf("Błąd odczytu pliku konfiguracyjnego: %s", err)
-		} else {
-			log.Println("Plik .env nie znaleziony, poleganie na zmiennych środowiskowych.")
-		}
+		// Jeśli pliku nie ma, ten błąd pojawi się jako pierwszy
+		return
 	}
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
-		log.Fatalf("Nie można zmapować konfiguracji do struktury: %v", err)
+		return
 	}
 
-	if config.UsosConsumerKey == "" || config.UsosConsumerSecret == "" {
-		log.Fatal("USOS_CONSUMER_KEY i USOS_CONSUMER_SECRET muszą być ustawione")
-	}
-	if config.SessionSecret == "" {
-		log.Fatal("SESSION_SECRET musi być ustawiony")
-	}
-	if config.UsosApiBaseURL == "" {
-		log.Fatal("USOS_API_BASE_URL musi być ustawiony")
-	}
+	// --- Automatyczne budowanie złożonych URL-i ---
+	config.DatabaseURL = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		config.DBUser,
+		config.DBPassword,
+		config.DBHost,
+		config.DBPort,
+		config.DBName,
+		config.DBSslMode,
+	)
 
-	AppConfig = config
-	log.Printf("Konfiguracja załadowana. USOS API Base URL: %s", AppConfig.UsosApiBaseURL)
-	return AppConfig, nil
+	config.UsosRequestTokenURL = config.UsosApiBaseURL + "/services/oauth/request_token"
+	config.UsosAuthorizeURL = config.UsosApiBaseURL + "/services/oauth/authorize"
+	config.UsosAccessTokenURL = config.UsosApiBaseURL + "/services/oauth/access_token"
+	config.UsosCallbackURL = config.AppBaseURL + "/auth/usos/callback"
+
+	return
 }

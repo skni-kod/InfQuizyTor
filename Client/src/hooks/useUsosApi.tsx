@@ -7,6 +7,7 @@ interface FetchState<T> {
   error: string | null;
 }
 
+// ZMIANA 1: 'fields' jest teraz opcjonalne (fields?: string)
 export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
   const [fetchState, setFetchState] = useState<FetchState<T>>({
     data: null,
@@ -14,7 +15,7 @@ export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
     error: null,
   });
 
-  const { user, authLoading } = useAppContext();
+  const { authState } = useAppContext(); // Używamy obiektu authState
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,7 +23,7 @@ export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
         setFetchState({
           data: null,
           loading: false,
-          error: "Brak ścieżki lub pól API.",
+          error: "Brak ścieżki API.",
         });
         return;
       }
@@ -30,14 +31,16 @@ export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
 
       try {
         console.log(`useUsosApi: Pobieranie ${apiPath}...`);
+        // Endpoint teraz poprawnie trafia do /api/services/...
         const backendApiUrl = `/api/${apiPath}`;
+
+        // ZMIANA 2: Budujemy URL warunkowo
         let fullUrl = backendApiUrl;
         if (fields) {
           const params = new URLSearchParams({ fields });
           fullUrl += `?${params.toString()}`;
         }
 
-        // Używamy 'fullUrl' zamiast starej logiki
         const response = await fetch(fullUrl, {
           method: "GET",
           headers: { Accept: "application/json" },
@@ -47,15 +50,18 @@ export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
         if (!response.ok) {
           let errorBody = `Błąd backendu! Status: ${response.status}`;
           try {
+            // Spróbuj sparsować błąd JSON (np. z USOS)
             const errorData = await response.json();
             errorBody += ` - ${
               errorData.message || errorData.details || errorData.error
             }`;
           } catch (e) {
+            // Jeśli USOS zwróci 404 (jako HTML), to json() się nie uda
             errorBody += " (Nie można sparsować błędu JSON)";
           }
           throw new Error(errorBody);
         }
+
         const data: T = await response.json();
         setFetchState({ data, loading: false, error: null });
       } catch (err) {
@@ -68,9 +74,10 @@ export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
       }
     };
 
-    if (authLoading) {
+    // Używamy stanu z obiektu authState
+    if (authState.authLoading) {
       setFetchState((prev) => ({ ...prev, loading: true }));
-    } else if (user) {
+    } else if (authState.user) {
       fetchData();
     } else {
       setFetchState({
@@ -79,7 +86,7 @@ export const useUsosApi = <T,>(apiPath: string, fields?: string) => {
         error: "Użytkownik nie jest zalogowany.",
       });
     }
-  }, [apiPath, fields, user, authLoading]); // 'fields' jest już w zależnościach
+  }, [apiPath, fields, authState.user, authState.authLoading]); // Zależności są poprawne
 
   return fetchState;
 };

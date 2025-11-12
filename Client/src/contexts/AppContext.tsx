@@ -1,39 +1,75 @@
-import React, { createContext, useContext, useState, useMemo } from "react";
-// Upewnij się, że ten typ istnieje w Twoim pliku types.tsx
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { UsosUserInfo } from "../assets/types.tsx"; // Popraw ścieżkę do typów
+
+// Definiujemy stan uwierzytelniania jako jeden obiekt
+interface AuthState {
+  user: UsosUserInfo | null;
+  authLoading: boolean;
+}
 
 interface AppContextType {
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
 
-  // Dane zalogowanego użytkownika
-  user: UsosUserInfo | null;
+  authState: AuthState;
   setUser: (user: UsosUserInfo | null) => void;
-  // Status sprawdzania autoryzacji przy starcie aplikacji
-  authLoading: boolean;
   setAuthLoading: (isLoading: boolean) => void;
+  setLoggedInUser: (user: UsosUserInfo) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const initialAuthState: AuthState = {
+  user: null,
+  authLoading: true, // Zaczynamy jako "ładujący"
+};
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<UsosUserInfo | null>(null);
-  const [authLoading, setAuthLoading] = useState(true); // Zaczynamy jako "ładujący"
+  const [authState, setAuthState] = useState<AuthState>(initialAuthState);
+
+  const setIsMenuOpenStable = useCallback((isOpen: boolean) => {
+    setIsMenuOpen(isOpen);
+  }, []);
+
+  const setUser = useCallback((user: UsosUserInfo | null) => {
+    setAuthState((prev) => ({ ...prev, user }));
+  }, []);
+
+  const setAuthLoading = useCallback((isLoading: boolean) => {
+    setAuthState((prev) => ({ ...prev, authLoading: isLoading }));
+  }, []);
+
+  const setLoggedInUser = useCallback((user: UsosUserInfo) => {
+    setAuthState({ user, authLoading: false });
+  }, []);
 
   const value = useMemo(
     () => ({
       isMenuOpen,
-      setIsMenuOpen,
-      user,
+      setIsMenuOpen: setIsMenuOpenStable,
+      authState,
       setUser,
-      authLoading,
       setAuthLoading,
+      setLoggedInUser,
     }),
-    [isMenuOpen, user, authLoading]
-  ); // Dodaj nowe stany do zależności
+    [
+      isMenuOpen,
+      authState,
+      setIsMenuOpenStable,
+      setUser,
+      setAuthLoading,
+      setLoggedInUser,
+    ]
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

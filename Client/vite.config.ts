@@ -6,17 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // ⬇️ NAJPIERW NAJBARDZIEJ SZCZEGÓŁOWA REGUŁA ⬇️
-      // Reguła dla USOS API
-
-      // ⬇️ POTEM BARDZIEJ OGÓLNA REGUŁA ⬇️
-      // Reguła dla Twojego backendu Go
+      // JEDYNA REGUŁA: Wszystkie żądania /api/* idą do backendu Go
       "/api": {
-        target: "http://localhost:8080",
+        target: "http://localhost:8080", // Adres Twojego serwera Go
         changeOrigin: true,
         secure: false,
-        // Tutaj 'rewrite' jest zwykle niepotrzebne,
-        // jeśli backend Go też oczekuje ścieżki /api
       },
     },
   },

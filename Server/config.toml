@@ -1,0 +1,25 @@
+# Adres URL Twojego frontendu (React/Vite)
+FRONTEND_URL = "http://localhost:5173"
+
+# Wygeneruj silny, losowy ciąg znaków (np. 32-64 znaki)
+SESSION_SECRET = "TUTAJ_WPISZ_SWOJ_LOSOWY_SEKRET_SESJI"
+
+# Pełny adres URL do Twojej bazy danych PostgreSQL
+DATABASE_URL = "postgres://user:password@localhost:5432/nazwa_bazy_danych"
+
+# --- Konfiguracja USOS ---
+# (Te dane musisz skopiować ze swojego panelu dewelopera USOSapps)
+USOS_CONSUMER_KEY = "TUTAJ_KLUCZ_KONSUMENTA_USOS"
+USOS_CONSUMER_SECRET = "TUTAJ_SEKRET_KONSUMENTA_USOS"
+
+# Adres URL, na który USOS ma przekierować użytkownika po logowaniu
+# MUSI pasować do tego, co wpisałeś w panelu USOS
+USOS_CALLBACK_URL = "http://localhost:8080/auth/usos/callback"
+
+# Główny adres API USOS (bez /services)
+USOS_API_BASE_URL = "https://usosapps.prz.edu.pl"
+
+# Pełne adresy URL endpointów OAuth (zazwyczaj są takie same dla każdej uczelni)
+USOS_REQUEST_TOKEN_URL = "https://usosapps.prz.edu.pl/services/oauth/request_token"
+USOS_AUTHORIZE_URL = "https://usosapps.prz.edu.pl/services/oauth/authorize"
+USOS_ACCESS_TOKEN_URL = "https://usosapps.prz.edu.pl/services/oauth/access_token"
