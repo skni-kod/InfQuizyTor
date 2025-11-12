@@ -7,10 +7,9 @@ import { FaUser } from "react-icons/fa";
 const UserCard: React.FC = () => {
   // --- POPRAWKA ---
   const { authState } = useAppContext();
-  const { user, authLoading } = authState; // Destrukturyzacja dla czytelności
   // --- KONIEC POPRAWKI ---
 
-  if (authLoading) {
+  if (authState.authLoading) {
     return (
       <Card title="Profil Użytkownika">
         <p>Ładowanie danych...</p>
@@ -18,7 +17,7 @@ const UserCard: React.FC = () => {
     );
   }
 
-  if (!user) {
+  if (!authState.user) {
     return (
       <Card title="Błąd">
         <p>Nie udało się załadować danych użytkownika.</p>
@@ -32,9 +31,9 @@ const UserCard: React.FC = () => {
       <FaUser className={styles.userIcon} />
       <div className={styles.userInfo}>
         <span className={styles.userName}>
-          {user.first_name} {user.last_name}
+          {authState.user.first_name} {authState.user.last_name}
         </span>
-        <span className={styles.userEmail}>{user.email}</span>
+        <span className={styles.userEmail}>{authState.user.email}</span>
       </div>
     </Card>
   );

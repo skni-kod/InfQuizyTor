@@ -15,18 +15,31 @@ type User struct {
 	UpdatedAt time.Time
 }
 
+func (User) TableName() string {
+	return "users"
+}
+
 // Token przechowuje tokeny OAuth dla użytkownika w Twojej bazie
 type Token struct {
 	ID           uint   `gorm:"primarykey"`
-	UserUsosID   string `gorm:"unique;not null"` // Powiązanie z UsosID użytkownika
+	UserUsosID   string `gorm:"unique;not null"`
 	AccessToken  string
 	AccessSecret string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+
+	// --- NOWE POLE ---
+	// Zapiszemy tutaj listę uprawnień, np. "studies|email|grades"
+	Scopes string
+	// --- KONIEC POPRAWKI ---
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (Token) TableName() string {
+	return "tokens"
 }
 
 // UsosUserInfo to struktura odpowiedzi z API USOS (dla /services/users/user)
-// Używamy jej do dekodowania odpowiedzi JSON podczas logowania
 type UsosUserInfo struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`

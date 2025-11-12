@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom"; // 1. Zaimportuj useNavigate
 import styles from "./Header.module.scss";
 import {
   FaChartPie,
@@ -10,38 +10,36 @@ import {
 } from "react-icons/fa";
 import { useAppContext } from "../contexts/AppContext"; // Importuj kontekst
 
-// Definiujemy adres URL backendu (port 8080)
 const BACKEND_URL = "http://localhost:8080";
 
 const Header = () => {
-  // --- POPRAWKA ---
-  // Odczytujemy 'authState' zamiast 'user' i 'authLoading'
+  // Poprawione, aby używać authState
   const { authState, setUser } = useAppContext();
-  // --- KONIEC POPRAWKI ---
+  const navigate = useNavigate(); // 2. Zainicjuj hook nawigacji
 
+  // Poprawiona funkcja wylogowywania
   const handleLogout = async () => {
     try {
-      // Zmieniamy na POST, aby pasowało do main.go
-      const response = await fetch(`${BACKEND_URL}/auth/usos/logout`, {
-        method: "POST", // Użyj POST
+      await fetch(`${BACKEND_URL}/auth/usos/logout`, {
+        method: "POST", // Upewnij się, że jest POST
         credentials: "include",
       });
-
-      if (response.ok) {
-        setUser(null);
-        // Przeładuj stronę, aby wyczyścić stan
-        window.location.href = "/"; // Bezpieczniejsze niż reload()
-      } else {
-        const errorData = await response.json();
-        console.error("Błąd wylogowania:", errorData.error || "Nieznany błąd");
-      }
+      // Nie obchodzi nas, czy odpowiedź to 200 OK, czy 401.
+      // Czekaliśmy na odpowiedź, więc serwer miał szansę wysłać polecenie usunięcia ciasteczka.
     } catch (error) {
       console.error("Błąd sieci podczas wylogowywania:", error);
+      // Jeśli serwer nie odpowiada, i tak wylogowujemy lokalnie.
     }
+
+    // --- POPRAWKA ---
+    // Te dwie linie są teraz wykonywane PO otrzymaniu odpowiedzi od serwera
+    setUser(null); // Wyczyść stan w React
+    navigate("/"); // 3. Użyj 'navigate' ZAMIAST 'window.location.reload()'
+    // --- KONIEC POPRAWKI ---
   };
 
   const renderAuthButton = () => {
-    // --- POPRAWKA ---
+    // Użyj authState
     if (authState.authLoading) {
       return (
         <button className={styles.navButton} disabled>
@@ -50,6 +48,7 @@ const Header = () => {
       );
     }
 
+    // Użyj authState
     if (authState.user) {
       return (
         <>
@@ -60,7 +59,6 @@ const Header = () => {
             }
           >
             <FaUserCircle />
-            {/* Używamy authState.user */}
             <span>{authState.user.first_name || "Profil"}</span>
           </NavLink>
           <button
@@ -73,7 +71,6 @@ const Header = () => {
         </>
       );
     }
-    // --- KONIEC POPRAWKI ---
 
     // Wylogowany
     return (

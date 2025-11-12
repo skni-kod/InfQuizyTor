@@ -8,16 +8,18 @@ import QuizPage from "./pages/QuizPage";
 import CommunityPage from "./pages/CommunityPage";
 import ProfilePage from "./pages/ProfilePage";
 import { useAppContext } from "./contexts/AppContext";
-import { UsosUserInfo } from "./assets/types.tsx"; // Upewnij się, że ścieżka do typów jest poprawna
+import { UsosUserInfo } from "./assets/types.tsx";
 import ApiPage from "./pages/ApiPage.tsx";
 
 function App() {
-  const { setUser, setAuthLoading } = useAppContext();
+  const { authState, setLoggedInUser, setUser, setAuthLoading } =
+    useAppContext();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // --- POCZĄTEK POPRAWKI ---
+        // --- POPRAWKA ---
+        // Odpytujemy dedykowany endpoint /api/users/me z backendu Go
         const response = await fetch("/api/users/me", {
           method: "GET",
           credentials: "include",
@@ -29,28 +31,33 @@ function App() {
 
         if (response.ok) {
           const userData: UsosUserInfo = await response.json();
-          setUser(userData);
+          setLoggedInUser(userData);
         } else {
-          // Jeśli odpowiedź NIE JEST ok (np. 401 Unauthorized), ustaw użytkownika na null
           setUser(null);
-          // Logowanie błędu, jeśli nie udało się zalogować, jest normalne
+          setAuthLoading(false);
           console.log(
             `Status autoryzacji: ${response.status}. Użytkownik niezalogowany.`
           );
         }
       } catch (error) {
-        // Ten błąd (Unexpected token '<') wystąpi, jeśli 'response.ok' jest false,
-        // a my spróbujemy parsować HTML jako JSON *przed* sprawdzeniem statusu.
-        // Ale teraz kod najpierw sprawdza 'response.ok'.
+        // Błąd ECONNREFUSED pojawi się tutaj
         console.error("Błąd podczas sprawdzania statusu autoryzacji:", error);
         setUser(null);
-      } finally {
         setAuthLoading(false);
       }
     };
 
     checkAuthStatus();
-  }, [setUser, setAuthLoading]); // Zależności są poprawne
+  }, [setLoggedInUser, setUser, setAuthLoading]);
+
+  // Nie renderuj niczego, dopóki sprawdzanie sesji się nie zakończy
+  if (authState.authLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        Ładowanie sesji...
+      </div>
+    );
+  }
 
   return (
     <Routes>
