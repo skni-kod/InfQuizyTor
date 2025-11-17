@@ -1,0 +1,115 @@
+/* Używamy zmiennych globalnych z _variables.scss */
+
+.playgroundCard {
+    /* Ten widget powinien być szeroki, więc ustawiamy go, aby zajął 2 kolumny */
+    grid-column: span 2; 
+  }
+  
+  .playgroundContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+    padding-top: var(--space-3);
+  }
+  
+  .inputSection,
+  .outputSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .textArea {
+    background-color: var(--bg0-dark);
+    border: 1px solid var(--bg3-dark);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    resize: vertical;
+    min-height: 150px;
+  
+    &:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+  }
+  
+  .buttonGroup {
+    display: flex;
+    gap: var(--space-3);
+  
+    button {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-3);
+      background-color: var(--primary);
+      color: var(--bg0-dark);
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+  
+      &:hover {
+        opacity: 0.85;
+      }
+  
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  .outputArea {
+    position: relative;
+    background-color: var(--bg0-dark);
+    border: 1px solid var(--bg3-dark);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    color: var(--text-secondary);
+    font-family: monospace;
+    font-size: var(--text-sm);
+    min-height: 200px;
+    overflow: auto;
+  
+    pre {
+      margin: 0;
+      white-space: pre-wrap; /* Zawija długie linie JSON */
+      word-wrap: break-word;
+    }
+  }
+  
+  .loadingOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: hsla(var(--hue), 10%, 7%, 0.7);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+
+    z-index: 10;
+    gap: var(--space-4);
+    color: var(--text-primary);
+  
+    .spinner {
+      font-size: var(--text-3xl);
+      animation: spin 1.5s linear infinite;
+    }
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .error {
+    color: var(--error);
+    font-weight: 600;
+  }

@@ -34,6 +34,8 @@ type Config struct {
 	UsosRequestTokenURL string
 	UsosAuthorizeURL    string
 	UsosAccessTokenURL  string
+
+	GeminiAPIKey string `mapstructure:"GEMINI_API_KEY"`
 }
 
 // LoadConfig wczytuje konfigurację z pliku .env w danym folderze

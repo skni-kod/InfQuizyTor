@@ -1,0 +1,33 @@
+/* Używamy zmiennych globalnych z _variables.scss */
+
+.error {
+    color: var(--error);
+  }
+  
+  .groupList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .groupItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--bg1-dark);
+    border-radius: var(--radius-sm);
+    
+    svg {
+      color: var(--primary);
+      font-size: var(--text-lg);
+    }
+  }
+  
+  .groupName {
+    font-weight: 500;
+    color: var(--text-secondary);
+  }

@@ -3,32 +3,14 @@ import { useAppContext } from "../contexts/AppContext";
 import styles from "./ApiPage.module.scss";
 
 // Importuj TYLKO POPRAWNE widgety
-import UserCard from "../components/Widgets/UserCard";
-import StudentTestsWidget from "../components/Widgets/StudentTestsWidget";
-import UserCoursesWidget from "../components/Widgets/UserCoursesWidget";
-import IdCardsWidget from "../components/Widgets/IdCardsWidget";
-import EctsCreditsWidget from "../components/Widgets/EctsCreditsWidget";
-import UsosCalendar from "../components/Calendar/UsosCalendar";
-import LatestGradesWidget from "../components/Widgets/LatestGradesWidget";
-import CustomGroupsWidget from "../components/Widgets/CustomGroupsWidget";
-import BuildingIndexWidget from "../components/Widgets/BuildingIndexWidget";
 import GeminiTestPlayground from "../components/Widgets/GeminiTestPlayground";
 // Lista POPRAWIONYCH widgetów
 const widgets: React.FC[] = [
-  UserCard,
-  LatestGradesWidget, // Poprawny widget ocen
-  StudentTestsWidget, // Poprawny widget sprawdzianów
-  UserCoursesWidget,
-  IdCardsWidget,
-  EctsCreditsWidget,
-  UsosCalendar,
-  CustomGroupsWidget,
-  BuildingIndexWidget,
   GeminiTestPlayground,
   // TestsCard i GradesCard (stare) zostały usunięte
 ];
 
-const ApiPage: React.FC = () => {
+const TestsPage: React.FC = () => {
   // --- POPRAWKA ---
   const { authState } = useAppContext();
   // --- KONIEC POPRAWKI ---
@@ -64,4 +46,4 @@ const ApiPage: React.FC = () => {
   );
 };
 
-export default ApiPage;
+export default TestsPage;

@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time" // Potrzebne dla http.Client
 
-	"github.com/gomodule/oauth1/oauth" // Używamy biblioteki 'gomodule'
+	"github.com/gomodule/oauth1/oauth" // Import 'gomodule' v0.2.0
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/db"
 	"github.com/skni-kod/InfQuizyTor/Server/models"
@@ -54,7 +54,7 @@ func InitUsosService(cfg config.Config) {
 	log.Println("Serwis USOS (gomodule v0.2.0) pomyślnie zainicjowany.")
 }
 
-// GetRequestToken (poprawiony dla 'gomodule')
+// GetRequestToken (poprawny dla 'gomodule')
 func (s *GormUsosService) GetRequestToken() (string, string, error) {
 	additionalParams := url.Values{}
 	additionalParams.Set("scopes", s.Scopes) // Dodajemy scopes jako parametr
@@ -71,14 +71,14 @@ func (s *GormUsosService) GetRequestToken() (string, string, error) {
 	return creds.Token, creds.Secret, nil
 }
 
-// GetAuthorizationURL (poprawiony dla 'gomodule')
+// GetAuthorizationURL (poprawny dla 'gomodule')
 func (s *GormUsosService) GetAuthorizationURL(requestToken string) (*url.URL, error) {
 	tempCreds := &oauth.Credentials{Token: requestToken}
 	urlString := s.Client.AuthorizationURL(tempCreds, nil)
 	return url.Parse(urlString)
 }
 
-// GetAccessToken (poprawiony dla 'gomodule')
+// GetAccessToken (poprawny dla 'gomodule')
 func (s *GormUsosService) GetAccessToken(requestToken, requestSecret, verifier string) (string, string, error) {
 	tempCreds := &oauth.Credentials{
 		Token:  requestToken,
@@ -95,7 +95,7 @@ func (s *GormUsosService) GetAccessToken(requestToken, requestSecret, verifier s
 	return creds.Token, creds.Secret, nil
 }
 
-// GetUserInfo (poprawiony dla 'gomodule', naprawia błąd "url must not contain query string")
+// GetUserInfo (NAPRAWIONY - błąd "url must not contain query string")
 func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models.UsosUserInfo, error) {
 	accessCreds := &oauth.Credentials{
 		Token:  accessToken,
@@ -121,6 +121,7 @@ func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models
 	)
 
 	if err != nil {
+		// Tutaj właśnie pojawiał się błąd "oauth: url must not contain a query string"
 		return nil, fmt.Errorf("błąd pobierania danych użytkownika: %w", err)
 	}
 	defer resp.Body.Close()
@@ -138,7 +139,7 @@ func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models
 	return &userInfo, nil
 }
 
-// MakeSignedRequest (poprawiony dla 'gomodule')
+// MakeSignedRequest (NAPRAWIONY - błąd "url must not contain query string")
 func (s *GormUsosService) MakeSignedRequest(userUsosID, targetPath, queryParams string) (*http.Response, error) {
 	log.Printf("Proxy: Pobieranie tokena dla użytkownika %s", userUsosID)
 	token, err := s.UserRepo.GetTokenByUsosID(userUsosID)
@@ -155,6 +156,7 @@ func (s *GormUsosService) MakeSignedRequest(userUsosID, targetPath, queryParams 
 	baseURL := fmt.Sprintf("%s/services/%s", s.UsosAPIURL, targetPath)
 	params, _ := url.ParseQuery(queryParams)
 
+	// Dodajemy 'scopes' do parametrów
 	params.Set("scopes", token.Scopes)
 
 	log.Printf("Proxy: Wykonywanie podpisanego żądania GET do: %s", baseURL)

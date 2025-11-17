@@ -220,3 +220,85 @@ export interface UsosLatestGrade {
     course_name: LangDict;
   };
 }
+export interface UsosPrimaryGroup {
+  group_id: string; // (Prawdopodobnie ID grupy)
+  name: LangDict;
+}
+
+/**
+ * Reprezentuje prostą grupę niestandardową (dla list zagnieżdżonych)
+ */
+export interface UsosSimpleCustomGroup {
+  id: string;
+  name: string;
+}
+
+/**
+ * Pełna definicja Grupy Niestandardowej (z services/csgroups/user)
+ */
+export interface UsosCustomGroup {
+  id: string;
+  name: string;
+
+  // Pola drugorzędne (zawartość grupy)
+  primary_groups?: UsosPrimaryGroup[];
+  custom_groups?: UsosSimpleCustomGroup[];
+  users?: UsosUserInfo[]; // Używamy ponownie typu UsosUserInfo
+  emails?: string[];
+}
+/**
+ * Reprezentuje współrzędne geograficzne (z services/geo/building2)
+ */
+export interface UsosBuildingLocation {
+  long: number;
+  lat: number;
+}
+
+/**
+ * Reprezentuje adresy URL zdjęć budynku (z services/geo/building2)
+ */
+export interface UsosBuildingPhotoUrls {
+  screen: string | null; // Zakładamy, że prosimy o 'screen'
+}
+
+/**
+ * Reprezentuje budynek (z services/geo/building_index)
+ */
+export interface UsosBuilding {
+  id: string;
+  name: LangDict;
+  postal_address: string | null;
+  location: UsosBuildingLocation | null;
+  photo_urls: UsosBuildingPhotoUrls | null;
+}
+/**
+ * Reprezentuje pojedynczą fiszkę wygenerowaną przez AI
+ */
+export interface GeneratedFlashcard {
+  question: string;
+  answer: string;
+}
+
+/**
+ * Reprezentuje pojedyncze pytanie quizowe wygenerowane przez AI
+ */
+export interface GeneratedQuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+
+/**
+ * Reprezentuje podsumowanie wygenerowane przez AI
+ */
+export interface GeneratedSummary {
+  summary: string; // Zwykły tekst lub Markdown
+}
+
+/**
+ * Ogólna odpowiedź z naszego API generującego
+ */
+export type GeminiApiResponse =
+  | GeneratedFlashcard[]
+  | GeneratedQuizQuestion[]
+  | GeneratedSummary;
