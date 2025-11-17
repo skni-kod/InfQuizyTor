@@ -8,11 +8,11 @@ import StudentTestsWidget from "../components/Widgets/StudentTestsWidget";
 import UserCoursesWidget from "../components/Widgets/UserCoursesWidget";
 import IdCardsWidget from "../components/Widgets/IdCardsWidget";
 import EctsCreditsWidget from "../components/Widgets/EctsCreditsWidget";
-import UsosCalendar from "../components/Calendar/UsosCalendar";
 import LatestGradesWidget from "../components/Widgets/LatestGradesWidget";
 import CustomGroupsWidget from "../components/Widgets/CustomGroupsWidget";
 import BuildingIndexWidget from "../components/Widgets/BuildingIndexWidget";
 import GeminiTestPlayground from "../components/Widgets/GeminiTestPlayground";
+import CalendarContainer from "../components/Calendar/CalendarContainer";
 // Lista POPRAWIONYCH widgetów
 const widgets: React.FC[] = [
   UserCard,
@@ -21,7 +21,8 @@ const widgets: React.FC[] = [
   UserCoursesWidget,
   IdCardsWidget,
   EctsCreditsWidget,
-  UsosCalendar,
+  CalendarContainer,
+
   CustomGroupsWidget,
   BuildingIndexWidget,
   GeminiTestPlayground,

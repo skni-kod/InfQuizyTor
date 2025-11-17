@@ -1,0 +1,95 @@
+/* Plik: src/components/Studio/ResourceStudio.module.scss */
+@use "../../styles/mixins" as m; // Importuj swoje mixiny
+
+.studioContainer {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-5);
+  height: 100%;
+  
+  @include m.media-md { // Użyj mixinu dla mniejszych ekranów
+    grid-template-columns: 1fr;
+  }
+}
+
+.topicSelector {
+  background: var(--bg1-dark);
+  border: 1px solid var(--bg3-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.topicList {
+  list-style: none;
+  margin-top: var(--space-4);
+  
+  button {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    
+    &:hover {
+      background-color: var(--bg2-dark);
+      color: var(--text-primary);
+    }
+    
+    &.active {
+      background-color: var(--primary);
+      color: var(--bg0-dark);
+      font-weight: 600;
+    }
+  }
+}
+
+.toolArea {
+  background: var(--bg1-dark);
+  border: 1px solid var(--bg3-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+
+  h3 {
+    color: var(--text-primary);
+  }
+}
+
+.placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: var(--space-4);
+}
+
+.toolTabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 2px solid var(--bg3-dark);
+  margin-top: var(--space-4);
+  
+  button {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px; // Aby nachodziło na border
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+
+    &.tabActive {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+  }
+}
+
+.toolContent {
+  margin-top: var(--space-5);
+}

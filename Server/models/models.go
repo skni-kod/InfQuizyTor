@@ -3,122 +3,142 @@ package models
 import (
 	"time"
 
-	"github.com/lib/pq"
+	"github.com/lib/pq" // Upewnij się, że masz: go get github.com/lib/pq
 )
 
-// User reprezentuje użytkownika w Twojej lokalnej bazie danych
+// --- MODELE PODSTAWOWE ---
+
 type User struct {
 	ID        uint   `gorm:"primarykey"`
 	UsosID    string `gorm:"unique;not null"`
 	FirstName string
 	LastName  string
 	Email     string `gorm:"unique"`
+	Role      string `gorm:"default:'student';not null"` // 'student' lub 'admin'
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (User) TableName() string {
-	return "users"
-}
+func (User) TableName() string { return "users" }
 
-// Token przechowuje tokeny OAuth dla użytkownika w Twojej bazie
 type Token struct {
 	ID           uint   `gorm:"primarykey"`
 	UserUsosID   string `gorm:"unique;not null"`
 	AccessToken  string
 	AccessSecret string
-
-	// --- NOWE POLE ---
-	// Zapiszemy tutaj listę uprawnień, np. "studies|email|grades"
-	Scopes string
-	// --- KONIEC POPRAWKI ---
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Scopes       string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
-func (Token) TableName() string {
-	return "tokens"
+func (Token) TableName() string { return "tokens" }
+
+// --- MODELE TREŚCI (AI / NAUKA) ---
+
+type Subject struct {
+	ID     uint   `gorm:"primarykey"`
+	UsosID string `gorm:"unique;not null"`
+	Name   string `gorm:"not null"`
 }
 
-// UsosUserInfo to struktura odpowiedzi z API USOS (dla /services/users/user)
+func (Subject) TableName() string { return "subjects" }
+
+type Topic struct {
+	ID              uint   `gorm:"primarykey"`
+	SubjectID       uint   `gorm:"not null;index"`
+	Name            string `gorm:"not null"`
+	CreatedByUsosID string `gorm:"not null"`
+}
+
+func (Topic) TableName() string { return "topics" }
+
+type Flashcard struct {
+	ID              uint   `gorm:"primarykey"`
+	TopicID         uint   `gorm:"not null;index"`
+	Question        string `gorm:"type:text;not null"`
+	Answer          string `gorm:"type:text;not null"`
+	Status          string `gorm:"default:'pending';not null;index"`
+	CreatedByUsosID string `gorm:"not null"`
+}
+
+func (Flashcard) TableName() string { return "flashcards" }
+
+type QuizQuestion struct {
+	ID                 uint           `gorm:"primarykey"`
+	TopicID            uint           `gorm:"not null;index"`
+	QuestionText       string         `gorm:"type:text;not null"`
+	Options            pq.StringArray `gorm:"type:text[]"`
+	CorrectOptionIndex int            `gorm:"not null"`
+	Status             string         `gorm:"default:'pending';not null;index"`
+	CreatedByUsosID    string         `gorm:"not null"`
+}
+
+func (QuizQuestion) TableName() string { return "quiz_questions" }
+
+// --- MODELE KALENDARZA I GRUP ---
+
+type UserGroupRole struct {
+	ID          uint   `gorm:"primarykey"`
+	UserUsosID  string `gorm:"not null;index"`
+	UsosGroupID int    `gorm:"not null;index"`
+	Role        string `gorm:"not null"` // np. "leader"
+}
+
+func (UserGroupRole) TableName() string { return "user_group_roles" }
+
+type CalendarLayer struct {
+	ID          uint   `gorm:"primarykey"`
+	Name        string `gorm:"not null"`
+	Color       string `gorm:"not null"`
+	Type        string `gorm:"not null;index"` // 'private' lub 'group'
+	OwnerUsosID string `gorm:"index;null"`
+	UsosGroupID int    `gorm:"index;null"`
+}
+
+func (CalendarLayer) TableName() string { return "calendar_layers" }
+
+type CalendarEvent struct {
+	ID          uint      `gorm:"primarykey"`
+	LayerID     uint      `gorm:"not null;index"`
+	Title       string    `gorm:"not null"`
+	StartTime   time.Time `gorm:"not null"`
+	EndTime     time.Time
+	Description string `gorm:"type:text"`
+}
+
+func (CalendarEvent) TableName() string { return "calendar_events" }
+
+// --- TYPY DO DEKODOWANIA (USOS i Gemini) ---
+
 type UsosUserInfo struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 }
-
-// Przedmioty (pobrane z USOS lub stworzone przez użytkownika)
-type Subject struct {
-	ID     uint   `gorm:"primarykey"`
-	UserID uint   // Kto jest właścicielem (klucz obcy do User)
-	Name   string `gorm:"not null"` // Np. "Analiza Matematyczna"
+type LangDict struct {
+	PL string `json:"pl"`
+	EN string `json:"en"`
 }
-
-func (Subject) TableName() string { return "subjects" }
-
-// Tematy/Działy (powiązane z przedmiotem)
-type Topic struct {
-	ID        uint   `gorm:"primarykey"`
-	SubjectID uint   `gorm:"not null"` // Klucz obcy do Subject
-	Name      string `gorm:"not null"` // Np. "Pochodne i całki"
+type UsosCourseEdition struct {
+	CourseID   string   `json:"course_id"`
+	CourseName LangDict `json:"course_name"`
 }
-
-func (Topic) TableName() string { return "topics" }
-
-// Notatki Źródłowe (to, co wrzuci użytkownik)
-type SourceNote struct {
-	ID        uint   `gorm:"primarykey"`
-	TopicID   uint   `gorm:"not null"`  // Klucz obcy do Topic
-	RawText   string `gorm:"type:text"` // Surowy tekst (z OCR lub .txt)
-	CreatedAt time.Time
+type UsosUserCoursesResponse struct {
+	CourseEditions map[string][]UsosCourseEdition `json:"course_editions"`
 }
-
-func (SourceNote) TableName() string { return "source_notes" }
-
-// Fiszki (wygenerowane przez AI)
-type Flashcard struct {
-	ID       uint   `gorm:"primarykey"`
-	TopicID  uint   `gorm:"not null"` // Klucz obcy do Topic
-	Question string `gorm:"type:text;not null"`
-	Answer   string `gorm:"type:text;not null"`
+type UsosUserGroup struct {
+	CourseUnitID string   `json:"course_unit_id"`
+	GroupID      int      `json:"group_number"`
+	CourseName   LangDict `json:"course_name"`
+	ClassType    LangDict `json:"class_type"`
 }
-
-func (Flashcard) TableName() string { return "flashcards" }
-
-// Pytania Quizowe (wygenerowane przez AI)
-type QuizQuestion struct {
-	ID                 uint           `gorm:"primarykey"`
-	TopicID            uint           `gorm:"not null"` // Klucz obcy do Topic
-	QuestionText       string         `gorm:"type:text;not null"`
-	Options            pq.StringArray `gorm:"type:text[]"` // Odpowiedzi A, B, C, D
-	CorrectOptionIndex int            `gorm:"not null"`    // Np. 0 (dla A)
+type GeneratedFlashcard struct {
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
 }
-
-func (QuizQuestion) TableName() string { return "quiz_questions" }
-
-// --- ŚLEDZENIE POSTĘPÓW (Powtórki i Liderboardy) ---
-
-// Logika Powtórek (Spaced Repetition)
-type FlashcardProgress struct {
-	ID           uint      `gorm:"primarykey"`
-	UserID       uint      `gorm:"not null"`
-	FlashcardID  uint      `gorm:"not null"`
-	NextReviewAt time.Time `gorm:"not null"`    // Kiedy pokazać następnym razem
-	Repetitions  int       `gorm:"default:0"`   // Ile razy powtórzono
-	EaseFactor   float64   `gorm:"default:2.5"` // Algorytm SM-2 (jak Anki)
+type GeneratedQuizQuestion struct {
+	Question     string   `json:"question"`
+	Options      []string `json:"options"`
+	CorrectIndex int      `json:"correctIndex"`
 }
-
-func (FlashcardProgress) TableName() string { return "flashcard_progress" }
-
-// Wyniki Quizów (dla Liderboardów)
-type QuizAttempt struct {
-	ID        uint `gorm:"primarykey"`
-	UserID    uint `gorm:"not null"`
-	TopicID   uint `gorm:"not null"`
-	Score     int  `gorm:"not null"` // Np. 80 (jako procent)
-	CreatedAt time.Time
-}
-
-func (QuizAttempt) TableName() string { return "quiz_attempts" }

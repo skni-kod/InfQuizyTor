@@ -11,6 +11,7 @@ import { useAppContext } from "./contexts/AppContext";
 import { UsosUserInfo } from "./assets/types.tsx";
 import ApiPage from "./pages/ApiPage.tsx";
 import TestsPage from "./pages/aiTests.tsx";
+import AdminPage from "./pages/AdminPage.tsx";
 
 function App() {
   const { authState, setLoggedInUser, setUser, setAuthLoading } =
@@ -66,6 +67,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="tests" element={<ApiPage />} />
         <Route path="aiTests" element={<TestsPage />} />
+        <Route path="admin" element={<AdminPage />} />
 
         <Route path="przedmioty" element={<SubjectHubPage />} />
         <Route path="przedmioty/:subjectId" element={<SubjectHubPage />} />

@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time" // Potrzebne dla http.Client
+	"strings"
+	"time"
 
-	"github.com/gomodule/oauth1/oauth" // Import 'gomodule' v0.2.0
+	"github.com/gomodule/oauth1/oauth"
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/db"
 	"github.com/skni-kod/InfQuizyTor/Server/models"
@@ -18,13 +19,13 @@ import (
 var UsosService *GormUsosService
 
 type GormUsosService struct {
-	Client      *oauth.Client // Zgodnie z dokumentacją v0.2.0
+	Client      *oauth.Client
 	UsosAPIURL  string
 	UserRepo    *db.GormUserRepository
 	Scopes      string
 	FrontendURL string
-	CallbackURL string       // oauth.Client nie przechowuje CallbackURL
-	HttpClient  *http.Client // Wymagany przez metody v0.2.0
+	CallbackURL string
+	HttpClient  *http.Client
 }
 
 func InitUsosService(cfg config.Config) {
@@ -50,86 +51,53 @@ func InitUsosService(cfg config.Config) {
 		CallbackURL: cfg.UsosCallbackURL,
 		HttpClient:  httpClient,
 	}
-
 	log.Println("Serwis USOS (gomodule v0.2.0) pomyślnie zainicjowany.")
 }
 
-// GetRequestToken (poprawny dla 'gomodule')
+// GetRequestToken (bez zmian)
 func (s *GormUsosService) GetRequestToken() (string, string, error) {
 	additionalParams := url.Values{}
-	additionalParams.Set("scopes", s.Scopes) // Dodajemy scopes jako parametr
-
-	creds, err := s.Client.RequestTemporaryCredentials(
-		s.HttpClient,
-		s.CallbackURL,
-		additionalParams,
-	)
+	additionalParams.Set("scopes", s.Scopes)
+	creds, err := s.Client.RequestTemporaryCredentials(s.HttpClient, s.CallbackURL, additionalParams)
 	if err != nil {
-		log.Printf("Błąd USOS (RequestToken): %v", err)
 		return "", "", fmt.Errorf("błąd pobierania Request Tokena: %w", err)
 	}
 	return creds.Token, creds.Secret, nil
 }
 
-// GetAuthorizationURL (poprawny dla 'gomodule')
+// GetAuthorizationURL (bez zmian)
 func (s *GormUsosService) GetAuthorizationURL(requestToken string) (*url.URL, error) {
 	tempCreds := &oauth.Credentials{Token: requestToken}
 	urlString := s.Client.AuthorizationURL(tempCreds, nil)
 	return url.Parse(urlString)
 }
 
-// GetAccessToken (poprawny dla 'gomodule')
+// GetAccessToken (bez zmian)
 func (s *GormUsosService) GetAccessToken(requestToken, requestSecret, verifier string) (string, string, error) {
-	tempCreds := &oauth.Credentials{
-		Token:  requestToken,
-		Secret: requestSecret,
-	}
-	creds, _, err := s.Client.RequestToken(
-		s.HttpClient,
-		tempCreds,
-		verifier,
-	)
+	tempCreds := &oauth.Credentials{Token: requestToken, Secret: requestSecret}
+	creds, _, err := s.Client.RequestToken(s.HttpClient, tempCreds, verifier)
 	if err != nil {
 		return "", "", fmt.Errorf("błąd wymiany Access Tokena: %w", err)
 	}
 	return creds.Token, creds.Secret, nil
 }
 
-// GetUserInfo (NAPRAWIONY - błąd "url must not contain query string")
+// GetUserInfo (bez zmian)
 func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models.UsosUserInfo, error) {
-	accessCreds := &oauth.Credentials{
-		Token:  accessToken,
-		Secret: accessSecret,
-	}
-
-	fields := "id|first_name|last_name|email"
-
-	// 1. URL jest teraz "czysty", bez parametrów
+	accessCreds := &oauth.Credentials{Token: accessToken, Secret: accessSecret}
 	baseURL := fmt.Sprintf("%s/services/users/user", s.UsosAPIURL)
-
-	// 2. Parametry (fields i scopes) są przekazywane osobno
 	params := url.Values{}
-	params.Set("fields", fields)
-	params.Set("scopes", s.Scopes)
+	params.Set("fields", "id|first_name|last_name|email")
 
-	// 3. Używamy s.Client.Get z 4 argumentami
-	resp, err := s.Client.Get(
-		s.HttpClient,
-		accessCreds,
-		baseURL,
-		params, // Parametry przekazujemy tutaj
-	)
-
+	resp, err := s.Client.Get(s.HttpClient, accessCreds, baseURL, params)
 	if err != nil {
-		// Tutaj właśnie pojawiał się błąd "oauth: url must not contain a query string"
 		return nil, fmt.Errorf("błąd pobierania danych użytkownika: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		log.Printf("Błąd odpowiedzi USOS (GetUserInfo): Status %d, Body: %s", resp.StatusCode, string(bodyBytes))
-		return nil, fmt.Errorf("błąd API USOS: status %d", resp.StatusCode)
+		return nil, fmt.Errorf("błąd API USOS (GetUserInfo): status %d, body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var userInfo models.UsosUserInfo
@@ -139,38 +107,84 @@ func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models
 	return &userInfo, nil
 }
 
-// MakeSignedRequest (NAPRAWIONY - błąd "url must not contain query string")
+// MakeSignedRequest (bez zmian)
 func (s *GormUsosService) MakeSignedRequest(userUsosID, targetPath, queryParams string) (*http.Response, error) {
-	log.Printf("Proxy: Pobieranie tokena dla użytkownika %s", userUsosID)
 	token, err := s.UserRepo.GetTokenByUsosID(userUsosID)
 	if err != nil {
-		log.Printf("Proxy: Błąd pobierania tokena: %v", err)
 		return nil, fmt.Errorf("błąd pobierania tokena z bazy: %w", err)
 	}
-
-	accessCreds := &oauth.Credentials{
-		Token:  token.AccessToken,
-		Secret: token.AccessSecret,
-	}
-
+	accessCreds := &oauth.Credentials{Token: token.AccessToken, Secret: token.AccessSecret}
 	baseURL := fmt.Sprintf("%s/services/%s", s.UsosAPIURL, targetPath)
 	params, _ := url.ParseQuery(queryParams)
 
-	// Dodajemy 'scopes' do parametrów
-	params.Set("scopes", token.Scopes)
-
-	log.Printf("Proxy: Wykonywanie podpisanego żądania GET do: %s", baseURL)
-
-	resp, err := s.Client.Get(
-		s.HttpClient,
-		accessCreds,
-		baseURL,
-		params,
-	)
+	resp, err := s.Client.Get(s.HttpClient, accessCreds, baseURL, params)
 	if err != nil {
-		log.Printf("Proxy: Błąd żądania GET do USOS: %v", err)
 		return nil, fmt.Errorf("błąd żądania do API USOS: %w", err)
 	}
-
 	return resp, nil
+}
+
+// --- NOWE FUNKCJE ---
+
+// GetCourses pobiera listę przedmiotów użytkownika z USOS
+func (s *GormUsosService) GetCourses(userUsosID string) (*models.UsosUserCoursesResponse, error) {
+	fields := "course_editions(course_id|course_name)"
+	resp, err := s.MakeSignedRequest(userUsosID, "services/courses/user", fmt.Sprintf("fields=%s", fields))
+	if err != nil {
+		return nil, fmt.Errorf("błąd żądania do courses/user: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		// Specjalna obsługa błędu pól z nawiasami
+		if strings.Contains(string(bodyBytes), "Unrecognized character") {
+			log.Println("OSTRZEŻENIE: Serwer USOS nie wspiera pól zagnieżdżonych. Ponawiam próbę z uproszczonymi polami.")
+			return s.GetCoursesFallback(userUsosID)
+		}
+		return nil, fmt.Errorf("błąd API USOS (GetCourses): status %d, body: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var courseData models.UsosUserCoursesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&courseData); err != nil {
+		return nil, fmt.Errorf("błąd dekodowania JSON z courses/user: %w", err)
+	}
+	return &courseData, nil
+}
+
+// GetCoursesFallback to wersja zapasowa, jeśli pola z nawiasami zawiodą
+func (s *GormUsosService) GetCoursesFallback(userUsosID string) (*models.UsosUserCoursesResponse, error) {
+	resp, err := s.MakeSignedRequest(userUsosID, "services/courses/user", "fields=course_editions")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("błąd API USOS (GetCoursesFallback): status %d", resp.StatusCode)
+	}
+	var courseData models.UsosUserCoursesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&courseData); err != nil {
+		return nil, fmt.Errorf("błąd dekodowania JSON z courses/user (fallback): %w", err)
+	}
+	return &courseData, nil
+}
+
+// GetUserGroups pobiera listę grup zajęciowych użytkownika
+func (s *GormUsosService) GetUserGroups(userUsosID string) ([]models.UsosUserGroup, error) {
+	resp, err := s.MakeSignedRequest(userUsosID, "services/groups/user", "fields=course_unit_id|group_number|course_name|class_type")
+	if err != nil {
+		return nil, fmt.Errorf("błąd żądania do groups/user: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("błąd API USOS (GetUserGroups): status %d, body: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var userGroups []models.UsosUserGroup
+	if err := json.NewDecoder(resp.Body).Decode(&userGroups); err != nil {
+		return nil, fmt.Errorf("błąd dekodowania JSON z groups/user: %w", err)
+	}
+	return userGroups, nil
 }

@@ -1,0 +1,77 @@
+/* Plik: src/components/Studio/ManualFlashcardForm.module.scss */
+
+.formContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 700px; // Ogranicz szerokość dla czytelności
+  }
+  
+  .desc {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: var(--space-2);
+  }
+  
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    
+    label {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    textarea {
+      background-color: var(--bg0-dark);
+      border: 1px solid var(--bg3-dark);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      font-size: var(--text-base);
+      resize: vertical;
+  
+      &:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+    }
+  }
+  
+  button[type="submit"] {
+    padding: var(--space-3);
+    background-color: var(--primary);
+    color: var(--bg0-dark);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    align-self: flex-start; // Nie rozciągaj przycisku
+  
+    &:hover { opacity: 0.85; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+  
+  .statusMessage {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    
+    &.success { background-color: hsla(var(--hue-success), 60%, 45%, 0.2); color: var(--success); }
+    &.error { background-color: hsla(var(--hue-error), 70%, 55%, 0.2); color: var(--error); }
+  }
+  
+  .icon-spin {
+    animation: spin 1.5s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }

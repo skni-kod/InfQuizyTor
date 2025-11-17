@@ -1,0 +1,113 @@
+/* Plik: src/components/Studio/TopicViewerModal.module.scss */
+@use "../../styles/mixins" as m;
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background-color: hsla(var(--hue), 10%, 7%, 0.6);
+  
+  /* --- POPRAWKA --- */
+  /* Najpierw prefixy, potem standardowa właściwość */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  /* --- KONIEC POPRAWKI --- */
+
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.modal {
+  @include m.glass-effect(15px, var(--glass-bg));
+  width: 100%;
+  max-width: 900px;
+  height: 80vh;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  font-size: var(--text-xl);
+  color: var(--text-muted);
+  padding: var(--space-2);
+  background: none;
+  
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg2-dark);
+    border-radius: var(--radius-full);
+  }
+}
+
+h2 {
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-5);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 2px solid var(--bg3-dark);
+  flex-shrink: 0;
+  
+  button {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+
+    &.tabActive {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+  }
+}
+
+.contentArea {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-top: var(--space-5);
+}
+
+.notesContent {
+  /* Style dla renderowanego Markdown (możesz je rozbudować) */
+  h3 {
+    color: var(--primary);
+    margin-bottom: var(--space-3);
+  }
+  li {
+    margin-left: var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+}
+
+.startButton {
+  background-color: var(--success);
+  color: var(--bg0-dark);
+  font-weight: 600;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-5);
+  font-size: var(--text-base);
+}
+
+pre {
+  background-color: var(--bg0-dark);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--bg3-dark);
+  color: var(--text-secondary);
+}

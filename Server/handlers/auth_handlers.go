@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt" // 1. Dodaj import 'fmt'
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,7 +16,6 @@ import (
 // HandleUsosLogin (poprawiony, aby zwracał JSON)
 func HandleUsosLogin(c *gin.Context) {
 	session := sessions.Default(c)
-
 	requestToken, requestSecret, err := services.UsosService.GetRequestToken()
 	if err != nil {
 		utils.SendError(c, http.StatusInternalServerError, "Nie można połączyć się z USOS")
@@ -35,24 +34,19 @@ func HandleUsosLogin(c *gin.Context) {
 		utils.SendError(c, http.StatusInternalServerError, "Błąd generowania URL autoryzacji")
 		return
 	}
-
-	// Zwracamy JSON, którego oczekuje Twój frontend
 	c.JSON(http.StatusOK, gin.H{"authorization_url": authURL.String()})
 }
 
-// HandleUsosCallback (POPRAWIONE PRZEKIEROWANIA)
+// HandleUsosCallback (poprawione przekierowania i zapis scopes)
 func HandleUsosCallback(c *gin.Context) {
 	session := sessions.Default(c)
 	requestToken := c.Query("oauth_token")
 	verifier := c.Query("oauth_verifier")
-
-	// --- 2. Pobieramy URL frontendu z serwisu ---
 	frontendURL := services.UsosService.FrontendURL
 
 	requestSecretValue := session.Get("request_secret")
 	if requestSecretValue == nil {
 		log.Println("Błąd krytyczny: brak request_secret w sesji")
-		// --- POPRAWKA PRZEKIEROWANIA ---
 		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/?error=session_expired", frontendURL))
 		return
 	}
@@ -61,16 +55,13 @@ func HandleUsosCallback(c *gin.Context) {
 	accessToken, accessSecret, err := services.UsosService.GetAccessToken(requestToken, requestSecret, verifier)
 	if err != nil {
 		log.Printf("Błąd wymiany Access Tokena: %v", err)
-		// --- POPRAWKA PRZEKIEROWANIA ---
 		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/?error=auth_failed", frontendURL))
 		return
 	}
 
-	// Teraz to żądanie POWINNO SIĘ UDAĆ
 	userInfo, err := services.UsosService.GetUserInfo(accessToken, accessSecret)
 	if err != nil {
 		log.Printf("Błąd pobierania danych użytkownika: %v", err)
-		// --- POPRAWKA PRZEKIEROWANIA ---
 		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/?error=user_info_failed", frontendURL))
 		return
 	}
@@ -80,10 +71,10 @@ func HandleUsosCallback(c *gin.Context) {
 		FirstName: userInfo.FirstName,
 		LastName:  userInfo.LastName,
 		Email:     userInfo.Email,
+		// Role jest 'student' by default (zdefiniowane w modelu)
 	}
 	if err := db.UserRepository.CreateOrUpdateUser(user); err != nil {
 		log.Printf("Błąd zapisu użytkownika do DB: %v", err)
-		// --- POPRAWKA PRZEKIEROWANIA ---
 		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/?error=db_user_failed", frontendURL))
 		return
 	}
@@ -92,11 +83,10 @@ func HandleUsosCallback(c *gin.Context) {
 		UserUsosID:   userInfo.ID,
 		AccessToken:  accessToken,
 		AccessSecret: accessSecret,
-		Scopes:       services.UsosService.Scopes,
+		Scopes:       services.UsosService.Scopes, // Poprawnie zapisuje scopes
 	}
 	if err := db.UserRepository.SaveToken(token); err != nil {
 		log.Printf("Błąd zapisu tokena do DB: %v", err)
-		// --- POPRAWKA PRZEKIEROWANIA ---
 		c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/?error=db_token_failed", frontendURL))
 		return
 	}
@@ -106,8 +96,6 @@ func HandleUsosCallback(c *gin.Context) {
 	session.Save()
 
 	log.Printf("Użytkownik %s (%s) pomyślnie zalogowany.", userInfo.ID, userInfo.FirstName)
-
-	// --- POPRAWKA PRZEKIEROWANIA (SUKCES) ---
 	c.Redirect(http.StatusFound, frontendURL)
 }
 

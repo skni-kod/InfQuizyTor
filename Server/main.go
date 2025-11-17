@@ -25,42 +25,61 @@ func main() {
 	db.InitDB(cfg)
 	defer db.CloseDB()
 
+	// Inicjalizujemy oba serwisy
 	services.InitUsosService(cfg)
+	services.InitGeminiService(cfg)
 
 	router := gin.Default()
-
 	router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
+	// Cors i Sesje
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{cfg.FrontendURL}
 	corsConfig.AllowCredentials = true
 	corsConfig.AddAllowHeaders("Authorization", "Content-Type")
 	router.Use(cors.New(corsConfig))
-
 	store := cookie.NewStore([]byte(cfg.SessionSecret))
 	router.Use(sessions.Sessions("usos_session", store))
 
+	// Trasy Publiczne (Logowanie/Wylogowanie)
 	authGroup := router.Group("/auth/usos")
 	{
 		authGroup.GET("/login", handlers.HandleUsosLogin)
 		authGroup.GET("/callback", handlers.HandleUsosCallback)
-		authGroup.POST("/logout", middleware.AuthRequired(), handlers.HandleLogout)
+		authGroup.POST("/logout", handlers.HandleLogout)
 	}
 
+	// Trasy Chronione (dla wszystkich zalogowanych)
 	apiGroup := router.Group("/api")
-	apiGroup.Use(middleware.AuthRequired()) // Zabezpiecz wszystkie trasy /api
+	apiGroup.Use(middleware.AuthRequired())
 	{
-		// --- POCZĄTEK POPRAWKI ---
-
-		// 1. DEDYKOWANA TRASA DLA /api/users/me
-		// (Handler, który czyta z BAZY DANYCH)
+		// USOS Proxy (oryginalne)
 		apiGroup.GET("/users/me", handlers.HandleGetUserMe)
-
-		// 2. OGÓLNE PROXY DLA WSZYSTKICH INNYCH RZECZY Z USOS
-		// (Handler, który łączy się z USOS)
 		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
 
-		// --- KONIEC POPRAWKI ---
+		// --- NOWE TRASY APLIKACJI ---
+
+		// Trasy dla Przedmiotów i Tematów
+		apiGroup.GET("/subjects", handlers.HandleGetSubjects) // Synchronizuje i pobiera przedmioty
+		apiGroup.GET("/subjects/:id/topics", handlers.HandleGetTopics)
+		apiGroup.POST("/topics", handlers.HandleCreateTopic) // Tworzenie nowego tematu
+
+		// Trasy dla Generowania Treści (AI i Ręczne)
+		apiGroup.POST("/topics/upload", handlers.HandleContentUpload)       // Przez AI (pliki)
+		apiGroup.POST("/flashcards/manual", handlers.HandleManualFlashcard) // Ręczne fiszki
+
+		// Trasy do Pobierania Treści (dla studentów)
+		apiGroup.GET("/topics/:id/content", handlers.HandleGetTopicContent) // Dla modala
+
+		// Trasy dla Admina (Moderacja)
+		adminGroup := apiGroup.Group("/admin")
+		adminGroup.Use(middleware.AdminRequired()) // Dodatkowe zabezpieczenie rolą "admin"
+		{
+			adminGroup.GET("/pending-flashcards", handlers.HandleGetPendingFlashcards)
+			adminGroup.POST("/approve-flashcard/:id", handlers.HandleApproveFlashcard)
+			adminGroup.POST("/reject-flashcard/:id", handlers.HandleRejectFlashcard)
+			// TODO: Dodać trasy do moderacji quizów (np. /pending-quiz-questions)
+		}
 	}
 
 	router.GET("/health", func(c *gin.Context) {

@@ -1,7 +1,7 @@
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { useAppContext } from "../../contexts/AppContext";
 import Widget from "../Widgets/Widget";
-import Menu from "../Menu/Menu";
+import Menu from "../Menu/GooeyMenu";
 import styles from "./WidgetGrid.module.scss";
 
 // Import stylów RGL (React-Grid-Layout)

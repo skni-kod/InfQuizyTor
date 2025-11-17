@@ -1,40 +1,88 @@
-@import '../styles/mixins';
+/* Plik: src/pages/SubjectHubPage.module.scss */
+@use "../styles/mixins" as m; // Upewnij się, że masz ten import
 
 .hubContainer {
-  padding: var(--space-8);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-6) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Ważne dla zakładek
+}
+
+.backButton {
+  background: var(--bg2-dark);
+  color: var(--text-secondary);
+  border: 1px solid var(--bg3-dark);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start; // Przycisk na górze po lewej
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg3-dark);
+    color: var(--text-primary);
+  }
+}
+
+.subjectTitle {
+  font-size: var(--text-3xl);
   color: var(--text-primary);
-  position: relative;
-  z-index: 1;
+  margin-top: var(--space-4);
 }
 
 .tabs {
   display: flex;
   gap: var(--space-2);
-  margin: var(--space-6) 0;
   border-bottom: 2px solid var(--bg3-dark);
+  margin-top: var(--space-5);
+  flex-shrink: 0; // Zapobiega kurczeniu się zakładek
+}
 
-  button {
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--text-muted);
-    border-bottom: 2px solid transparent;
-    transform: translateY(2px);
-    transition: all var(--transition-medium);
+.tabButton {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition-fast);
 
-    &:hover {
-      color: var(--text-primary);
-    }
+  &:hover {
+    color: var(--text-secondary);
   }
-  
-  .tabActive {
+
+  &.tabActive {
     color: var(--primary);
     border-bottom-color: var(--primary);
+    font-weight: 600;
   }
 }
 
 .tabContent {
-  @include glass-effect(5px, var(--glass-bg));
-  padding: var(--space-6);
+  flex-grow: 1; // Zajmuje resztę miejsca
+  padding: var(--space-5) 0;
+  overflow-y: auto; // Tylko ta zawartość się przewija
+}
+
+.graphContainer {
+  // Kontener dla grafu, aby go ładnie wyśrodkować
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto; // Umożliwia przewijanie grafu
+  padding: var(--space-4);
+}
+
+.contactInfo {
+  // Placeholder
+  padding: var(--space-4);
+  background: var(--bg1-dark);
   border-radius: var(--radius-lg);
 }
