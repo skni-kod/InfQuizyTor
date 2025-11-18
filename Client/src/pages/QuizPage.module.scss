@@ -1,6 +1,4 @@
-// Remove the @import or @use line for variables, as CSS variables are global.
-// @import '../styles/variables'; // REMOVE THIS LINE
-// @use '../styles/variables'; // OR REMOVE THIS LINE
+// Nie importujemy tutaj Reacta! To plik stylów.
 
 .quizContainer {
   display: flex;
@@ -9,7 +7,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: var(--space-8);
-  background-color: var(--bg1-dark); // CSS variable works globally
+  background-color: var(--bg1-dark);
   color: var(--text-primary);
   text-align: center;
 }
@@ -24,10 +22,13 @@
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: background-color var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  border: 1px solid transparent;
 
   &:hover {
     background-color: var(--tertiary);
     color: var(--text-primary);
+    border-color: var(--primary);
   }
 }
 
@@ -53,6 +54,7 @@ p {
   min-width: 300px;
   max-width: 600px;
   border: 1px solid var(--bg3-dark);
+  box-shadow: var(--shadow-lg);
 
   p {
     font-size: var(--text-base);

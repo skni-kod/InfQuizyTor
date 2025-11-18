@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../contexts/AppContext";
 import styles from "./Menu.module.scss";
 
 import { AppSubject, Topic, Subject } from "../../assets/types.tsx";
-
 import QuizGraph from "../Quiz/QuizGraph";
 
 import {
@@ -22,6 +21,7 @@ import {
 } from "react-icons/fa";
 import { IconType } from "react-icons";
 
+// --- LOGIKA WIZUALNA ---
 const SUBJECT_VISUALS: Record<string, { icon: IconType; color: string }> = {
   "Analiza matematyczna i algebra liniowa": {
     icon: FaCalculator,
@@ -63,6 +63,31 @@ const mapDbSubjectsToAppSubjects = (dbSubjects: Subject[]): AppSubject[] => {
   });
 };
 
+// Generuje gradient dla bordera
+// Funkcja pomocnicza (upewnij się, że masz taką logikę)
+const getGradientString = (colors: string[]) => {
+  if (colors.length === 0)
+    return "conic-gradient(var(--primary), var(--primary))";
+
+  // Jeśli jest tylko jeden kolor (np. Level 2 - konkretny przedmiot),
+  // tworzymy gradient z tego samego koloru do tego samego koloru (jednolite tło/ramka)
+  if (colors.length === 1) {
+    return `conic-gradient(${colors[0]}, ${colors[0]})`;
+  }
+
+  const segmentSize = 100 / colors.length;
+  let gradientParts = [];
+  for (let i = 0; i < colors.length; i++) {
+    const start = i * segmentSize;
+    // Dodajemy 'hard stop' albo miękkie przejście. Tutaj miękkie (środek segmentu).
+    gradientParts.push(`${colors[i]} ${start + segmentSize / 2}%`);
+  }
+  // Zamykamy pętlę
+  gradientParts.push(`${colors[0]} 100%`);
+
+  return `conic-gradient(from 0deg, ${gradientParts.join(", ")})`;
+};
+
 type MenuLevel = 0 | 1 | 2;
 type LoadingState = "idle" | "loading" | "error";
 
@@ -78,42 +103,37 @@ const Menu = () => {
   const [topicsLoadingState, setTopicsLoadingState] =
     useState<LoadingState>("idle");
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [rotation, setRotation] = useState(0);
 
   const isLoading =
     subjectsLoadingState === "loading" || topicsLoadingState === "loading";
 
+  // --- OPTYMALIZACJA: Wstępne pobieranie danych ---
+  // Pobieramy przedmioty od razu po załadowaniu komponentu, żeby nie czekać przy kliknięciu
   useEffect(() => {
-    let frameId: number;
-    const animate = () => {
-      setRotation((prev) => (prev + 0.5) % 360); // Wolniejszy obrót
-      frameId = requestAnimationFrame(animate);
-    };
-    if (isMenuOpen) {
-      frameId = requestAnimationFrame(animate);
-    }
-    return () => cancelAnimationFrame(frameId);
-  }, [isMenuOpen]);
+    const fetchInitialData = async () => {
+      if (subjects.length > 0) return; // Już mamy dane
 
-  const syncAndFetchSubjects = async () => {
-    setSubjectsLoadingState("loading");
-    try {
+      setSubjectsLoadingState("loading");
       try {
-        await fetch("/api/subjects/sync", {
-          method: "POST",
-          credentials: "include",
-        });
-      } catch (e) {}
-      const getRes = await fetch("/api/subjects", { credentials: "include" });
-      if (!getRes.ok) throw new Error("Błąd pobierania");
-      const dbData: Subject[] = await getRes.json();
-      setSubjects(mapDbSubjectsToAppSubjects(dbData));
-      setSubjectsLoadingState("idle");
-    } catch (e) {
-      console.error(e);
-      setSubjectsLoadingState("error");
-    }
-  };
+        try {
+          await fetch("/api/subjects/sync", {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (e) {}
+        const getRes = await fetch("/api/subjects", { credentials: "include" });
+        if (!getRes.ok) throw new Error("Błąd pobierania");
+        const dbData: Subject[] = await getRes.json();
+        setSubjects(mapDbSubjectsToAppSubjects(dbData));
+        setSubjectsLoadingState("idle");
+      } catch (e) {
+        console.error(e);
+        setSubjectsLoadingState("error");
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   const fetchTopics = async (subject: AppSubject) => {
     setTopicsLoadingState("loading");
@@ -136,7 +156,7 @@ const Menu = () => {
     setLevel(1);
     setIsMenuOpen(true);
     setActiveSubject(null);
-    if (subjects.length === 0) syncAndFetchSubjects();
+    // Dane są już pobierane w useEffect, więc nie musimy tu czekać
   };
 
   const openLevel2 = (subject: AppSubject) => {
@@ -183,6 +203,7 @@ const Menu = () => {
     return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
   };
 
+  // Dynamiczne zmienne
   let CentralIcon = FaUserCircle;
   if (level === 1) CentralIcon = FaTimes;
   if (level === 2 && activeSubject) CentralIcon = activeSubject.icon;
@@ -190,6 +211,15 @@ const Menu = () => {
   const centralNodeColor =
     level === 2 && activeSubject ? activeSubject.color : "var(--primary)";
   const nodeRadius = 220;
+
+  // Obliczanie kolorów do gradientu
+  const currentColors = useMemo(() => {
+    if (level === 1) return subjects.map((s) => s.color);
+    if (level === 2 && activeSubject) return [activeSubject.color];
+    return ["var(--primary)"];
+  }, [level, subjects, activeSubject]);
+
+  const borderGradient = getGradientString(currentColors);
 
   return (
     <div className={styles.gooeyContainer}>
@@ -201,13 +231,11 @@ const Menu = () => {
           style={
             {
               "--node-color": centralNodeColor,
-              "--angle": `${rotation}deg`,
+              "--border-gradient": borderGradient,
             } as React.CSSProperties
           }
         >
-          <div className={styles.centralIconWrapper}>
-            <CentralIcon />
-          </div>
+          <CentralIcon />
           <span className={styles.centralLabel}>
             {level === 0 && "Profil"}
             {level === 1 && "Zamknij"}
@@ -225,43 +253,38 @@ const Menu = () => {
         )}
 
         {/* --- POZIOM 1: Przedmioty --- */}
-        {/* UWAGA: Usunięto warunek {level === 1 && ...}. Mapujemy zawsze, jeśli są dane. */}
-        {subjectsLoadingState !== "loading" &&
-          subjects.map((subject, i) => {
-            const { x, y } = getRadialPosition(i, subjects.length, nodeRadius);
+        {subjects.map((subject, i) => {
+          const { x, y } = getRadialPosition(i, subjects.length, nodeRadius);
+          const isVisible = level === 1;
 
-            // Sterujemy widocznością tylko za pomocą flagi
-            const isVisible = level === 1;
-
-            return (
-              <button
-                key={subject.id}
-                className={`${styles.node} ${styles.subjectNode}`}
-                onClick={() => openLevel2(subject)}
-                // Jeśli nie jest widoczny (Level 0 lub Level 2), blokujemy kliknięcia CSS-em (pointer-events)
-                disabled={!isVisible}
-                style={
-                  {
-                    "--node-color": subject.color,
-                    // Jeśli widoczne: idź na pozycję. Jeśli nie: wróć do środka.
-                    transform: isVisible
-                      ? `translate(${x}px, ${y}px) scale(1)`
-                      : `translate(0px, 0px) scale(0)`,
-                    opacity: isVisible ? 1 : 0,
-                    pointerEvents: isVisible ? "auto" : "none",
-                    // Opóźnienie zależne od indeksu - tworzy efekt fali
-                    transitionDelay: isVisible ? `${i * 0.04}s` : "0s",
-                    zIndex: 5,
-                  } as React.CSSProperties
-                }
-              >
-                <div className={styles.iconWrapper}>
-                  <subject.icon />
-                </div>
-                <span>{subject.name}</span>
-              </button>
-            );
-          })}
+          return (
+            <button
+              key={subject.id}
+              className={`${styles.node} ${styles.subjectNode}`}
+              onClick={() => openLevel2(subject)}
+              disabled={!isVisible}
+              style={
+                {
+                  "--node-color": subject.color,
+                  // Używamy transformacji do pozycji. Jeśli ukryty -> wraca do środka.
+                  transform: isVisible
+                    ? `translate(${x}px, ${y}px) scale(1)`
+                    : `translate(0px, 0px) scale(0)`,
+                  opacity: isVisible ? 1 : 0,
+                  pointerEvents: isVisible ? "auto" : "none",
+                  // Lepsze opóźnienie dla płynności (szybciej)
+                  transitionDelay: isVisible ? `${i * 0.03}s` : "0s",
+                  zIndex: 5,
+                } as React.CSSProperties
+              }
+            >
+              <div className={styles.iconWrapper}>
+                <subject.icon />
+              </div>
+              <span>{subject.name}</span>
+            </button>
+          );
+        })}
 
         {/* --- POZIOM 2: Graf Quizu --- */}
         {level === 2 && activeSubject && topicsLoadingState !== "loading" && (

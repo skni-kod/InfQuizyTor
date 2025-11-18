@@ -1,16 +1,16 @@
 package db
 
 import (
+	"errors"
 	"log"
 
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause" // Import wymagany do obsługi UPSERT (OnConflict)
+	"gorm.io/gorm/clause"
 )
 
-// Globalna instancja repozytorium
 var UserRepository *GormUserRepository
 
 type GormUserRepository struct {
@@ -18,14 +18,12 @@ type GormUserRepository struct {
 }
 
 func InitDB(cfg config.Config) {
-	// Połączenie GORM
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Nie można połączyć się z bazą danych: %v", err)
 	}
 
 	log.Println("Uruchamianie automigracji bazy danych...")
-	// Automigracja tworzy tabele, jeśli nie istnieją
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Token{},
@@ -37,12 +35,15 @@ func InitDB(cfg config.Config) {
 		&models.CalendarLayer{},
 		&models.CalendarEvent{},
 		&models.QuizNode{},
+		// Nowe tabele
+		&models.UserProgress{},
+		&models.Achievement{},
+		&models.UserAchievement{},
 	)
 	if err != nil {
 		log.Fatalf("Błąd automigracji: %v", err)
 	}
 
-	// Inicjalizacja globalnej zmiennej
 	UserRepository = NewGormUserRepository(db)
 	log.Println("Repozytorium użytkowników pomyślnie zainicjowane.")
 }
@@ -61,7 +62,7 @@ func CloseDB() {
 	}
 }
 
-// --- Metody User ---
+// --- Metody User/Token ---
 
 func (r *GormUserRepository) GetUserByUsosID(usosID string) (*models.User, error) {
 	var user models.User
@@ -72,32 +73,55 @@ func (r *GormUserRepository) GetUserByUsosID(usosID string) (*models.User, error
 }
 
 func (r *GormUserRepository) CreateOrUpdateUser(user *models.User) error {
-	// Używa FirstOrCreate lub aktualizuje atrybuty
 	return r.DB.Where(models.User{UsosID: user.UsosID}).Assign(user).FirstOrCreate(user).Error
 }
 
-// --- Metody Token (Naprawione) ---
-
 func (r *GormUserRepository) GetTokenByUsosID(usosID string) (*models.Token, error) {
 	var token models.Token
-	// Zakładamy, że w modelu Token pole nazywa się UserUsosID, a w bazie user_usos_id
 	if err := r.DB.Where("user_usos_id = ?", usosID).First(&token).Error; err != nil {
 		return nil, err
 	}
 	return &token, nil
 }
 
-// SaveToken - Naprawiona metoda używająca GORM zamiast raw SQL z pgx
 func (r *GormUserRepository) SaveToken(token *models.Token) error {
-	// Używamy klauzuli ON CONFLICT, aby wymusić aktualizację
 	return r.DB.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_usos_id"}},                                                           // Klucz główny w bazie
-		DoUpdates: clause.AssignmentColumns([]string{"access_token", "access_token_secret", "scopes", "updated_at"}), // Pola do aktualizacji
+		Columns:   []clause.Column{{Name: "user_usos_id"}},
+		UpdateAll: true,
 	}).Create(token).Error
 }
 
-// --- Metody Przedmiotów (Subject) ---
+// --- Metody Dashboard ---
 
+func (r *GormUserRepository) GetLastUserProgress(userUsosID string) (*models.UserProgress, error) {
+	var progress models.UserProgress
+	err := r.DB.Preload("Topic.Subject").
+		Where("user_usos_id = ?", userUsosID).
+		Order("updated_at desc").
+		First(&progress).Error
+
+	if err != nil {
+		// Jeśli po prostu nie znaleziono rekordu, zwróć nil (bez błędu)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &progress, nil
+}
+
+func (r *GormUserRepository) GetUserAchievements(userUsosID string) ([]models.UserAchievement, error) {
+	var achievements []models.UserAchievement
+	if err := r.DB.Preload("Achievement").
+		Where("user_usos_id = ?", userUsosID).
+		Order("unlocked_at desc").
+		Find(&achievements).Error; err != nil {
+		return nil, err
+	}
+	return achievements, nil
+}
+
+// --- Metody Przedmiotów ---
 func (r *GormUserRepository) FindOrCreateSubjectByUsosID(usosID, name string) (*models.Subject, error) {
 	var subject models.Subject
 	if err := r.DB.Where(models.Subject{UsosID: usosID}).FirstOrCreate(&subject, models.Subject{UsosID: usosID, Name: name}).Error; err != nil {
@@ -105,7 +129,6 @@ func (r *GormUserRepository) FindOrCreateSubjectByUsosID(usosID, name string) (*
 	}
 	return &subject, nil
 }
-
 func (r *GormUserRepository) GetSubjects() ([]models.Subject, error) {
 	var subjects []models.Subject
 	if err := r.DB.Find(&subjects).Error; err != nil {
@@ -113,7 +136,6 @@ func (r *GormUserRepository) GetSubjects() ([]models.Subject, error) {
 	}
 	return subjects, nil
 }
-
 func (r *GormUserRepository) GetSubjectByUsosID(usosID string) (*models.Subject, error) {
 	var subject models.Subject
 	if err := r.DB.Where("usos_id = ?", usosID).First(&subject).Error; err != nil {
@@ -121,9 +143,6 @@ func (r *GormUserRepository) GetSubjectByUsosID(usosID string) (*models.Subject,
 	}
 	return &subject, nil
 }
-
-// --- Metody Grafu i Tematów ---
-
 func (r *GormUserRepository) GetTopicsBySubjectID(subjectID uint) ([]models.Topic, error) {
 	var topics []models.Topic
 	if err := r.DB.Where("subject_id = ?", subjectID).Find(&topics).Error; err != nil {
@@ -131,7 +150,6 @@ func (r *GormUserRepository) GetTopicsBySubjectID(subjectID uint) ([]models.Topi
 	}
 	return topics, nil
 }
-
 func (r *GormUserRepository) GetGraphByCourseUsosID(usosID string) ([]models.QuizNode, error) {
 	var nodes []models.QuizNode
 	if err := r.DB.Where("usos_course_id = ?", usosID).Find(&nodes).Error; err != nil {
@@ -140,56 +158,43 @@ func (r *GormUserRepository) GetGraphByCourseUsosID(usosID string) ([]models.Qui
 	return nodes, nil
 }
 
-// --- Metody Tworzenia Treści ---
-
-func (r *GormUserRepository) CreateTopic(topic *models.Topic) error {
-	return r.DB.Create(topic).Error
+// --- Metody Tworzenia ---
+func (r *GormUserRepository) CreateTopic(topic *models.Topic) error { return r.DB.Create(topic).Error }
+func (r *GormUserRepository) CreateFlashcard(fc *models.Flashcard) error {
+	return r.DB.Create(fc).Error
 }
-
-func (r *GormUserRepository) CreateFlashcard(flashcard *models.Flashcard) error {
-	return r.DB.Create(flashcard).Error
+func (r *GormUserRepository) CreateQuizQuestion(q *models.QuizQuestion) error {
+	return r.DB.Create(q).Error
 }
-
-func (r *GormUserRepository) CreateQuizQuestion(question *models.QuizQuestion) error {
-	return r.DB.Create(question).Error
-}
-
-func (r *GormUserRepository) CreateCalendarLayer(layer *models.CalendarLayer) error {
-	return r.DB.Create(layer).Error
+func (r *GormUserRepository) CreateCalendarLayer(l *models.CalendarLayer) error {
+	return r.DB.Create(l).Error
 }
 
 // --- Metody Moderacji ---
-
 func (r *GormUserRepository) GetPendingFlashcards() ([]models.Flashcard, error) {
-	var flashcards []models.Flashcard
-	if err := r.DB.Where("status = ?", "pending").Find(&flashcards).Error; err != nil {
+	var f []models.Flashcard
+	if err := r.DB.Where("status = ?", "pending").Find(&f).Error; err != nil {
 		return nil, err
 	}
-	return flashcards, nil
+	return f, nil
 }
-
 func (r *GormUserRepository) SetFlashcardStatus(id uint, status string) error {
 	return r.DB.Model(&models.Flashcard{}).Where("id = ?", id).Update("status", status).Error
 }
-
 func (r *GormUserRepository) GetApprovedFlashcardsByTopic(topicID uint) ([]models.Flashcard, error) {
-	var flashcards []models.Flashcard
-	if err := r.DB.Where("topic_id = ? AND status = ?", topicID, "approved").Find(&flashcards).Error; err != nil {
+	var f []models.Flashcard
+	if err := r.DB.Where("topic_id = ? AND status = ?", topicID, "approved").Find(&f).Error; err != nil {
 		return nil, err
 	}
-	return flashcards, nil
+	return f, nil
 }
-
 func (r *GormUserRepository) GetApprovedQuizQuestionsByTopic(topicID uint) ([]models.QuizQuestion, error) {
-	var questions []models.QuizQuestion
-	if err := r.DB.Where("topic_id = ? AND status = ?", topicID, "approved").Find(&questions).Error; err != nil {
+	var q []models.QuizQuestion
+	if err := r.DB.Where("topic_id = ? AND status = ?", topicID, "approved").Find(&q).Error; err != nil {
 		return nil, err
 	}
-	return questions, nil
+	return q, nil
 }
-
-// --- Metody Grup ---
-
 func (r *GormUserRepository) IsUserGroupLeader(userUsosID string, usosGroupID int) (bool, error) {
 	var role models.UserGroupRole
 	if err := r.DB.Where("user_usos_id = ? AND usos_group_id = ? AND role = ?", userUsosID, usosGroupID, "leader").First(&role).Error; err != nil {

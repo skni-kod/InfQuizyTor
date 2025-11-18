@@ -31,16 +31,16 @@ func main() {
 	router := gin.Default()
 	router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
-	// Cors i Sesje
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{cfg.FrontendURL}
 	corsConfig.AllowCredentials = true
 	corsConfig.AddAllowHeaders("Authorization", "Content-Type")
 	router.Use(cors.New(corsConfig))
+
 	store := cookie.NewStore([]byte(cfg.SessionSecret))
 	router.Use(sessions.Sessions("usos_session", store))
 
-	// Trasy Publiczne (Logowanie/Wylogowanie)
+	// Auth
 	authGroup := router.Group("/auth/usos")
 	{
 		authGroup.GET("/login", handlers.HandleUsosLogin)
@@ -48,36 +48,31 @@ func main() {
 		authGroup.POST("/logout", handlers.HandleLogout)
 	}
 
-	// Trasy Chronione (dla wszystkich zalogowanych)
+	// API Protected
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.AuthRequired())
 	{
-		// USOS Proxy (oryginalne)
 		apiGroup.GET("/users/me", handlers.HandleGetUserMe)
-		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
 
-		// --- ZAKTUALIZOWANE TRASY APLIKACJI ---
+		// --- DASHBOARD ENDPOINTS ---
+		apiGroup.GET("/dashboard/upcoming", handlers.HandleGetUpcomingEvents)
+		apiGroup.GET("/dashboard/progress", handlers.HandleGetDashboardProgress)
+		apiGroup.GET("/dashboard/leaderboard", handlers.HandleGetDashboardLeaderboard)
+		apiGroup.GET("/dashboard/achievements", handlers.HandleGetDashboardAchievements)
 
-		// Trasy dla Przedmiotów i Tematów
-
-		// Ta trasa jest prosta - tylko odczytuje z DB.
+		// Subjects & Topics
 		apiGroup.GET("/subjects", handlers.HandleGetSubjects)
-
-		// --- NOWA TRASA: Ten endpoint jest wywoływany przez frontend, aby wymusić synchronizację ---
 		apiGroup.POST("/subjects/sync", handlers.HandleSyncSubjects)
-
 		apiGroup.GET("/subjects/:usos_id/topics", handlers.HandleGetTopicsByUsosID)
 		apiGroup.POST("/topics", handlers.HandleCreateTopic)
 		apiGroup.GET("/subjects/:usos_id/graph", handlers.HandleGetCourseGraph)
 
-		// Trasy dla Generowania Treści (AI i Ręczne)
+		// Content Generation
 		apiGroup.POST("/topics/upload", handlers.HandleContentUpload)
 		apiGroup.POST("/flashcards/manual", handlers.HandleManualFlashcard)
-
-		// Trasy do Pobierania Treści (dla studentów)
 		apiGroup.GET("/topics/:id/content", handlers.HandleGetTopicContent)
 
-		// Trasy dla Admina (Moderacja)
+		// Admin
 		adminGroup := apiGroup.Group("/admin")
 		adminGroup.Use(middleware.AdminRequired())
 		{
@@ -85,6 +80,9 @@ func main() {
 			adminGroup.POST("/approve-flashcard/:id", handlers.HandleApproveFlashcard)
 			adminGroup.POST("/reject-flashcard/:id", handlers.HandleRejectFlashcard)
 		}
+
+		// Proxy Fallback
+		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
 	}
 
 	router.GET("/health", func(c *gin.Context) {

@@ -1,264 +1,82 @@
-@import '../styles/variables';
-@import '../styles/mixins';
+@use "../styles/mixins" as m;
 
 .dashboardContainer {
-  position: relative; // Needed for absolute positioning of children
-  width: 100%;
-  height: calc(100vh - 60px); // Full height minus header
-  overflow: hidden; // Prevent scrollbars if content overflows slightly
-}
-
-.menuContainer {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 100; // Menu is above widgets
-}
-
-.dashboardContainer {
+  min-height: calc(100vh - 60px);
+  padding: 20px;
   position: relative;
+  overflow-x: hidden;
+  gap: 2rem;
+
+  background-image: var(--bg-image-url);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-color: var(--bg0-dark);
+}
+
+// --- KONFIGURACJA ANIMACJI ---
+
+// Domyślnie, wnętrze każdego kafelka ma płynne przejścia
+:global(.react-grid-item) > div {
   width: 100%;
-  height: calc(100vh - 60px); // Full height minus header
-  overflow: hidden;
-
-  // --- ADD BACKGROUND STYLES ---
-  /* background-image: var(--bg-image-url); // Use the variable passed from the component
-  background-size: cover;               // Cover the entire area
-  background-position: center center;   // Center the image
-  background-repeat: no-repeat;         // Do not repeat the image */
-  background-color: var(--bg0-dark);    // Fallback color if image fails
-  // --- END BACKGROUND STYLES ---
-}
-
-.menuContainer {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 100;
-}
-.widgetWrapper {
-  position: absolute;
-  width: 300px; // Adjust width as needed
-  height: 250px; // Adjust height as needed
-  opacity: 1;
-  transform-origin: center center; // Scale animation from center
-  transition: opacity var(--transition-slow) ease, transform var(--transition-slow) ease;
-  z-index: 50; // Widgets are below menu
-
-  &.hidden {
-    opacity: 0;
-    // Fly away from the center
-    transform: translate(-50%, -50%) scale(0.5); // Combined with inline transform
-    pointer-events: none;
-  }
-}
-
-// --- Specific Widget Content Styles ---
-
-.eventList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-
-  li {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-}
-
-.eventColor {
-  display: block;
-  width: 8px;
-  height: 32px; // Make it taller
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-
-.eventDetails {
-  display: flex;
-  flex-direction: column;
-  font-size: var(--text-xs);
-  line-height: 1.4;
-
-  strong {
-    font-size: var(--text-sm);
-    color: var(--text-primary);
-    margin-bottom: var(--space-1);
-  }
-  span {
-     color: var(--text-muted);
-  }
-}
-
-.widgetActions {
-  margin-top: auto; // Push buttons to bottom
-  padding-top: var(--space-4); // Add space above buttons
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-
-  button {
-    flex: 1;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: var(--text-xs);
-    transition: background-color var(--transition-medium);
-
-    &:first-child { // Primary button style
-      background-color: var(--primary);
-      color: var(--bg0-dark);
-      &:hover { background-color: hsl(var(--hue), 70%, 65%);}
-    }
-    &:last-child { // Secondary button style
-      background-color: var(--bg3-dark);
-      color: var(--text-secondary);
-      &:hover { background-color: var(--tertiary); color: var(--text-primary);}
-    }
-  }
-}
-
-.progressDetails {
-   h3 {
-     color: var(--primary);
-     margin: var(--space-2) 0;
-   }
-   p { margin-bottom: var(--space-4); }
-}
-
-.progressBarContainer {
-  width: 100%;
-  height: 8px;
-  background-color: var(--bg3-dark);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--space-2);
-}
-
-.progressBar {
   height: 100%;
-  background-color: var(--success);
-  border-radius: var(--radius-full);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease,
+    filter 0.5s ease;
+  transform-origin: center center;
 }
 
-.rankingContext {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin-bottom: var(--space-3);
-}
-
-.rankingList {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-4) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-
-  li {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-sm);
-    background-color: transparent; // Default
-    transition: background-color var(--transition-fast);
-
-    span:last-child { font-weight: bold; }
+// --- STAN OTWARTEGO MENU ---
+.menuOpen {
+  // 1. WIDGETY: Wszystkie dzieci elementów siatki, KTÓRE NIE SĄ w kafelku z klasą .static-menu
+  // Używamy :not() na rodzicu (.react-grid-item)
+  :global(.react-grid-item):not(:global(.static-menu)) > div {
+    // "Ucieczka" od środka
+    transform: scale(0.85); // Zmniejsz
+    opacity: 0; // Prawie zniknij
+    filter: blur(8px) grayscale(80%); // Rozmyj
+    pointer-events: none; // Wyłącz interakcję
   }
 
-  .currentUser {
-    background-color: hsla(var(--hue), 50%, 40%, 0.3); // Highlight user
-    color: var(--primary);
+  // 2. MENU: Element z klasą .static-menu
+  // Musi zostać na wierzchu i bez zmian
+  :global(.react-grid-item.static-menu) {
+    z-index: 1000 !important;
+
+    // Upewnij się, że dziecko (menuWrapper) nie znika
+    > div {
+      transform: none !important;
+      opacity: 1 !important;
+      filter: none !important;
+      pointer-events: auto;
+    }
   }
 }
 
-.rankingAction {
+// --- STYL KONTENERA MENU ---
+// Ten div jest bezpośrednim dzieckiem .react-grid-item dla menu
+.menuWrapper {
+  display: flex; // Flexbox do centrowania
+  align-items: center; // Pionowo
+  justify-content: center; // Poziomo
   width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  background-color: var(--warning);
-  color: var(--bg0-dark);
-  transition: background-color var(--transition-medium);
-  margin-top: auto;
+  height: 100%;
+  // Menu przepuszcza kliknięcia w puste miejsca
+  pointer-events: none;
 
-  &:hover { background-color: hsl(40, 90%, 70%); }
-}.widgetWrapper {
-  // ... (twoje istniejące style dla .widgetWrapper)
-  
-  // POPRAWKA: Dodaj te style, aby użyć zmiennej --widget-color
-  // którą przekazujemy z Reacta.
-  // To sprawi, że każdy widget będzie miał kolor kursu.
-  background-color: var(--bg2-dark);
-  border: 2px solid var(--widget-color, var(--tertiary));
-  box-shadow: 0 0 10px var(--widget-color, var(--tertiary)),
-              inset 0 0 5px var(--widget-color, var(--tertiary));
-  cursor: pointer;
-  transition: all 0.3s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); // Upewnij się, że transform jest animowany
-
-  &:hover {
-    transform: translate(-50%, -50%) scale(1.1) !important; // Powiększenie przy najechaniu
-    box-shadow: 0 0 20px var(--widget-color, var(--tertiary)),
-                inset 0 0 10px var(--widget-color, var(--tertiary));
-  }
-
-  // Ukrywanie, gdy menu jest otwarte (już masz ten styl)
-  &.hidden {
-    transform: translate(-50%, -50%) scale(0) !important;
-    opacity: 0;
+  // Ale samo kółko menu (dziecko) musi klikać
+  & > * {
+    pointer-events: auto;
   }
 }
 
-// NOWE STYLE: Zawartość widgetu kursu
-.courseWidgetContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-2);
-  text-align: center;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  color: var(--text-primary);
-
-  svg {
-    font-size: var(--text-4xl);
-    color: var(--widget-color, var(--tertiary));
-  }
+// Ukrycie uchwytów zmiany rozmiaru dla statycznego menu
+:global(.react-grid-item.static .react-resizable-handle) {
+  display: none !important;
 }
 
-// NOWE STYLE: Loader i Błąd
-.loader,
-.error {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background-color: var(--bg2-dark);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--tertiary);
-  z-index: 10;
-  color: var(--text-primary);
-  font-size: var(--text-lg);
-
-  svg {
-    font-size: var(--text-3xl);
-  }
-}
-
-.error {
-  color: var(--danger);
-  border-color: var(--danger);
+// Styl placeholdera podczas przesuwania widgetów
+:global(.react-grid-placeholder) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px;
+  opacity: 0.3;
 }

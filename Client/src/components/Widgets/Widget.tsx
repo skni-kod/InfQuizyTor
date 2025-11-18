@@ -1,28 +1,34 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import styles from "./Widget.module.scss";
 import { FaCog } from "react-icons/fa";
 
-interface WidgetProps {
+interface WidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   children: React.ReactNode;
 }
 
-// Ten komponent jest wrapperem na treść.
-// `react-grid-layout` zajmuje się przeciąganiem i zmianą rozmiaru.
-const Widget: React.FC<WidgetProps> = ({ title, children }) => {
-  return (
-    <div className={styles.widget}>
-      {" "}
-      {/* [cite: 112] */}
-      <div className={styles.widgetHeader}>
-        <h3 className={styles.widgetTitle}>{title}</h3>
-        <button className={styles.widgetButton}>
-          <FaCog /> + {""}
-        </button>
+const Widget = forwardRef<HTMLDivElement, WidgetProps>(
+  ({ title, children, style, className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        style={style} // RGL zarządza pozycją tego diva
+        className={`${styles.widgetContainer} ${className || ""}`}
+        {...props}
+      >
+        {/* Dodajemy klasę 'widget-inner' do animacji CSS */}
+        <div className={`widget-inner ${styles.widget}`}>
+          <div className={styles.widgetHeader}>
+            <h3 className={styles.widgetTitle}>{title}</h3>
+            <button className={styles.widgetButton}>
+              <FaCog />
+            </button>
+          </div>
+          <div className={styles.widgetContent}>{children}</div>
+        </div>
       </div>
-      <div className={styles.widgetContent}>{children}</div>
-    </div>
-  );
-};
+    );
+  }
+);
 
 export default Widget;

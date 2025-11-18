@@ -1,5 +1,5 @@
-@use '../styles/mixins' as m; // POPRAWIONA ŚCIEŻKA (tylko jedno '../')
-@import '../styles/variables'; // Importuj zmienne (może być potrzebne dla var())
+@use "../styles/mixins" as m; // POPRAWIONA ŚCIEŻKA (tylko jedno '../')
+@import "../styles/variables"; // Importuj zmienne (może być potrzebne dla var())
 
 .header {
   @include m.glass-effect(10px, var(--glass-bg));
@@ -39,13 +39,15 @@
   font-size: var(--text-sm);
   text-decoration: none;
   position: relative;
-  transition: color var(--transition-medium), border-bottom-color var(--transition-medium);
+  transition: color var(--transition-medium),
+    border-bottom-color var(--transition-medium);
   border-bottom: 3px solid transparent;
   height: 100%;
 
   span {
     display: none;
-    @include m.media-md { // Użyj przestrzeni nazw 'm'
+    @include m.media-md {
+      // Użyj przestrzeni nazw 'm'
       display: inline;
     }
   }
@@ -85,7 +87,8 @@
 
   span {
     display: none;
-    @include m.media-md { // Użyj przestrzeni nazw 'm'
+    @include m.media-md {
+      // Użyj przestrzeni nazw 'm'
       display: inline;
     }
   }
@@ -106,5 +109,5 @@
   align-items: center;
   height: 100%;
   margin-left: auto; // Przesuń na prawo (jeśli .nav ma flex-grow)
-                   // lub po prostu pozwól im być na końcu .nav
+  // lub po prostu pozwól im być na końcu .nav
 }
