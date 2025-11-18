@@ -46,7 +46,7 @@ const TopicViewerModal: React.FC<TopicViewerModalProps> = ({
       setTimeout(() => {
         // Symulacja ładowania
         setSummary(
-          "To jest *wygenerowane* podsumowanie dla tematu: " + topic.name
+          "To jest *wygenerowane* podsumowanie dla tematu: " + topic.Name
         );
         setFlashcards(MOCK_FLASHCARDS);
         setQuiz(MOCK_QUIZ);
@@ -67,7 +67,7 @@ const TopicViewerModal: React.FC<TopicViewerModalProps> = ({
           <FaTimes />
         </button>
 
-        <h2>{topic.name}</h2>
+        <h2>{topic.Name}</h2>
 
         <div className={styles.tabs}>
           <button

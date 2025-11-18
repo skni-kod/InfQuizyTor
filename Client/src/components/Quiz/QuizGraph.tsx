@@ -1,145 +1,250 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styles from "./QuizGraph.module.scss";
-// Poprawne importy
-import { QuizNode, Subject, Topic } from "../../assets/types.tsx";
-import { FaArrowLeft, FaCheckCircle, FaLock, FaPlay } from "react-icons/fa";
-// Import danych z nowego pliku
-import { MOCK_GRAPH, MOCK_TOPIC_MAP } from "./mock-graph-data";
+import { QuizNode, Subject, Topic, AppSubject } from "../../assets/types.tsx";
+import {
+  FaArrowLeft,
+  FaCheckCircle,
+  FaLock,
+  FaPlay,
+  FaSpinner,
+} from "react-icons/fa";
+import * as d3 from "d3-force";
+import useMeasure from "react-use-measure";
 
 // --- Interfejsy ---
 
 interface QuizGraphProps {
-  subject: Subject;
-  onBack: () => void;
-  onNodeClick: (topic: Topic) => void; // Prop do obsługi kliknięcia
+  subject: Subject | AppSubject;
+  topics: Topic[]; // Lista odblokowanych tematów
+  onBack?: () => void;
+  onNodeClick: (topic: Topic) => void;
+  UsosID: string; // UsosID kursu
+  subjectColor: string;
 }
 
-interface TreeNodeProps {
-  node: QuizNode;
-  tree: Map<string | null, QuizNode[]>;
-  onNodeClick: (topic: Topic) => void; // Przekazujemy handler
-  depth?: number;
+// Interfejsy D3
+interface D3Node extends QuizNode {
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
+}
+interface D3Link {
+  source: number; // ID węzła (number)
+  target: number; // ID węzła (number)
 }
 
-// --- Funkcja budująca drzewo (z Twojego pliku) ---
-const buildTree = (nodes: QuizNode[]): Map<string | null, QuizNode[]> => {
-  const tree = new Map<string | null, QuizNode[]>();
-  const nodeMap = new Map<string, QuizNode>(
-    nodes.map((node) => [node.id, node])
-  );
+// --- Komponent Węzła (Node) ---
+const GraphNode: React.FC<{
+  node: D3Node;
+  topics: Topic[]; // Lista odblokowanych tematów
+  onNodeClick: (topic: Topic) => void;
+}> = ({ node, topics, onNodeClick }) => {
+  const topic = topics.find((t) => t.Name === node.Title);
+  const status = topic ? "available" : "locked";
+  // TODO: Dodać logikę dla 'completed'
 
-  nodes.forEach((node) => {
-    if (node.dependencies.length === 0) {
-      const children = tree.get(null) || [];
-      children.push(node);
-      tree.set(null, children);
-    } else {
-      // Proste podejście: linkuj do pierwszego rodzica
-      const primaryParentId = node.dependencies[0];
-      if (nodeMap.has(primaryParentId)) {
-        const children = tree.get(primaryParentId) || [];
-        children.push(node);
-        tree.set(primaryParentId, children);
-      } else {
-        // Zapasowo, jeśli rodzic nie istnieje (np. złożone zależności)
-        const children = tree.get(null) || [];
-        children.push(node);
-        tree.set(null, children);
-      }
-    }
-  });
-  return tree;
-};
-
-// --- Komponent Węzła (TreeNode) ---
-const TreeNode: React.FC<TreeNodeProps> = ({
-  node,
-  tree,
-  onNodeClick,
-  depth = 0,
-}) => {
-  const children = tree.get(node.id) || [];
-  const isUnlocked = node.status !== "locked";
-
-  const getStatusIcon = (status: QuizNode["status"]) => {
-    switch (status) {
+  const getStatusIcon = (s: "locked" | "available" | "completed") => {
+    switch (s) {
       case "completed":
-        return <FaCheckCircle />;
+        return <FaCheckCircle className={styles.icon} />;
       case "available":
-        return <FaPlay />;
+        return <FaPlay className={styles.icon} />;
       case "locked":
-        return <FaLock />;
+        return <FaLock className={styles.icon} />;
     }
   };
 
-  // --- POPRAWKA: Obsługa kliknięcia ---
   const handleClick = () => {
-    // Znajdź temat (Topic) w naszej mapie używając 'title' z węzła
-    const topic = MOCK_TOPIC_MAP[node.title];
-    if (topic) {
-      onNodeClick(topic); // Przekaż pełny obiekt Topic do rodzica
-    } else {
-      console.warn(`Nie znaleziono tematu dla węzła: ${node.title}`);
+    if (status !== "locked" && topic) {
+      onNodeClick(topic);
     }
   };
-  // --- KONIEC POPRAWKI ---
 
   return (
-    <li className={`${styles.treeNode} ${depth > 0 ? styles.isChild : ""}`}>
-      <div
-        className={`${styles.nodeContent} ${styles[node.status]}`}
-        style={{ "--delay": `${depth * 100}ms` } as React.CSSProperties}
-        onClick={isUnlocked ? handleClick : undefined} // Klikalny tylko jeśli odblokowany
-      >
-        <span className={styles.nodeTitle}>{node.title}</span>
-        <span className={styles.nodeIcon}>{getStatusIcon(node.status)}</span>
-      </div>
-      {children.length > 0 && (
-        <ul className={styles.childrenList}>
-          {children.map((child) => (
-            <TreeNode
-              key={child.id}
-              node={child}
-              tree={tree}
-              onNodeClick={onNodeClick} // Przekaż dalej
-              depth={depth + 1}
-            />
-          ))}
-        </ul>
-      )}
-    </li>
+    <g
+      className={`${styles.node} ${styles[status]}`}
+      transform={`translate(${node.x}, ${node.y})`}
+      onClick={handleClick}
+    >
+      <circle r={40} />
+      {getStatusIcon(status)}
+      <text x={0} y={60} textAnchor="middle" className={styles.nodeTitle}>
+        {node.Title}
+      </text>
+    </g>
   );
 };
 
 // --- Główny Komponent QuizGraph ---
 const QuizGraph: React.FC<QuizGraphProps> = ({
   subject,
+  topics,
   onBack,
   onNodeClick,
+  UsosID,
+  subjectColor,
 }) => {
-  // Użyj MOCK_GRAPH (z importu) zamiast MOCK_GRAPH_DATA
-  const nodeTree = buildTree(MOCK_GRAPH);
-  const rootNodes = nodeTree.get(null) || [];
+  const [ref, bounds] = useMeasure();
+  const [renderedNodes, setRenderedNodes] = useState<D3Node[]>([]);
+
+  // Stany do pobierania grafu
+  const [graphStructure, setGraphStructure] = useState<QuizNode[]>([]);
+  const [isLoadingGraph, setIsLoadingGraph] = useState(true);
+  const [graphError, setGraphError] = useState<string | null>(null);
+
+  // Pobieranie struktury grafu
+  useEffect(() => {
+    const fetchGraphStructure = async () => {
+      if (!UsosID) return;
+
+      setIsLoadingGraph(true);
+      setGraphError(null);
+      try {
+        // --- POPRAWKA: Używamy nowej trasy /api/subjects/... ---
+        // Stary URL: /api/courses/${UsosID}/graph
+        const res = await fetch(
+          `/api/subjects/${UsosID}/graph`, // Zgodny z main.go
+          {
+            credentials: "include",
+          }
+        );
+        // --- KONIEC POPRAWKI ---
+
+        if (!res.ok)
+          throw new Error(`Nie udało się pobrać grafu: ${res.status}`);
+        const data: QuizNode[] = await res.json();
+        setGraphStructure(data);
+      } catch (e: any) {
+        setGraphError(e.message || "Błąd ładowania grafu");
+      }
+      setIsLoadingGraph(false);
+    };
+
+    fetchGraphStructure();
+  }, [UsosID]);
+
+  // Krok 1: Przekształć dane w format D3
+  const graphData = useMemo(() => {
+    if (!bounds.width || !bounds.height || graphStructure.length === 0) {
+      return { nodes: [], links: [] };
+    }
+
+    const links: D3Link[] = [];
+
+    const rootNode: D3Node = {
+      ID: 0,
+      Title: "",
+      UsosCourseID: UsosID,
+      Dependencies: [],
+      x: bounds.width / 2,
+      y: bounds.height / 2,
+      fx: bounds.width / 2,
+      fy: bounds.height / 2,
+    };
+
+    const topicNodes: D3Node[] = graphStructure.map((node) => ({ ...node }));
+    const nodes = [rootNode, ...topicNodes];
+
+    for (const node of topicNodes) {
+      if (!node.Dependencies || node.Dependencies.length === 0) {
+        links.push({ source: 0, target: node.ID }); // Połącz z ROOT
+      } else {
+        node.Dependencies.forEach((depId: number) => {
+          links.push({ source: depId, target: node.ID });
+        });
+      }
+    }
+
+    return { nodes, links };
+  }, [graphStructure, bounds.width, bounds.height, UsosID]);
+
+  // Krok 2: Uruchom symulację D3
+  useEffect(() => {
+    if (!graphData.nodes.length) return;
+
+    const nodesCopy = graphData.nodes.map((n) => ({ ...n }));
+    const linksCopy = graphData.links.map((l) => ({ ...l }));
+
+    const simulation = d3
+      .forceSimulation(nodesCopy)
+      .force(
+        "link",
+        d3
+          .forceLink(linksCopy)
+          .id((d: any) => d.ID)
+          .distance(120)
+      )
+      .force("charge", d3.forceManyBody().strength(-500))
+      .force("collide", d3.forceCollide(50));
+
+    simulation.stop();
+    simulation.tick(300);
+    setRenderedNodes([...nodesCopy]);
+  }, [graphData]);
+
+  // Znajdź pozycje końcowe dla linii (linków)
+  const renderedLinks = useMemo(() => {
+    return graphData.links.map((link) => {
+      const source = renderedNodes.find((n) => n.ID === link.source);
+      const target = renderedNodes.find((n) => n.ID === link.target);
+      return { source, target };
+    });
+  }, [graphData.links, renderedNodes]);
+
+  const subjectName = "Name" in subject ? subject.Name : subject.name;
 
   return (
     <div className={styles.graphContainer}>
       <header className={styles.header}>
-        <button className={styles.backButton} onClick={onBack}>
-          <FaArrowLeft /> Wróć do pulpitu
-        </button>
-        <h1 className={styles.title}>{subject.name} - Ścieżka Nauki</h1>
+        {onBack && (
+          <button className={styles.backButton} onClick={onBack}>
+            <FaArrowLeft /> Wróć
+          </button>
+        )}
+        <h2 className={styles.title}>{subjectName} - Ścieżka Nauki</h2>
       </header>
-      <div className={styles.treeWrapper}>
-        <ul className={styles.treeRoot}>
-          {rootNodes.map((rootNode) => (
-            <TreeNode
-              key={rootNode.id}
-              node={rootNode}
-              tree={nodeTree}
-              onNodeClick={onNodeClick} // Przekaż handler do pierwszych węzłów
-            />
-          ))}
-        </ul>
+      <div className={styles.svgWrapper} ref={ref}>
+        {/* Obsługa ładowania i błędów */}
+        {isLoadingGraph && (
+          <FaSpinner className={`${styles.spinner} icon-spin`} />
+        )}
+        {!isLoadingGraph && graphError && (
+          <div className={styles.error}>{graphError}</div>
+        )}
+
+        {!isLoadingGraph && !graphError && bounds.width > 0 && (
+          <svg width={bounds.width} height={bounds.height}>
+            <g
+              className={styles.links}
+              style={{ "--link-color": subjectColor } as React.CSSProperties}
+            >
+              {renderedLinks.map((link, i) => (
+                <line
+                  key={i}
+                  x1={link.source?.x}
+                  y1={link.source?.y}
+                  x2={link.target?.x}
+                  y2={link.target?.y}
+                />
+              ))}
+            </g>
+            <g className={styles.nodes}>
+              {renderedNodes
+                .filter((node) => node.ID !== 0) // Nie renderuj kotwicy ROOT
+                .map((node) => (
+                  <GraphNode
+                    key={node.ID}
+                    node={node}
+                    topics={topics} // Przekaż odblokowane tematy
+                    onNodeClick={onNodeClick}
+                  />
+                ))}
+            </g>
+          </svg>
+        )}
       </div>
     </div>
   );

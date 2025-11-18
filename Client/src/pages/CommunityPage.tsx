@@ -1,6 +1,6 @@
 // Usuń tę linię: import React from 'react';
 import styles from "./CommunityPage.module.scss"; // Assuming this file exists and is used
-import Calendar from "../components/Calendar/UsosCalendar";
+import CalendarContainer from "../components/Calendar/CalendarContainer";
 
 const CommunityPage = () => {
   return (
@@ -9,7 +9,7 @@ const CommunityPage = () => {
       {/* Use styles if defined */}
       <h1>Społeczność</h1>
       <p>Ta strona jest w budowie.</p>
-      Remove any unused <Calendar />
+      Remove any unused <CalendarContainer />
     </div>
   );
 };

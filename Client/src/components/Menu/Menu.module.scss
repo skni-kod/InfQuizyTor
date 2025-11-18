@@ -8,178 +8,166 @@
   display: grid;
   place-items: center;
   z-index: 500;
-
-  // Optional: Overall large background blur (keep or remove)
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -50px;
-    background: conic-gradient(/* ... lighter colors ... */);
-    filter: blur(80px);
-    opacity: 0.3;
-    z-index: -1;
-    pointer-events: none;
-  }
-}
-
-.svgFilters {
-  position: absolute;
-  width: 0;
-  height: 0;
 }
 
 .menu {
   position: relative;
-  width: 100px; // Size of the central node
+  width: 100px;
   height: 100px;
   display: grid;
   place-items: center;
-  pointer-events: all;
-
-  // --- Blurred Background Swirls (Sized based on node radius) ---
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    // Size based on the radius variable passed from JS (--menu-radius = 2 * nodeRadius)
-    // plus some extra padding for the blur effect
-    width: calc(var(--menu-radius, 320px) + 60px); // Base size + blur padding
-    height: calc(var(--menu-radius, 320px) + 60px);
-    border-radius: 50%;
-    /* background: conic-gradient(
-      var(--primary), var(--success), var(--info), var(--warning),
-      hsl(280, 70%, 55%), hsl(30, 70%, 55%), hsl(180, 70%, 55%),
-      hsl(60, 70%, 55%), var(--primary)
-    ); */
-    opacity: 0;
-    transition: all var(--transition-slow) ease-in-out;
-  }
-
-  // First swirl (closer, less blur)
-  &::before {
-    filter: blur(20px);
-    z-index: 1; // Behind nodes
-  }
-
-  // Second swirl (further, more blur, optional rotation)
-  &::after {
-    background: conic-gradient(from 45deg, /* ... colors ... */); // Optional rotation
-    filter: blur(40px);
-    transition-delay: 0.1s; // Slight delay
-    z-index: 0; // Behind first swirl
-  }
-
-  // Show swirls when expanded
-  
+  pointer-events: none; // Puste miejsca w menu nie blokują kliknięć pod spodem
 }
 
+// --- BAZOWY STYL DLA KAŻDEGO WĘZŁA ---
 .node {
-  // Base styles (display, border-radius, position, cursor, font, transition, z-index etc.)
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1);
-  border-radius: var(--radius-full);
-  position: absolute;
+  position: absolute; // Absolutne, aby wszystkie zaczynały w środku (0,0)
+  border-radius: 50%;
   cursor: pointer;
+  border: none;
+  outline: none;
+  
+  color: var(--text-primary);
   font-weight: 600;
-  transition: all var(--transition-slow) cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  // Default background, border, shadow for SUBJECT/QUIZ nodes
+
+  // --- KLUCZOWE DLA ANIMACJI ---
+  // Transition obsługuje zmianę transform (pozycji i skali) oraz opacity
+  transition: 
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), // Sprężysty "pop"
+    opacity 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+
+  // Domyślne tło
   background-color: var(--bg2-dark);
-  color: var(--text-primary);
-  border: 2px solid var(--node-color, var(--primary));
-  box-shadow: 0 0 5px var(--node-color, var(--primary)),
-              0 0 10px var(--node-color, var(--primary));
-              -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  z-index: 5; // Above background swirls
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+
+  z-index: 5;
+  pointer-events: auto; // Przywracamy klikalność dla samych węzłów
+
+  &:hover {
+    z-index: 100;
+    filter: brightness(1.1);
+    box-shadow: 0 0 20px var(--node-color);
+  }
+  
+  // Kiedy disabled (ukryty), upewniamy się że nie klika
+  &:disabled {
+    pointer-events: none;
+    cursor: default;
+  }
 }
 
-// ALL NODES SAME SIZE
-.profileNode, .subjectNode, .quizNode {
-  width: 100px;
-  height: 100px;
-}
-
+// --- STYL CENTRALNEGO PRZYCISKU ---
 .profileNode {
-  font-size: var(--text-4xl);
-  // Default state: Solid dark background
-  background-color: var(--bg2-dark);
-  color: var(--text-primary);
-  border: none; // No simple border by default
-  box-shadow: none; // No default shadow
-  z-index: 10; // Keep on top
+  width: 110px;
+  height: 110px;
+  font-size: 2rem;
+  z-index: 20;
+  
+  // Zawsze widoczny, zawsze w środku
+  opacity: 1 !important;
+  transform: translate(0, 0) scale(1) !important;
+  
+  // Ciemne tło
+  background-color: var(--bg1-dark);
+  
+  // Wielokolorowy border (pseudo-elementy lub gradient border)
+  border: 3px solid transparent;
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  // Wewnątrz ciemne, na zewnątrz gradient obrócony o --angle (z Reacta)
+  background-image: 
+    linear-gradient(var(--bg1-dark), var(--bg1-dark)), 
+    conic-gradient(from var(--angle, 0deg), var(--primary), var(--success), var(--warning), var(--error), var(--info), var(--primary));
 
-  // --- Styles when menu is expanded ---
-  .menu.isExpanded & {
-    position: relative; // Needed for pseudo-elements
+  .centralIconWrapper {
+    z-index: 2;
+  }
 
-    // *** APPLY CONIC GRADIENT DIRECTLY TO THE NODE ***
-    background: conic-gradient(
-      var(--primary), var(--success), var(--info), var(--warning),
-      hsl(280, 70%, 55%), hsl(30, 70%, 55%), hsl(180, 70%, 55%),
-      hsl(60, 70%, 55%), var(--primary)
-    );
-    color: var(--text-primary); // Use dark text/icon on colorful background
-    // Optional: Animate the gradient rotation
-    animation: rotateBorder 10s linear infinite;
-
-    // *** PSEUDO-ELEMENT ::before FOR SOLID BACKGROUND BORDER ***
-    &::before {
-      content: '';
-      position: absolute;
-      // Slightly larger than the node to create border effect
-      inset: 3px; // Adjust thickness/gap
-      border-radius: inherit;
-      background: var(--bg2-dark); // Solid dark background color
-      z-index: -1; // Position behind the conic gradient
-      transition: all var(--transition-slow) ease-in-out;
-      opacity: 1; // Always visible when expanded
-      // Remove blur and animation from this layer
-      filter: none;
-      animation: none;
-    }
-
-    // *** PSEUDO-ELEMENT ::after FOR SUBTLE GLOW (Optional) ***
-    &::after {
-      content: '';
-      position: absolute;
-      inset: -6px; // Slightly larger than ::before for glow effect
-      border-radius: inherit;
-       // Can use the same conic gradient or a simpler color
-      background: conic-gradient(
-        var(--primary), var(--success), var(--info), var(--warning),
-        hsl(280, 70%, 55%), hsl(30, 70%, 55%), hsl(180, 70%, 55%),
-        hsl(60, 70%, 55%), var(--primary)
-      );
-      filter: blur(10px); // Blur for the glow
-      z-index: -2; // Position behind ::before
-      transition: all var(--transition-slow) ease-in-out;
-      opacity: 0.5; // Adjust glow intensity
-      // Optional: Add rotation
-      // animation: rotateBorder 10s linear infinite reverse; // Rotate opposite direction?
-    }
+  .centralLabel {
+    position: absolute;
+    bottom: -25px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    pointer-events: none;
+    white-space: nowrap;
   }
 }
+
+// --- STYL PRZEDMIOTU ---
 .subjectNode {
-  font-size: var(--text-xs);
-  svg { font-size: var(--text-2xl); }
+  width: 90px;
+  height: 90px;
+  padding: 5px;
+  
+  // Ramka w kolorze przedmiotu
+  border: 2px solid var(--node-color);
+
+  .iconWrapper {
+    font-size: 2rem;
+    margin-bottom: 4px;
+    color: var(--node-color);
+  }
+
+  span {
+    font-size: 0.65rem;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--text-primary);
+    
+    // Pozycjonowanie tekstu pod kółkiem
+    position: absolute;
+    top: 100%; 
+    width: 120px;
+    margin-top: 5px;
+    
+    // Ograniczenie tekstu
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  &:hover {
+    // Przy hover powiększamy, ale musimy zachować pozycję z JS
+    // Tutaj 'scale(1.1)' w transform nadpisze inline style, co może zepsuć pozycję (X,Y).
+    // Lepiej animować samą zawartość lub użyć innej metody (np. zoom).
+    // Bezpieczne podejście: zmiana tła/cienia:
+    background-color: var(--bg3-dark);
+    box-shadow: 0 0 25px var(--node-color);
+  }
 }
 
-.quizNode {
-  font-size: 10px;
-  padding: var(--space-1);
-  text-align: center;
-  svg { font-size: var(--text-lg); }
+// --- LOADER / BŁĄD ---
+.loaderOverlay {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  font-size: 2rem;
+  color: var(--primary);
+  animation: spin 1s linear infinite;
+}
 
-  /* Status variants */
-  &.completed { background-color: var(--bg3-dark); }
-  &.available { background-color: var(--bg2-dark); }// Redundant but explicit
-  &.locked {
-    background-color: var(--bg1-dark);
-    svg {
-      color: var(--text-muted); // Dim icon color
-    }
-  }
+.errorNode {
+  position: absolute;
+  top: 80px;
+  background-color: var(--error);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  z-index: 30;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/lib/pq" // Upewnij się, że masz: go get github.com/lib/pq
+	"gorm.io/gorm"      // Dodajemy import gorm
 )
 
 // --- MODELE PODSTAWOWE ---
@@ -37,7 +38,7 @@ func (Token) TableName() string { return "tokens" }
 
 type Subject struct {
 	ID     uint   `gorm:"primarykey"`
-	UsosID string `gorm:"unique;not null"`
+	UsosID string `gorm:"unique;not null"` // ID przedmiotu z USOS
 	Name   string `gorm:"not null"`
 }
 
@@ -45,19 +46,32 @@ func (Subject) TableName() string { return "subjects" }
 
 type Topic struct {
 	ID              uint   `gorm:"primarykey"`
-	SubjectID       uint   `gorm:"not null;index"`
+	SubjectID       uint   `gorm:"not null;index"` // Klucz obcy do Subject
 	Name            string `gorm:"not null"`
-	CreatedByUsosID string `gorm:"not null"`
+	CreatedByUsosID string `gorm:"not null"` // Kto to stworzył
 }
 
 func (Topic) TableName() string { return "topics" }
+
+// --- NOWY MODEL ---
+// QuizNode definiuje węzeł na grafie ścieżki nauki
+type QuizNode struct {
+	gorm.Model                 // Dodaje ID, CreatedAt, UpdatedAt, DeletedAt
+	UsosCourseID string        `gorm:"index;not null"` // Klucz obcy do Subject.UsosID
+	Title        string        `gorm:"not null"`
+	Dependencies pq.Int64Array `gorm:"type:integer[]"` // Lista ID innych QuizNode (wymaga lib/pq)
+}
+
+func (QuizNode) TableName() string { return "quiz_nodes" }
+
+// --- KONIEC NOWEGO MODELU ---
 
 type Flashcard struct {
 	ID              uint   `gorm:"primarykey"`
 	TopicID         uint   `gorm:"not null;index"`
 	Question        string `gorm:"type:text;not null"`
 	Answer          string `gorm:"type:text;not null"`
-	Status          string `gorm:"default:'pending';not null;index"`
+	Status          string `gorm:"default:'pending';not null;index"` // 'pending', 'approved', 'rejected'
 	CreatedByUsosID string `gorm:"not null"`
 }
 

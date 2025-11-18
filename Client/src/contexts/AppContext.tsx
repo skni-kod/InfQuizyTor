@@ -5,9 +5,8 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { UsosUserInfo } from "../assets/types.tsx"; // Popraw ścieżkę do typów
+import { UsosUserInfo } from "../assets/types.tsx";
 
-// Definiujemy stan uwierzytelniania jako jeden obiekt
 interface AuthState {
   user: UsosUserInfo | null;
   authLoading: boolean;
@@ -16,18 +15,19 @@ interface AuthState {
 interface AppContextType {
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
-
   authState: AuthState;
   setUser: (user: UsosUserInfo | null) => void;
   setAuthLoading: (isLoading: boolean) => void;
   setLoggedInUser: (user: UsosUserInfo) => void;
+  isGooeyMenuOpen: boolean;
+  setIsGooeyMenuOpen: (isOpen: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const initialAuthState: AuthState = {
   user: null,
-  authLoading: true, // Zaczynamy jako "ładujący"
+  authLoading: true,
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -35,21 +35,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authState, setAuthState] = useState<AuthState>(initialAuthState);
+  const [isGooeyMenuOpen, setIsGooeyMenuOpen] = useState(false);
 
-  const setIsMenuOpenStable = useCallback((isOpen: boolean) => {
-    setIsMenuOpen(isOpen);
-  }, []);
-
-  const setUser = useCallback((user: UsosUserInfo | null) => {
-    setAuthState((prev) => ({ ...prev, user }));
-  }, []);
-
-  const setAuthLoading = useCallback((isLoading: boolean) => {
-    setAuthState((prev) => ({ ...prev, authLoading: isLoading }));
-  }, []);
-
-  const setLoggedInUser = useCallback((user: UsosUserInfo) => {
-    setAuthState({ user, authLoading: false });
+  const setIsMenuOpenStable = useCallback(
+    (isOpen: boolean) => setIsMenuOpen(isOpen),
+    []
+  );
+  const setUser = useCallback(
+    (user: UsosUserInfo | null) => setAuthState((prev) => ({ ...prev, user })),
+    []
+  );
+  const setAuthLoading = useCallback(
+    (isLoading: boolean) =>
+      setAuthState((prev) => ({ ...prev, authLoading: isLoading })),
+    []
+  );
+  const setLoggedInUser = useCallback(
+    (user: UsosUserInfo) => setAuthState({ user, authLoading: false }),
+    []
+  );
+  const setIsGooeyMenuOpenStable = useCallback((isOpen: boolean) => {
+    setIsGooeyMenuOpen(isOpen);
   }, []);
 
   const value = useMemo(
@@ -60,14 +66,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser,
       setAuthLoading,
       setLoggedInUser,
+      isGooeyMenuOpen,
+      setIsGooeyMenuOpen: setIsGooeyMenuOpenStable,
     }),
     [
       isMenuOpen,
       authState,
+      isGooeyMenuOpen,
       setIsMenuOpenStable,
       setUser,
       setAuthLoading,
       setLoggedInUser,
+      setIsGooeyMenuOpenStable,
     ]
   );
 

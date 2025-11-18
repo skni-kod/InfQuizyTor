@@ -1,38 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./SubjectHubPage.module.scss";
+// POPRAWKA: Importujemy czysty typ `Subject`
 import { Subject, Topic } from "../assets/types.tsx";
-
-// Importy komponentów
 import QuizGraph from "../components/Quiz/QuizGraph";
 import ResourceStudio from "../components/Studio/ResourceStudio";
 import TopicViewerModal from "../components/Studio/TopicViewerModal";
 import { FaArrowLeft } from "react-icons/fa";
 
-// Mock (do zastąpienia prawdziwymi danymi z API)
+// POPRAWKA: Typ MOCK_SUBJECT_DATA to teraz 'Subject'
 const MOCK_SUBJECT_DATA: Subject = {
-  id: "s1",
-  name: "Analiza Matematyczna",
-  icon: () => null,
-  color: "",
+  ID: 1,
+  UsosID: "s1",
+  Name: "Analiza Matematyczna",
 };
-const MOCK_TOPICS: Topic[] = [
-  { id: "t1", name: "Podstawy Równań", subject_id: "s1" },
-  { id: "t2", name: "Pochodne Cząstkowe", subject_id: "s1" },
-  { id: "t3", name: "Całki Wielokrotne", subject_id: "s1" },
-  { id: "t4", name: "Całki Krzywoliniowe", subject_id: "s1" },
-  { id: "t5", name: "Twierdzenie Greena", subject_id: "s1" },
-];
 
 const SubjectHubPage: React.FC = () => {
-  const { subjectId } = useParams(); // Pobieramy subjectId
+  const { subjectId } = useParams(); // subjectId to UsosID
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("path");
+
+  // POPRAWKA: Stan przechowuje teraz typ 'Subject'
+  const [currentSubject, setCurrentSubject] =
+    useState<Subject>(MOCK_SUBJECT_DATA);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [viewingTopic, setViewingTopic] = useState<Topic | null>(null);
 
-  // Funkcje
+  const fetchSubjectData = async () => {
+    if (!subjectId) return;
+    setLoading(true);
+    try {
+      // TODO: Zaimplementuj /api/subjects/:id
+      // Na razie używamy mocka, ale upewniamy się, że pasuje do typu
+      const mockSubject = { ...MOCK_SUBJECT_DATA, UsosID: subjectId, ID: 0 }; // ID z bazy byłoby nieznane
+      setCurrentSubject(mockSubject);
+
+      // --- POPRAWKA: fetchTopics ---
+      // Stary URL: /api/topics?subject_id=${subjectId}
+      const topicsRes = await fetch(
+        `/api/subjects/${subjectId}/topics`, // Zgodny z main.go
+        {
+          credentials: "include",
+        }
+      );
+      // --- KONIEC POPRAWKI ---
+
+      if (!topicsRes.ok) throw new Error("Nie udało się pobrać tematów");
+      const topicsData: Topic[] = await topicsRes.json();
+      setTopics(topicsData);
+    } catch (error) {
+      console.error("Błąd ładowania danych przedmiotu:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubjectData();
+  }, [subjectId]);
+
   const handleNodeClick = (topic: Topic) => {
-    console.log("Wybrano temat:", topic.name);
     setViewingTopic(topic);
   };
 
@@ -41,26 +70,18 @@ const SubjectHubPage: React.FC = () => {
   };
 
   const handleBackToDashboard = () => {
-    navigate("/"); // Wróć do pulpitu
+    navigate("/");
   };
 
-  // --- POPRAWKA: Używamy 'subjectId' ---
-  // TODO: Zastąp MOCK_... prawdziwym ładowaniem danych
-  // useEffect(() => {
-  //   // Tutaj wywołałbyś API, aby pobrać dane przedmiotu i tematów
-  //   // na podstawie 'subjectId'
-  //   // np. fetch(`/api/subjects/${subjectId}`)
-  //   // np. fetch(`/api/subjects/${subjectId}/topics`)
-  // }, [subjectId]); // Używamy 'subjectId' jako zależności
+  const refreshTopics = () => {
+    fetchSubjectData();
+  };
 
-  // Na razie zostawiamy mock, ale lint wie, że 'subjectId' ma cel
-  if (!subjectId) {
-    return <p>Nie wybrano przedmiotu</p>; // Obsługa braku ID
+  if (loading) {
+    return (
+      <div className={styles.loadingScreen}>Ładowanie danych przedmiotu...</div>
+    );
   }
-
-  const currentSubject = MOCK_SUBJECT_DATA;
-  const topics = MOCK_TOPICS;
-  // --- KONIEC POPRAWKI ---
 
   return (
     <>
@@ -69,7 +90,7 @@ const SubjectHubPage: React.FC = () => {
           <FaArrowLeft /> Wróć do pulpitu
         </button>
 
-        <h1 className={styles.subjectTitle}>{currentSubject.name}</h1>
+        <h1 className={styles.subjectTitle}>{currentSubject.Name}</h1>
 
         <div className={styles.tabs}>
           <button
@@ -86,7 +107,7 @@ const SubjectHubPage: React.FC = () => {
             }`}
             onClick={() => setActiveTab("resources")}
           >
-            Studio Treści (Zasoby)
+            Studio Treści
           </button>
           <button
             className={`${styles.tabButton} ${
@@ -102,14 +123,21 @@ const SubjectHubPage: React.FC = () => {
           {activeTab === "path" && (
             <div className={styles.graphContainer}>
               <QuizGraph
-                subject={currentSubject}
+                subject={currentSubject} // Przekazujemy cały obiekt Subject
+                UsosID={currentSubject.UsosID} // Prop UsosID
+                topics={topics}
                 onNodeClick={handleNodeClick}
                 onBack={handleBackToDashboard}
+                subjectColor={"var(--primary)"} // Przekaż domyślny kolor
               />
             </div>
           )}
           {activeTab === "resources" && (
-            <ResourceStudio subject={currentSubject} topics={topics} />
+            <ResourceStudio
+              subject={currentSubject}
+              topics={topics}
+              onTopicCreated={refreshTopics}
+            />
           )}
           {activeTab === "contact" && (
             <div className={styles.contactInfo}>

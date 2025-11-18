@@ -189,4 +189,76 @@
   margin-top: auto;
 
   &:hover { background-color: hsl(40, 90%, 70%); }
+}.widgetWrapper {
+  // ... (twoje istniejące style dla .widgetWrapper)
+  
+  // POPRAWKA: Dodaj te style, aby użyć zmiennej --widget-color
+  // którą przekazujemy z Reacta.
+  // To sprawi, że każdy widget będzie miał kolor kursu.
+  background-color: var(--bg2-dark);
+  border: 2px solid var(--widget-color, var(--tertiary));
+  box-shadow: 0 0 10px var(--widget-color, var(--tertiary)),
+              inset 0 0 5px var(--widget-color, var(--tertiary));
+  cursor: pointer;
+  transition: all 0.3s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); // Upewnij się, że transform jest animowany
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.1) !important; // Powiększenie przy najechaniu
+    box-shadow: 0 0 20px var(--widget-color, var(--tertiary)),
+                inset 0 0 10px var(--widget-color, var(--tertiary));
+  }
+
+  // Ukrywanie, gdy menu jest otwarte (już masz ten styl)
+  &.hidden {
+    transform: translate(-50%, -50%) scale(0) !important;
+    opacity: 0;
+  }
+}
+
+// NOWE STYLE: Zawartość widgetu kursu
+.courseWidgetContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+
+  svg {
+    font-size: var(--text-4xl);
+    color: var(--widget-color, var(--tertiary));
+  }
+}
+
+// NOWE STYLE: Loader i Błąd
+.loader,
+.error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--bg2-dark);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--tertiary);
+  z-index: 10;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+
+  svg {
+    font-size: var(--text-3xl);
+  }
+}
+
+.error {
+  color: var(--danger);
+  border-color: var(--danger);
 }

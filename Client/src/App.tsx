@@ -10,7 +10,7 @@ import ProfilePage from "./pages/ProfilePage";
 import { useAppContext } from "./contexts/AppContext";
 import { UsosUserInfo } from "./assets/types.tsx";
 import ApiPage from "./pages/ApiPage.tsx";
-import TestsPage from "./pages/aiTests.tsx";
+import TestsPage from "./pages/Tests.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 
 function App() {
@@ -65,8 +65,8 @@ function App() {
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<DashboardPage />} />
-        <Route path="tests" element={<ApiPage />} />
-        <Route path="aiTests" element={<TestsPage />} />
+        <Route path="tests/api" element={<ApiPage />} />
+        <Route path="tests" element={<TestsPage />} />
         <Route path="admin" element={<AdminPage />} />
 
         <Route path="przedmioty" element={<SubjectHubPage />} />

@@ -1,132 +1,176 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppContext } from "../../contexts/AppContext"; // Ensure path is correct
-import styles from "./Menu.module.scss"; // Ensure path is correct
-import { Subject, QuizNode } from "../../assets/types.tsx"; // Ensure path is correct (using assets/)
+import { useAppContext } from "../../contexts/AppContext";
+import styles from "./Menu.module.scss";
+
+import { AppSubject, Topic, Subject } from "../../assets/types.tsx";
+
+import QuizGraph from "../Quiz/QuizGraph";
+
 import {
   FaUserCircle,
   FaCalculator,
   FaDatabase,
-  FaReact,
-  FaLock,
-  FaCheck,
-  FaPlay,
   FaCode,
   FaNetworkWired,
   FaAtom,
   FaMicrochip,
   FaBookOpen,
+  FaSpinner,
+  FaQuestion,
+  FaTimes,
 } from "react-icons/fa";
+import { IconType } from "react-icons";
 
-// --- EXPANDED MOCK DATA ---
-const MOCK_SUBJECTS: Subject[] = [
-  { id: "s1", name: "Analiza", icon: FaCalculator, color: "var(--primary)" },
-  { id: "s2", name: "Bazy Danych", icon: FaDatabase, color: "var(--success)" },
-  { id: "s3", name: "Frontend", icon: FaReact, color: "var(--info)" },
-  {
-    id: "s4",
-    name: "Programowanie Obiektowe",
-    icon: FaCode,
-    color: "var(--warning)",
+const SUBJECT_VISUALS: Record<string, { icon: IconType; color: string }> = {
+  "Analiza matematyczna i algebra liniowa": {
+    icon: FaCalculator,
+    color: "var(--primary)",
   },
-  { id: "s5", name: "Fizyka I", icon: FaAtom, color: "hsl(280, 70%, 55%)" },
-  {
-    id: "s6",
-    name: "Sieci Komputerowe",
-    icon: FaNetworkWired,
-    color: "hsl(30, 70%, 55%)",
-  },
-  {
-    id: "s7",
-    name: "Algorytmy",
+  "Wstęp do programowania": { icon: FaCode, color: "var(--info)" },
+  "Wychowanie fizyczne cz.1": { icon: FaBookOpen, color: "var(--tertiary)" },
+  "Technika informacyjno-pomiarowa": {
     icon: FaMicrochip,
-    color: "hsl(180, 70%, 55%)",
+    color: "var(--success)",
   },
-  { id: "s8", name: "Logika", icon: FaBookOpen, color: "hsl(60, 70%, 55%)" },
-];
-const MOCK_QUIZZES_ANALIZA: QuizNode[] = [
-  { id: "s1q1", title: "Granice", status: "completed", dependencies: [] },
-  {
-    id: "s1q2",
-    title: "Pochodne",
-    status: "completed",
-    dependencies: ["s1q1"],
+  "Sygnały i systemy": { icon: FaNetworkWired, color: "hsl(30, 70%, 55%)" },
+  "Programowanie w języku C": { icon: FaCode, color: "var(--info)" },
+  "Narzędzia dla programistów": { icon: FaMicrochip, color: "var(--warning)" },
+  "Logika i teoria mnogości": { icon: FaBookOpen, color: "hsl(60, 70%, 55%)" },
+  "Języki, automaty i obliczenia": {
+    icon: FaBookOpen,
+    color: "hsl(280, 70%, 55%)",
   },
-  {
-    id: "s1q3",
-    title: "Zastosowania Poch.",
-    status: "available",
-    dependencies: ["s1q2"],
-  },
-  {
-    id: "s1q4",
-    title: "Całki Nieoznaczone",
-    status: "available",
-    dependencies: ["s1q2"],
-  },
-  {
-    id: "s1q5",
-    title: "Całki Oznaczone",
-    status: "locked",
-    dependencies: ["s1q4"],
-  },
-  {
-    id: "s1q6",
-    title: "Całki Niewłaściwe",
-    status: "locked",
-    dependencies: ["s1q5"],
-  },
-  { id: "s1q7", title: "Szeregi", status: "locked", dependencies: ["s1q1"] },
-  { id: "s1q8", title: "Szeregi", status: "locked", dependencies: ["s1q1"] },
-];
-// --- END EXPANDED MOCK DATA ---
+  "Bazy Danych": { icon: FaDatabase, color: "var(--success)" },
+  "Systemy Operacyjne": { icon: FaMicrochip, color: "var(--info)" },
+  "Fizyka I": { icon: FaAtom, color: "hsl(280, 70%, 55%)" },
+  default: { icon: FaQuestion, color: "var(--tertiary)" },
+};
+
+const mapDbSubjectsToAppSubjects = (dbSubjects: Subject[]): AppSubject[] => {
+  return dbSubjects.map((subject) => {
+    const name = subject.Name || "default";
+    const visuals = SUBJECT_VISUALS[name] || SUBJECT_VISUALS["default"];
+    return {
+      id: subject.UsosID,
+      UsosID: subject.UsosID,
+      term_id: (subject as any).term_id || "2024L",
+      db_id: subject.ID,
+      name: name,
+      icon: visuals.icon,
+      color: visuals.color,
+    };
+  });
+};
 
 type MenuLevel = 0 | 1 | 2;
+type LoadingState = "idle" | "loading" | "error";
 
 const Menu = () => {
   const { isMenuOpen, setIsMenuOpen } = useAppContext();
   const [level, setLevel] = useState<MenuLevel>(0);
-  const [activeSubject, setActiveSubject] = useState<Subject | null>(null);
+  const [activeSubject, setActiveSubject] = useState<AppSubject | null>(null);
   const navigate = useNavigate();
 
-  // State Transitions
+  const [subjects, setSubjects] = useState<AppSubject[]>([]);
+  const [subjectsLoadingState, setSubjectsLoadingState] =
+    useState<LoadingState>("idle");
+  const [topicsLoadingState, setTopicsLoadingState] =
+    useState<LoadingState>("idle");
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [rotation, setRotation] = useState(0);
+
+  const isLoading =
+    subjectsLoadingState === "loading" || topicsLoadingState === "loading";
+
+  useEffect(() => {
+    let frameId: number;
+    const animate = () => {
+      setRotation((prev) => (prev + 0.5) % 360); // Wolniejszy obrót
+      frameId = requestAnimationFrame(animate);
+    };
+    if (isMenuOpen) {
+      frameId = requestAnimationFrame(animate);
+    }
+    return () => cancelAnimationFrame(frameId);
+  }, [isMenuOpen]);
+
+  const syncAndFetchSubjects = async () => {
+    setSubjectsLoadingState("loading");
+    try {
+      try {
+        await fetch("/api/subjects/sync", {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (e) {}
+      const getRes = await fetch("/api/subjects", { credentials: "include" });
+      if (!getRes.ok) throw new Error("Błąd pobierania");
+      const dbData: Subject[] = await getRes.json();
+      setSubjects(mapDbSubjectsToAppSubjects(dbData));
+      setSubjectsLoadingState("idle");
+    } catch (e) {
+      console.error(e);
+      setSubjectsLoadingState("error");
+    }
+  };
+
+  const fetchTopics = async (subject: AppSubject) => {
+    setTopicsLoadingState("loading");
+    setTopics([]);
+    try {
+      const res = await fetch(`/api/subjects/${subject.UsosID}/topics`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Błąd");
+      const data: Topic[] = await res.json();
+      setTopics(data);
+      setTopicsLoadingState("idle");
+    } catch (e) {
+      console.error(e);
+      setTopicsLoadingState("error");
+    }
+  };
+
   const openLevel1 = () => {
     setLevel(1);
     setIsMenuOpen(true);
     setActiveSubject(null);
+    if (subjects.length === 0) syncAndFetchSubjects();
   };
-  const openLevel2 = (subject: Subject) => {
+
+  const openLevel2 = (subject: AppSubject) => {
     setLevel(2);
     setActiveSubject(subject);
     setIsMenuOpen(true);
+    fetchTopics(subject);
   };
+
   const backToLevel1 = () => {
     setLevel(1);
     setActiveSubject(null);
     setIsMenuOpen(true);
   };
+
   const closeMenu = () => {
     setLevel(0);
     setActiveSubject(null);
     setIsMenuOpen(false);
   };
 
-  // Event Handlers
   const handleCentralClick = () => {
     if (level === 0) openLevel1();
     else if (level === 1) closeMenu();
     else if (level === 2) backToLevel1();
   };
-  const handleQuizClick = (quiz: QuizNode) => {
-    if (quiz.status !== "locked" && activeSubject) {
-      navigate(`/quiz/${activeSubject.id}/${quiz.id}`);
+
+  const handleGraphNodeClick = (topic: Topic) => {
+    if (activeSubject) {
+      navigate(`/quiz/${activeSubject.UsosID}/${topic.ID}`);
       closeMenu();
-    } else {
-      console.log(`Quiz "${quiz.title}" is locked or no active subject.`);
     }
   };
 
-  // Effect
   useEffect(() => {
     if (!isMenuOpen && level !== 0) {
       setLevel(0);
@@ -134,155 +178,106 @@ const Menu = () => {
     }
   }, [isMenuOpen, level]);
 
-  // Helper Functions
   const getRadialPosition = (index: number, count: number, radius: number) => {
     const angle = (index / count) * 2 * Math.PI - Math.PI / 2;
     return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
   };
-  const getQuizIcon = (status: QuizNode["status"]) => {
-    switch (status) {
-      case "completed":
-        return <FaCheck />;
-      case "available":
-        return <FaPlay />;
-      case "locked":
-        return <FaLock />;
-      default:
-        return null;
-    }
-  };
 
-  // Dynamic Render Variables
-  const CentralIcon =
-    level === 2 && activeSubject ? activeSubject.icon : FaUserCircle;
+  let CentralIcon = FaUserCircle;
+  if (level === 1) CentralIcon = FaTimes;
+  if (level === 2 && activeSubject) CentralIcon = activeSubject.icon;
+
   const centralNodeColor =
-    level === 2 && activeSubject ? activeSubject.color : "var(--primary)"; // Background color still changes
-
-  // Determine quiz list
-  const quizzesToShow = activeSubject ? MOCK_QUIZZES_ANALIZA : [];
-
-  // Define radii - INCREASED radius to prevent overlap with larger nodes
-  const nodeRadius = 200; // Increased distance
+    level === 2 && activeSubject ? activeSubject.color : "var(--primary)";
+  const nodeRadius = 220;
 
   return (
-    <div className={styles.Container}>
-      {/* SVG filter */}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        version="1.1"
-        className={styles.svgFilters}
-      >
-        <defs>
-          <filter id="">
-            <feGaussianBlur
-              in="SourceGraphic"
-              stdDeviation="10"
-              result="blur"
-            />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
-              result="goo"
-            />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Apply filter AND add dynamic class for lines */}
-      <div
-        className={`${styles.menu} ${level > 0 ? styles.isExpanded : ""}`}
-        style={
-          {
-            filter: "url(#)",
-            "--menu-radius": `${nodeRadius * 2}px`,
-          } as React.CSSProperties
-        } // Pass radius for background size
-      >
-        {/* Central Node */}
+    <div className={styles.gooeyContainer}>
+      <div className={`${styles.menu} ${level > 0 ? styles.isExpanded : ""}`}>
+        {/* --- CENTRALNY PRZYCISK --- */}
         <button
           className={`${styles.node} ${styles.profileNode}`}
           onClick={handleCentralClick}
           style={
             {
-              zIndex: 10,
-              "--node-color": centralNodeColor, // Sets background
+              "--node-color": centralNodeColor,
+              "--angle": `${rotation}deg`,
             } as React.CSSProperties
           }
         >
-          <CentralIcon />
+          <div className={styles.centralIconWrapper}>
+            <CentralIcon />
+          </div>
+          <span className={styles.centralLabel}>
+            {level === 0 && "Profil"}
+            {level === 1 && "Zamknij"}
+            {level === 2 && "Wróć"}
+          </span>
         </button>
 
-        {/* Level 1: Subject Nodes */}
-        {MOCK_SUBJECTS.map((subject, i) => {
-          const { x, y } = getRadialPosition(
-            i,
-            MOCK_SUBJECTS.length,
-            nodeRadius
-          ); // Use new radius
-          const isVisible = level === 1;
-          const isActiveCentral =
-            level === 2 && activeSubject?.id === subject.id;
-          return (
-            <button
-              key={subject.id}
-              className={`${styles.node} ${styles.subjectNode}`} // Class determines size now
-              onClick={() => openLevel2(subject)}
-              style={
-                {
-                  "--node-color": subject.color, // Sets border/shadow
-                  transform: isVisible
-                    ? `translate(${x}px, ${y}px) scale(1)`
-                    : `translate(0px, 0px) scale(0)`,
-                  transitionDelay: `${i * 0.05}s`,
-                  zIndex: isActiveCentral ? 9 : 5,
-                  opacity: isActiveCentral ? 0 : 1,
-                } as React.CSSProperties
-              }
-            >
-              <subject.icon />
-              <span>{subject.name}</span>
-            </button>
-          );
-        })}
+        {isLoading && (
+          <div className={styles.loaderOverlay}>
+            <FaSpinner className="icon-spin" />
+          </div>
+        )}
+        {subjectsLoadingState === "error" && level === 1 && (
+          <div className={styles.errorNode}>Błąd sieci</div>
+        )}
 
-        {/* Level 2: Quiz Nodes */}
-        {quizzesToShow.map((quiz, i) => {
-          const { x, y } = getRadialPosition(
-            i,
-            quizzesToShow.length,
-            nodeRadius
-          ); // Use new radius
-          const isVisible = level === 2;
-          let nodeColorVar: string | undefined = undefined; // Use a different name to avoid conflict
-          if (quiz.status === "available" && activeSubject)
-            nodeColorVar = activeSubject.color;
-          else if (quiz.status === "completed") nodeColorVar = "var(--success)";
-          else if (quiz.status === "locked") nodeColorVar = "var(--tertiary)";
-          return (
-            <button
-              key={quiz.id}
-              className={`${styles.node} ${styles.quizNode} ${
-                styles[quiz.status]
-              }`} // Class determines size now
-              onClick={() => handleQuizClick(quiz)}
-              style={
-                {
-                  "--node-color": nodeColorVar, // Sets border/shadow
-                  transform: isVisible
-                    ? `translate(${x}px, ${y}px) scale(1)`
-                    : `translate(0px, 0px) scale(0)`,
-                  transitionDelay: isVisible ? `${i * 0.05}s` : "0s",
-                  zIndex: 7,
-                } as React.CSSProperties
-              }
-            >
-              {getQuizIcon(quiz.status)}
-              <span>{quiz.title}</span>
-            </button>
-          );
-        })}
+        {/* --- POZIOM 1: Przedmioty --- */}
+        {/* UWAGA: Usunięto warunek {level === 1 && ...}. Mapujemy zawsze, jeśli są dane. */}
+        {subjectsLoadingState !== "loading" &&
+          subjects.map((subject, i) => {
+            const { x, y } = getRadialPosition(i, subjects.length, nodeRadius);
+
+            // Sterujemy widocznością tylko za pomocą flagi
+            const isVisible = level === 1;
+
+            return (
+              <button
+                key={subject.id}
+                className={`${styles.node} ${styles.subjectNode}`}
+                onClick={() => openLevel2(subject)}
+                // Jeśli nie jest widoczny (Level 0 lub Level 2), blokujemy kliknięcia CSS-em (pointer-events)
+                disabled={!isVisible}
+                style={
+                  {
+                    "--node-color": subject.color,
+                    // Jeśli widoczne: idź na pozycję. Jeśli nie: wróć do środka.
+                    transform: isVisible
+                      ? `translate(${x}px, ${y}px) scale(1)`
+                      : `translate(0px, 0px) scale(0)`,
+                    opacity: isVisible ? 1 : 0,
+                    pointerEvents: isVisible ? "auto" : "none",
+                    // Opóźnienie zależne od indeksu - tworzy efekt fali
+                    transitionDelay: isVisible ? `${i * 0.04}s` : "0s",
+                    zIndex: 5,
+                  } as React.CSSProperties
+                }
+              >
+                <div className={styles.iconWrapper}>
+                  <subject.icon />
+                </div>
+                <span>{subject.name}</span>
+              </button>
+            );
+          })}
+
+        {/* --- POZIOM 2: Graf Quizu --- */}
+        {level === 2 && activeSubject && topicsLoadingState !== "loading" && (
+          <QuizGraph
+            subject={{
+              ID: activeSubject.db_id,
+              UsosID: activeSubject.UsosID,
+              Name: activeSubject.name,
+            }}
+            UsosID={activeSubject.UsosID}
+            topics={topics}
+            onNodeClick={handleGraphNodeClick}
+            onBack={backToLevel1}
+            subjectColor={activeSubject.color}
+          />
+        )}
       </div>
     </div>
   );

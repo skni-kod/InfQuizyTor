@@ -2,39 +2,40 @@ import React from "react";
 import { useAppContext } from "../contexts/AppContext";
 import styles from "./ApiPage.module.scss";
 
-// Importuj TYLKO POPRAWNE widgety
+// 1. IMPORTUJ NOWE MENU
+import TopicViewerModal from "../components/Studio/TopicViewerModal"; // Import modala
+import { Topic } from "../assets/types"; // Importuj Topic
+
+// Importuj swoje widgety
 import UserCard from "../components/Widgets/UserCard";
+import LatestGradesWidget from "../components/Widgets/LatestGradesWidget";
 import StudentTestsWidget from "../components/Widgets/StudentTestsWidget";
 import UserCoursesWidget from "../components/Widgets/UserCoursesWidget";
 import IdCardsWidget from "../components/Widgets/IdCardsWidget";
 import EctsCreditsWidget from "../components/Widgets/EctsCreditsWidget";
-import LatestGradesWidget from "../components/Widgets/LatestGradesWidget";
 import CustomGroupsWidget from "../components/Widgets/CustomGroupsWidget";
 import BuildingIndexWidget from "../components/Widgets/BuildingIndexWidget";
-import GeminiTestPlayground from "../components/Widgets/GeminiTestPlayground";
-import CalendarContainer from "../components/Calendar/CalendarContainer";
-// Lista POPRAWIONYCH widgetów
+// import CalendarContainer from "../components/Calendar/CalendarContainer";
+
 const widgets: React.FC[] = [
   UserCard,
-  LatestGradesWidget, // Poprawny widget ocen
-  StudentTestsWidget, // Poprawny widget sprawdzianów
+  LatestGradesWidget,
+  StudentTestsWidget,
   UserCoursesWidget,
   IdCardsWidget,
   EctsCreditsWidget,
-  CalendarContainer,
-
   CustomGroupsWidget,
   BuildingIndexWidget,
-  GeminiTestPlayground,
-  // TestsCard i GradesCard (stare) zostały usunięte
+  // CalendarContainer,
 ];
 
 const ApiPage: React.FC = () => {
-  // --- POPRAWKA ---
-  const { authState } = useAppContext();
-  // --- KONIEC POPRAWKI ---
+  // 2. POBIERZ STAN GOOEY MENU
+  const { authState, isGooeyMenuOpen } = useAppContext();
 
-  // --- POPRAWKA ---
+  // Stan dla modala (jest tutaj, bo GooeyMenu i QuizGraph go potrzebują)
+  const [viewingTopic, setViewingTopic] = React.useState<Topic | null>(null);
+
   if (authState.authLoading) {
     return (
       <div className={styles.loadingContainer}>Ładowanie aplikacji...</div>
@@ -42,7 +43,6 @@ const ApiPage: React.FC = () => {
   }
 
   if (!authState.user) {
-    // --- KONIEC POPRAWKI ---
     return (
       <div className={styles.loadingContainer}>
         <h2>Witaj w InfQuizyTor!</h2>
@@ -51,12 +51,23 @@ const ApiPage: React.FC = () => {
     );
   }
 
-  // Użytkownik jest zalogowany
   return (
     <div className={styles.pageContainer}>
+      {/* 3. DODAJ KOMPONENTY (będą pływać nad wszystkim) */}
+
+      <TopicViewerModal
+        topic={viewingTopic}
+        onClose={() => setViewingTopic(null)}
+      />
+
       <h1>Twój Panel USOS</h1>
 
-      <div className={styles.dashboardGrid}>
+      {/* 4. DODAJ KLASĘ WARUNKOWĄ DO SIATKI WIDGETÓW */}
+      <div
+        className={`${styles.dashboardGrid} ${
+          isGooeyMenuOpen ? styles.isHidden : ""
+        }`}
+      >
         {widgets.map((Widget, index) => (
           <Widget key={index} />
         ))}

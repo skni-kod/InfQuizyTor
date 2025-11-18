@@ -16,20 +16,16 @@ const Header = () => {
   const { authState, setUser } = useAppContext();
   const navigate = useNavigate();
 
-  // --- POPRAWKA 1: Dodajemy funkcję handleLogin ---
   const handleLogin = async () => {
     try {
-      // 1. Wyślij żądanie do backendu
       const response = await fetch(`${BACKEND_URL}/auth/usos/login`, {
         method: "GET",
         credentials: "include",
       });
 
       if (response.ok) {
-        // 2. Odbierz JSON (ten, który widziałeś na zrzucie ekranu)
         const data = await response.json();
 
-        // 3. Sprawdź, czy JSON zawiera URL i przekieruj przeglądarkę
         if (data.authorization_url) {
           window.location.href = data.authorization_url;
         } else {
@@ -42,7 +38,6 @@ const Header = () => {
       console.error("Błąd sieci:", error);
     }
   };
-  // --- KONIEC POPRAWKI 1 ---
 
   const handleLogout = async () => {
     try {
@@ -89,15 +84,12 @@ const Header = () => {
       );
     }
 
-    // --- POPRAWKA 2: Zmieniamy <a> na <button> ---
-    // Wylogowany
     return (
       <button onClick={handleLogin} className={styles.navLink}>
         <FaSignInAlt />
         <span>Zaloguj się</span>
       </button>
     );
-    // --- KONIEC POPRAWKI 2 ---
   };
 
   return (

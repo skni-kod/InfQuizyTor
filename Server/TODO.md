@@ -1,3 +1,5 @@
+# Todo
+
 Synchronizacja przedmiotów z USOS.
 
 Zarządzanie treścią (Tematy).
@@ -32,7 +34,7 @@ go mod tidy
 
 [ ] Napraw logowanie na frontendzie:
 
-[ ] Client/src/layouts/Header.tsx: Zastąp całą zawartość pliku tym kodem, który implementuje handleLogin (pobiera JSON i przekierowuje) zamiast zwykłego linku <a>.
+[x] Client/src/layouts/Header.tsx: Zastąp całą zawartość pliku tym kodem, który implementuje handleLogin (pobiera JSON i przekierowuje) zamiast zwykłego linku .
 
 [ ] Wyczyść dane:
 
@@ -56,7 +58,7 @@ Teraz, gdy logowanie działa, implementujemy resztę.
 
 [ ] Dodaj GEMINI_API_KEY do pliku .env.
 
-[ ] Dodaj pole GeminiAPIKey string do struktury Config w config/config.go.
+[x] Dodaj pole GeminiAPIKey string do struktury Config w config/config.go.
 
 [ ] Modele (models/models.go):
 
@@ -114,7 +116,7 @@ Teraz, gdy backend jest gotowy, budujemy UI, aby z niego korzystał.
 
 [ ] src/components/Widgets/CustomGroupsWidget.tsx: Napraw błąd fields, zmieniając go na const fields = "id|name";.
 
-[ ] Kalendarz V2: Zastąp <UsosCalendar /> nowym <CalendarContainer />.
+[ ] Kalendarz V2: Zastąp UsosCalendar nowym CalendarContainer.
 
 [ ] Strona Przedmiotu (Subject Hub):
 
@@ -162,11 +164,11 @@ Gdy wszystko działa lokalnie, czas na wdrożenie.
 
 [ ] Zbuduj statyczne pliki: cd Client && pnpm build. Wynik znajdzie się w Client/dist.
 
-[j] Konfiguracja Serwera (Nginx/Caddy):
+[ ] Konfiguracja Serwera (Nginx/Caddy):
 
 [ ] Skonfiguruj serwer (np. Nginx) jako odwrotne proxy.
 
-[ ] Reguła 1: Wszystkie żądania location /api/ oraz location /auth/ muszą być przekierowane do Twojego backendu Go (np. proxy_pass http://localhost:8080;).
+[ ] Reguła 1: Wszystkie żądania location /api/ oraz location /auth/ muszą być przekierowane do Twojego backendu Go (np. proxy_pass <http://localhost:8080>;).
 
 [ ] Reguła 2: Wszystkie inne żądania (location /) muszą serwować pliki statyczne z Client/dist.
 
@@ -180,6 +182,6 @@ Gdy wszystko działa lokalnie, czas na wdrożenie.
 
 [ ] Ustaw wszystkie zmienne z pliku .env na serwerze produkcyjnym.
 
-[ ] WAŻNE: Upewnij się, że APP_BASE_URL (dla Go) i USOS_CALLBACK_URL wskazują na Twój publiczny adres URL (np. https://infquizytor.pl), a nie localhost:8080.
+[ ] WAŻNE: Upewnij się, że APP_BASE_URL (dla Go) i USOS_CALLBACK_URL wskazują na Twój publiczny adres URL (np. <https://infquizytor.pl>), a nie localhost:8080.
 
-[ ] Zmień FRONTEND_URL na swój publiczny adres (np. https://infquizytor.pl), aby CORS działał poprawnie.
+[ ] Zmień FRONTEND_URL na swój publiczny adres (np. <https://infquizytor.pl>), aby CORS działał poprawnie.

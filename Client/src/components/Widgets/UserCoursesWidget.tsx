@@ -15,7 +15,7 @@ import {
 } from "react-icons/fa";
 
 const UserCoursesWidget: React.FC = () => {
-  const apiPath = "services/courses/user";
+  const apiPath = "courses/user";
   // Prosimy o listę semestrów ORAZ o edycje kursów z konkretnymi polami
   // To jest przykład zagnieżdżonego selektora pól w API USOS
 

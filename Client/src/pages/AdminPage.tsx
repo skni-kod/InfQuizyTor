@@ -1,3 +1,5 @@
+import { useAppContext } from "../contexts/AppContext";
+
 export default function AdminPage() {
   const { authState } = useAppContext();
   if (authState.user?.role !== "admin") {

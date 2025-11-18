@@ -4,156 +4,141 @@ import { IconType } from "react-icons";
 // 0. Typy Generyczne (Współdzielone)
 // =================================================================
 
-/**
- * Standardowa odpowiedź USOS dla pól wielojęzycznych. Pole 'en' jest
- * opcjonalne, ponieważ nie zawsze jest zwracane.
- */
 export interface LangDict {
   pl: string;
   en?: string;
 }
 
 // =================================================================
-// 1. Typy Aplikacji (Użytkownik, Przedmioty, AI)
+// 1. Typy Aplikacji (Użytkownik, AI, Mock Data)
 // =================================================================
 
 // --- Użytkownik ---
-
-/**
- * Informacje o użytkowniku (z naszego API, wzorowane na USOS).
- */
 export interface UsosUserInfo {
-  id: string;
+  id: string; // To jest UsosID
   first_name: string;
   last_name: string;
   email: string;
   role: "student" | "admin";
 }
 
-// --- Ścieżka Nauki (Przedmioty, Tematy, Graf) ---
+// --- Generowanie Treści (AI) ---
+export interface GeneratedFlashcard {
+  question: string;
+  answer: string;
+}
+export interface GeneratedQuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+export interface GeneratedSummary {
+  summary: string;
+}
+export type GeminiApiResponse =
+  | GeneratedFlashcard[]
+  | GeneratedQuizQuestion[]
+  | GeneratedSummary;
+
+// --- Mockowe Dane (Dashboard) ---
+export interface UpcomingEvent {
+  id: string;
+  type: string;
+  title: string;
+  time: string;
+  source: string;
+  color: string;
+}
+export interface RankingEntry {
+  rank: number;
+  name: string;
+  score: number;
+  isCurrentUser?: boolean;
+}
+export interface LearningProgress {
+  subject: string;
+  topic: string;
+  progress: number;
+  required?: number;
+}
+
+// =================================================================
+// 2. Typy Ścieżki Nauki (Nasza Baza Danych i Frontend)
+// =================================================================
 
 /**
- * Reprezentuje główny przedmiot w aplikacji.
+ * Typ `Subject` zwracany przez nasze API (np. /api/subjects/:id).
+ * Pasuje do `models.Subject` z Go.
  */
 export interface Subject {
-  id: string;
+  ID: number; // ID z naszej bazy (Primary Key)
+  UsosID: string;
+  Name: string;
+}
+
+/**
+ * Typ `Subject` używany w aplikacji (np. w Menu).
+ * Łączy dane z API z danymi frontendu (ikona, kolor).
+ */
+export interface AppSubject {
+  id: string; // Używamy UsosID jako głównego identyfikatora na frontendzie
+  UsosID: string; // Wymagane przez QuizGraph i dla spójności
+  db_id: number; // ID z naszej bazy danych (pasuje do Subject.ID)
   name: string;
+  term_id: string;
   icon: IconType;
   color: string;
 }
 
 /**
  * Reprezentuje pojedynczy temat/dział w ramach przedmiotu.
+ * Pasuje do `models.Topic` z Go.
  */
 export interface Topic {
-  id: string;
-  subject_id: string;
-  name: string;
+  ID: number;
+  SubjectID: number;
+  Name: string;
+  CourseUsosID?: string; // Ważne dla mapowania w Menu.tsx
+  CreatedByUsosID: string;
 }
 
 /**
  * Reprezentuje węzeł na grafie postępów w nauce.
+ * POWINIEN pasować do modelu `models.QuizNode` (lub podobnego) z backendu Go.
  */
 export interface QuizNode {
-  id: string;
-  title: string;
-  status: "locked" | "available" | "completed";
-  dependencies: string[]; // Lista ID węzłów, które muszą być ukończone
+  ID: number; // ID węzła z bazy danych
+  UsosCourseID: string; // Do którego kursu należy
+  Title: string; // Nazwa wyświetlana
+  // Zależności są teraz liczbami (ID innych QuizNode)
+  Dependencies: number[];
 }
-
-// --- Generowanie Treści (AI) ---
-
-/**
- * Reprezentuje pojedynczą fiszkę wygenerowaną przez AI.
- */
-export interface GeneratedFlashcard {
-  question: string;
-  answer: string;
-}
-
-/**
- * Reprezentuje pojedyncze pytanie quizowe wygenerowane przez AI.
- */
-export interface GeneratedQuizQuestion {
-  question: string;
-  options: string[];
-  correctIndex: number;
-}
-
-/**
- * Reprezentuje podsumowanie wygenerowane przez AI.
- */
-export interface GeneratedSummary {
-  summary: string; // Może zawierać Markdown
-}
-
-/**
- * Ogólna odpowiedź z naszego API generującego treści.
- */
-export type GeminiApiResponse =
-  | GeneratedFlashcard[]
-  | GeneratedQuizQuestion[]
-  | GeneratedSummary;
 
 // =================================================================
-// 2. Typy dla Danych z API USOS
+// 3. Typy dla Danych z API USOS
 // =================================================================
 
 // --- Kalendarz ---
-
-/**
- * Ujednolicony typ dla wydarzenia w kalendarzu aplikacji. Łączy dane z USOS
- * oraz wydarzenia niestandardowe z naszej bazy.
- */
 export interface AppCalendarEvent {
-  id: string; // ID z USOS lub z naszej bazy
+  id: string;
   start_time: string;
   end_time?: string | null;
-  layerId: string; // Klucz warstwy, np. "usos-exam", "private-1"
-
-  // Pola niestandardowe (z naszej bazy)
+  layerId: string;
   title?: string;
   description?: string;
-
-  // Pola z USOS (mogą być puste lub null)
-  name?: Partial<LangDict>; // Czasem USOS zwraca pusty obiekt {}
+  name?: Partial<LangDict>;
   url?: string | null;
   building_name?: Partial<LangDict> | null;
   room_number?: string | null;
   course_name?: Partial<LangDict> | null;
   classtype_name?: Partial<LangDict> | null;
 }
-
-/**
- * Struktura odpowiedzi z naszego API kalendarza (/api/calendar/all-events).
- */
 export interface AppCalendarResponse {
   events: AppCalendarEvent[];
   layers: Record<string, { name: string; color: string }>;
 }
 
-/**
- * Wydarzenie z kalendarza instytucji (np. dni wolne, sesje). Endpoint:
- * services/calendar/search
- */
-export interface UsosInstitutionCalendarEvent {
-  id: number;
-  name: LangDict;
-  start_date: string; // ISO 8601
-  end_date: string; // ISO 8601
-  type: string; // np. rector, dean, holidays, exam_session
-  is_day_off: boolean;
-  faculty?: {
-    faculty_id: string;
-  } | null;
-}
-
 // --- Oceny ---
-
-/**
- * Reprezentuje pojedynczą, ostatnio dodaną ocenę. Endpoint:
- * services/grades/latest
- */
 export interface UsosLatestGrade {
   value_symbol: string;
   value_description: LangDict;
@@ -166,41 +151,23 @@ export interface UsosLatestGrade {
 }
 
 // --- Przedmioty i Semestry ---
-
-/**
- * Reprezentuje semestr akademicki.
- */
 export interface UsosTerm {
   id: string;
   name: LangDict;
 }
-
-/**
- * Reprezentuje jedną edycję kursu (przedmiot w danym semestrze). Endpoint:
- * services/courses/user
- */
 export interface UsosCourseEdition {
   course_id: string;
   course_name: LangDict;
   term_id: string;
   profile_url: string | null;
-  passing_status: "passed" | "failed" | "not_yet_passed" | string;
+  passing_status: string;
 }
-
-/**
- * Odpowiedź z endpointu 'services/courses/user'.
- */
 export interface UsosUserCoursesResponse {
   terms: UsosTerm[];
   course_editions: Record<string, UsosCourseEdition[]>;
 }
 
 // --- Sprawdziany (Drzewa Ocen) ---
-
-/**
- * Reprezentuje główny węzeł sprawdzianu (testu). Endpoint:
- * services/crstests/participant
- */
 export interface UsosTestRoot {
   node_id: string;
   name: LangDict;
@@ -213,119 +180,13 @@ export interface UsosTestRoot {
     profile_url: string | null;
   } | null;
 }
-
-/**
- * Odpowiedź z endpointu 'services/crstests/participant'.
- */
 export interface UsosParticipantTestsResponse {
   tests: Record<string, UsosTestRoot[]>;
   terms: Record<string, UsosTerm>;
 }
 
-// --- Legitymacje i Karty ---
-
-/**
- * Reprezentuje legitymację lub kartę użytkownika. Endpoint: services/cards/user
- */
+// --- Inne typy USOS ---
 export interface UsosCard {
-  id: string;
-  type: "student" | "phd" | "staff" | "graduate" | "academic_teacher" | string;
-  barcode_number: string | null;
-  student_number: string | null;
-  expiration_date: string | null;
-  date_of_issue: string | null;
+  /* ... */
 }
-
-// --- Grupy Niestandardowe ---
-
-/**
- * Reprezentuje grupę zajęciową (np. wykład, ćwiczenia).
- */
-export interface UsosPrimaryGroup {
-  group_id: string;
-  name: LangDict;
-}
-
-/**
- * Reprezentuje prostą grupę niestandardową (używane w zagnieżdżeniach).
- */
-export interface UsosSimpleCustomGroup {
-  id: string;
-  name: string;
-}
-
-/**
- * Pełna definicja grupy niestandardowej. Endpoint: services/csgroups/user
- */
-export interface UsosCustomGroup {
-  id: string;
-  name: string;
-  primary_groups?: UsosPrimaryGroup[];
-  custom_groups?: UsosSimpleCustomGroup[];
-  users?: UsosUserInfo[];
-  emails?: string[];
-}
-
-// --- Budynki (Geo) ---
-
-/**
- * Reprezentuje współrzędne geograficzne.
- */
-export interface UsosBuildingLocation {
-  long: number;
-  lat: number;
-}
-
-/**
- * Reprezentuje adresy URL zdjęć budynku.
- */
-export interface UsosBuildingPhotoUrls {
-  screen: string | null;
-}
-
-/**
- * Reprezentuje budynek uczelni. Endpoint: services/geo/building_index
- */
-export interface UsosBuilding {
-  id: string;
-  name: LangDict;
-  postal_address: string | null;
-  location: UsosBuildingLocation | null;
-  photo_urls: UsosBuildingPhotoUrls | null;
-}
-
-// =================================================================
-// 3. Typy dla Mockowych Danych (Dashboard)
-// =================================================================
-
-/**
- * Mockowy typ dla nadchodzących wydarzeń na pulpicie.
- */
-export interface UpcomingEvent {
-  id: string;
-  type: string;
-  title: string;
-  time: string;
-  source: string;
-  color: string;
-}
-
-/**
- * Mockowy typ dla wpisu w rankingu na pulpicie.
- */
-export interface RankingEntry {
-  rank: number;
-  name: string;
-  score: number;
-  isCurrentUser?: boolean;
-}
-
-/**
- * Mockowy typ dla postępów w nauce na pulpicie.
- */
-export interface LearningProgress {
-  subject: string;
-  topic: string;
-  progress: number;
-  required?: number;
-}
+// ... (reszta typów USOS)

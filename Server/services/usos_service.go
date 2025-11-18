@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gomodule/oauth1/oauth"
+	"github.com/gomodule/oauth1/oauth" // Używamy 'gomodule'
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/db"
 	"github.com/skni-kod/InfQuizyTor/Server/models"
@@ -54,42 +54,64 @@ func InitUsosService(cfg config.Config) {
 	log.Println("Serwis USOS (gomodule v0.2.0) pomyślnie zainicjowany.")
 }
 
-// GetRequestToken (bez zmian)
+// GetRequestToken (poprawny dla 'gomodule' - wysyła scopes)
 func (s *GormUsosService) GetRequestToken() (string, string, error) {
 	additionalParams := url.Values{}
 	additionalParams.Set("scopes", s.Scopes)
-	creds, err := s.Client.RequestTemporaryCredentials(s.HttpClient, s.CallbackURL, additionalParams)
+
+	creds, err := s.Client.RequestTemporaryCredentials(
+		s.HttpClient,
+		s.CallbackURL,
+		additionalParams,
+	)
 	if err != nil {
+		log.Printf("Błąd USOS (RequestToken): %v", err)
 		return "", "", fmt.Errorf("błąd pobierania Request Tokena: %w", err)
 	}
 	return creds.Token, creds.Secret, nil
 }
 
-// GetAuthorizationURL (bez zmian)
+// GetAuthorizationURL (poprawny dla 'gomodule')
 func (s *GormUsosService) GetAuthorizationURL(requestToken string) (*url.URL, error) {
 	tempCreds := &oauth.Credentials{Token: requestToken}
 	urlString := s.Client.AuthorizationURL(tempCreds, nil)
 	return url.Parse(urlString)
 }
 
-// GetAccessToken (bez zmian)
+// GetAccessToken (poprawny dla 'gomodule')
 func (s *GormUsosService) GetAccessToken(requestToken, requestSecret, verifier string) (string, string, error) {
-	tempCreds := &oauth.Credentials{Token: requestToken, Secret: requestSecret}
-	creds, _, err := s.Client.RequestToken(s.HttpClient, tempCreds, verifier)
+	tempCreds := &oauth.Credentials{
+		Token:  requestToken,
+		Secret: requestSecret,
+	}
+	creds, _, err := s.Client.RequestToken(
+		s.HttpClient,
+		tempCreds,
+		verifier,
+	)
 	if err != nil {
 		return "", "", fmt.Errorf("błąd wymiany Access Tokena: %w", err)
 	}
 	return creds.Token, creds.Secret, nil
 }
 
-// GetUserInfo (bez zmian)
+// GetUserInfo (poprawny dla 'gomodule')
 func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models.UsosUserInfo, error) {
-	accessCreds := &oauth.Credentials{Token: accessToken, Secret: accessSecret}
+	accessCreds := &oauth.Credentials{
+		Token:  accessToken,
+		Secret: accessSecret,
+	}
+	fields := "id|first_name|last_name|email"
 	baseURL := fmt.Sprintf("%s/services/users/user", s.UsosAPIURL)
 	params := url.Values{}
-	params.Set("fields", "id|first_name|last_name|email")
+	params.Set("fields", fields)
 
-	resp, err := s.Client.Get(s.HttpClient, accessCreds, baseURL, params)
+	resp, err := s.Client.Get(
+		s.HttpClient,
+		accessCreds,
+		baseURL,
+		params,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("błąd pobierania danych użytkownika: %w", err)
 	}
@@ -97,7 +119,8 @@ func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("błąd API USOS (GetUserInfo): status %d, body: %s", resp.StatusCode, string(bodyBytes))
+		log.Printf("Błąd odpowiedzi USOS (GetUserInfo): Status %d, Body: %s", resp.StatusCode, string(bodyBytes))
+		return nil, fmt.Errorf("błąd API USOS: status %d", resp.StatusCode)
 	}
 
 	var userInfo models.UsosUserInfo
@@ -107,29 +130,49 @@ func (s *GormUsosService) GetUserInfo(accessToken, accessSecret string) (*models
 	return &userInfo, nil
 }
 
-// MakeSignedRequest (bez zmian)
+// MakeSignedRequest (poprawny dla 'gomodule')
 func (s *GormUsosService) MakeSignedRequest(userUsosID, targetPath, queryParams string) (*http.Response, error) {
+	log.Printf("Proxy: Pobieranie tokena dla użytkownika %s", userUsosID)
 	token, err := s.UserRepo.GetTokenByUsosID(userUsosID)
 	if err != nil {
+		log.Printf("Proxy: Błąd pobierania tokena: %v", err)
 		return nil, fmt.Errorf("błąd pobierania tokena z bazy: %w", err)
 	}
-	accessCreds := &oauth.Credentials{Token: token.AccessToken, Secret: token.AccessSecret}
+
+	accessCreds := &oauth.Credentials{
+		Token:  token.AccessToken,
+		Secret: token.AccessSecret,
+	}
+
 	baseURL := fmt.Sprintf("%s/services/%s", s.UsosAPIURL, targetPath)
 	params, _ := url.ParseQuery(queryParams)
 
-	resp, err := s.Client.Get(s.HttpClient, accessCreds, baseURL, params)
+	// Dodajemy scopes (wymagane przez niektóre endpointy USOS)
+	params.Set("scopes", token.Scopes)
+
+	log.Printf("Proxy: Wykonywanie podpisanego żądania GET do: %s z parametrami: %s", baseURL, params.Encode())
+
+	resp, err := s.Client.Get(
+		s.HttpClient,
+		accessCreds,
+		baseURL,
+		params,
+	)
 	if err != nil {
+		log.Printf("Proxy: Błąd żądania GET do USOS: %v", err)
 		return nil, fmt.Errorf("błąd żądania do API USOS: %w", err)
 	}
+
 	return resp, nil
 }
 
-// --- NOWE FUNKCJE ---
+// --- POPRAWKA: Usunięto 'services/' z wywołania MakeSignedRequest ---
+// --- Oraz dodano logikę fallback dla błędu 400 (Unrecognized character) ---
 
-// GetCourses pobiera listę przedmiotów użytkownika z USOS
 func (s *GormUsosService) GetCourses(userUsosID string) (*models.UsosUserCoursesResponse, error) {
 	fields := "course_editions(course_id|course_name)"
-	resp, err := s.MakeSignedRequest(userUsosID, "services/courses/user", fmt.Sprintf("fields=%s", fields))
+	// Wywołujemy "courses/user", a nie "services/courses/user"
+	resp, err := s.MakeSignedRequest(userUsosID, "courses/user", fmt.Sprintf("fields=%s", fields))
 	if err != nil {
 		return nil, fmt.Errorf("błąd żądania do courses/user: %w", err)
 	}
@@ -137,24 +180,32 @@ func (s *GormUsosService) GetCourses(userUsosID string) (*models.UsosUserCourses
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		// Specjalna obsługa błędu pól z nawiasami
-		if strings.Contains(string(bodyBytes), "Unrecognized character") {
+		// Sprawdzamy, czy błąd to 400 (Bad Request) i czy zawiera błąd pól
+		if resp.StatusCode == http.StatusBadRequest && (strings.Contains(string(bodyBytes), "Unrecognized character") || strings.Contains(string(bodyBytes), "invalid_fields")) {
 			log.Println("OSTRZEŻENIE: Serwer USOS nie wspiera pól zagnieżdżonych. Ponawiam próbę z uproszczonymi polami.")
 			return s.GetCoursesFallback(userUsosID)
 		}
+		log.Printf("Błąd odpowiedzi USOS (GetCourses): Status %d, Body: %s", resp.StatusCode, string(bodyBytes))
 		return nil, fmt.Errorf("błąd API USOS (GetCourses): status %d, body: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var courseData models.UsosUserCoursesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&courseData); err != nil {
-		return nil, fmt.Errorf("błąd dekodowania JSON z courses/user: %w", err)
+		log.Printf("Błąd dekodowania JSON, próba fallback: %v", err)
+		return s.GetCoursesFallback(userUsosID)
 	}
+
+	if courseData.CourseEditions == nil {
+		log.Println("OSTRZEŻENIE: Odpowiedź API nie zawierała 'course_editions'. Ponawiam próbę z fallbackiem.")
+		return s.GetCoursesFallback(userUsosID)
+	}
+
 	return &courseData, nil
 }
 
-// GetCoursesFallback to wersja zapasowa, jeśli pola z nawiasami zawiodą
 func (s *GormUsosService) GetCoursesFallback(userUsosID string) (*models.UsosUserCoursesResponse, error) {
-	resp, err := s.MakeSignedRequest(userUsosID, "services/courses/user", "fields=course_editions")
+	// Wywołujemy "courses/user" z prostymi polami
+	resp, err := s.MakeSignedRequest(userUsosID, "courses/user", "fields=course_editions")
 	if err != nil {
 		return nil, err
 	}
@@ -169,9 +220,9 @@ func (s *GormUsosService) GetCoursesFallback(userUsosID string) (*models.UsosUse
 	return &courseData, nil
 }
 
-// GetUserGroups pobiera listę grup zajęciowych użytkownika
 func (s *GormUsosService) GetUserGroups(userUsosID string) ([]models.UsosUserGroup, error) {
-	resp, err := s.MakeSignedRequest(userUsosID, "services/groups/user", "fields=course_unit_id|group_number|course_name|class_type")
+	// Wywołujemy "groups/user"
+	resp, err := s.MakeSignedRequest(userUsosID, "groups/user", "fields=course_unit_id|group_number|course_name|class_type")
 	if err != nil {
 		return nil, fmt.Errorf("błąd żądania do groups/user: %w", err)
 	}

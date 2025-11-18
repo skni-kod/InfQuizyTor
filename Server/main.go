@@ -25,7 +25,6 @@ func main() {
 	db.InitDB(cfg)
 	defer db.CloseDB()
 
-	// Inicjalizujemy oba serwisy
 	services.InitUsosService(cfg)
 	services.InitGeminiService(cfg)
 
@@ -57,28 +56,34 @@ func main() {
 		apiGroup.GET("/users/me", handlers.HandleGetUserMe)
 		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
 
-		// --- NOWE TRASY APLIKACJI ---
+		// --- ZAKTUALIZOWANE TRASY APLIKACJI ---
 
 		// Trasy dla Przedmiotów i Tematów
-		apiGroup.GET("/subjects", handlers.HandleGetSubjects) // Synchronizuje i pobiera przedmioty
-		apiGroup.GET("/subjects/:id/topics", handlers.HandleGetTopics)
-		apiGroup.POST("/topics", handlers.HandleCreateTopic) // Tworzenie nowego tematu
+
+		// Ta trasa jest prosta - tylko odczytuje z DB.
+		apiGroup.GET("/subjects", handlers.HandleGetSubjects)
+
+		// --- NOWA TRASA: Ten endpoint jest wywoływany przez frontend, aby wymusić synchronizację ---
+		apiGroup.POST("/subjects/sync", handlers.HandleSyncSubjects)
+
+		apiGroup.GET("/subjects/:usos_id/topics", handlers.HandleGetTopicsByUsosID)
+		apiGroup.POST("/topics", handlers.HandleCreateTopic)
+		apiGroup.GET("/subjects/:usos_id/graph", handlers.HandleGetCourseGraph)
 
 		// Trasy dla Generowania Treści (AI i Ręczne)
-		apiGroup.POST("/topics/upload", handlers.HandleContentUpload)       // Przez AI (pliki)
-		apiGroup.POST("/flashcards/manual", handlers.HandleManualFlashcard) // Ręczne fiszki
+		apiGroup.POST("/topics/upload", handlers.HandleContentUpload)
+		apiGroup.POST("/flashcards/manual", handlers.HandleManualFlashcard)
 
 		// Trasy do Pobierania Treści (dla studentów)
-		apiGroup.GET("/topics/:id/content", handlers.HandleGetTopicContent) // Dla modala
+		apiGroup.GET("/topics/:id/content", handlers.HandleGetTopicContent)
 
 		// Trasy dla Admina (Moderacja)
 		adminGroup := apiGroup.Group("/admin")
-		adminGroup.Use(middleware.AdminRequired()) // Dodatkowe zabezpieczenie rolą "admin"
+		adminGroup.Use(middleware.AdminRequired())
 		{
 			adminGroup.GET("/pending-flashcards", handlers.HandleGetPendingFlashcards)
 			adminGroup.POST("/approve-flashcard/:id", handlers.HandleApproveFlashcard)
 			adminGroup.POST("/reject-flashcard/:id", handlers.HandleRejectFlashcard)
-			// TODO: Dodać trasy do moderacji quizów (np. /pending-quiz-questions)
 		}
 	}
 
