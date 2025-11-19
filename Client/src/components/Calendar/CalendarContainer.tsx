@@ -1,92 +1,114 @@
-import React, { useState, useEffect } from "react";
-import UsosCalendar from "./UsosCalendar";
-import { AppCalendarEvent, AppCalendarResponse } from "../../assets/types.tsx";
-
-// --- POPRAWIONY MOCK ---
-// Używamy 'Partial<LangDict>' aby dopasować do 'AppCalendarEvent'
-const MOCK_API_RESPONSE: AppCalendarResponse = {
-  events: [
-    {
-      id: "usos1",
-      start_time: "2025-11-20T10:00:00",
-      name: { pl: "Wykład Analiza" },
-      layerId: "usos-other",
-    },
-    {
-      id: "usos2",
-      start_time: "2025-11-21T12:00:00",
-      name: { pl: "Egzamin Logika" },
-      layerId: "usos-exam",
-    },
-    {
-      id: "priv1",
-      start_time: "2025-11-20T18:00:00",
-      title: "Spotkanie Koła AI",
-      name: {},
-      layerId: "layer-private-1",
-    },
-    {
-      id: "group1",
-      start_time: "2025-11-22T08:00:00",
-      title: "Wejściówka L01",
-      name: {},
-      layerId: "layer-group-1",
-    },
-  ],
-  layers: {
-    "usos-other": { name: "Zajęcia USOS", color: "#555" },
-    "usos-exam": { name: "Egzaminy USOS", color: "#E74C3C" },
-    "layer-private-1": { name: "Moje Koło AI", color: "#3498DB" },
-    "layer-group-1": { name: "Wejściówki L01", color: "#F1C40F" },
-  },
-};
-// --- KONIEC POPRAWIONEGO MOCKA ---
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import UsosCalendar, { ViewType } from "./UsosCalendar";
+import {
+  AppCalendarEvent,
+  AppCalendarResponse,
+  CalendarLayerDefinition,
+} from "../../assets/types.tsx";
+import { useAppContext } from "../../contexts/AppContext";
 
 const CalendarContainer: React.FC = () => {
+  const { authState } = useAppContext();
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<ViewType>("week");
+
   const [allEvents, setAllEvents] = useState<AppCalendarEvent[]>([]);
-  const [layers, setLayers] = useState<
-    Record<string, { name: string; color: string }>
-  >({});
+  const [layers, setLayers] = useState<Record<string, CalendarLayerDefinition>>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeLayerIDs, setActiveLayerIDs] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const fetchCalendarData = async () => {
-      setLoading(true);
-      try {
-        // TODO: Zastąp mock prawdziwym wywołaniem API /api/calendar/all-events
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const data: AppCalendarResponse = MOCK_API_RESPONSE;
+  const fetchCalendarData = useCallback(async () => {
+    if (!authState.user) return;
 
-        setAllEvents(data.events);
-        setLayers(data.layers);
+    setLoading(true);
+    setError(null);
+
+    // ZMIANA: Pobieramy tylko 7 dni wstecz, aby priorytetyzować aktualny i przyszły czas
+    // Backend teraz obsługuje większe "days", więc pobieramy 60 dni w przód.
+    const start = new Date();
+    start.setDate(start.getDate() - 7);
+    const startStr = start.toISOString().split("T")[0];
+    const days = "60"; // Pobieramy 2 miesiące danych
+
+    const backendApiUrl = "/api/calendar/all-events";
+    const params = new URLSearchParams({ start: startStr, days: days });
+
+    try {
+      const response = await fetch(`${backendApiUrl}?${params.toString()}`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) throw new Error(`Błąd API: ${response.status}`);
+
+      const data: AppCalendarResponse = await response.json();
+
+      const normalizedEvents = (data.events || []).map((ev) => ({
+        ...ev,
+        start_time: ev.start_time ? ev.start_time.replace(" ", "T") : "",
+        end_time: ev.end_time ? ev.end_time.replace(" ", "T") : null,
+      }));
+
+      setAllEvents(normalizedEvents);
+      setLayers(data.layers || {});
+
+      if (
+        activeLayerIDs.size === 0 &&
+        data.layers &&
+        Object.keys(data.layers).length > 0
+      ) {
         setActiveLayerIDs(new Set(Object.keys(data.layers)));
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Nieznany błąd");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Błąd ładowania");
+    } finally {
+      setLoading(false);
+    }
+  }, [authState.user]);
 
-    fetchCalendarData();
-  }, []);
+  useEffect(() => {
+    if (authState.authLoading) {
+      setLoading(true);
+    } else if (authState.user) {
+      fetchCalendarData();
+    } else {
+      setError("Zaloguj się, aby zobaczyć plan.");
+      setLoading(false);
+    }
+  }, [authState.user, authState.authLoading, fetchCalendarData]);
 
   const toggleFilter = (layerId: string) => {
-    setActiveLayerIDs((prevFilters) => {
-      const newFilters = new Set(prevFilters);
-      if (newFilters.has(layerId)) {
-        newFilters.delete(layerId);
-      } else {
-        newFilters.add(layerId);
-      }
-      return newFilters;
+    setActiveLayerIDs((prev) => {
+      const next = new Set(prev);
+      if (next.has(layerId)) next.delete(layerId);
+      else next.add(layerId);
+      return next;
     });
   };
 
-  const filteredEvents = allEvents.filter((event) =>
-    activeLayerIDs.has(event.layerId)
+  const handleNavigate = (direction: "prev" | "next") => {
+    const newDate = new Date(currentDate);
+    const sign = direction === "next" ? 1 : -1;
+    if (view === "month") newDate.setMonth(newDate.getMonth() + sign);
+    else if (view === "week") newDate.setDate(newDate.getDate() + sign * 7);
+    else newDate.setDate(newDate.getDate() + sign);
+    setCurrentDate(newDate);
+  };
+
+  const goToDate = (date: Date, newView: ViewType) => {
+    setCurrentDate(date);
+    setView(newView);
+  };
+
+  const filteredEvents = useMemo(
+    () => allEvents.filter((event) => activeLayerIDs.has(event.layerId)),
+    [allEvents, activeLayerIDs]
   );
 
   return (
@@ -97,6 +119,11 @@ const CalendarContainer: React.FC = () => {
       onToggleLayer={toggleFilter}
       loading={loading}
       error={error}
+      currentDate={currentDate}
+      view={view}
+      onViewChange={setView}
+      onNavigate={handleNavigate}
+      onGoToDate={goToDate}
     />
   );
 };

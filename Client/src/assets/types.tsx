@@ -106,24 +106,31 @@ export interface QuizNode {
 // =================================================================
 // 3. Typy dla Danych z API USOS (NAPRAWIONE)
 // =================================================================
-
 export interface AppCalendarEvent {
   id: string;
   start_time: string;
   end_time?: string | null;
-  layerId: string;
-  title?: string;
-  description?: string;
-  name?: Partial<LangDict>;
+  layerId: string; // Klucz do filtrowania warstw
+  title?: string; // Tytuł wyświetlany (priorytet nad name)
+  type?: "class" | "exam" | "colloquium" | "sport" | "private" | "other"; // Typ dla ikony
+  name?: Partial<LangDict>; // Dane z USOS
   url?: string | null;
   building_name?: Partial<LangDict> | null;
   room_number?: string | null;
   course_name?: Partial<LangDict> | null;
   classtype_name?: Partial<LangDict> | null;
 }
+
+export interface CalendarLayerDefinition {
+  id: string;
+  name: string;
+  color: string;
+  isSystem: boolean; // true dla warstw USOS, false dla użytkownika
+}
+
 export interface AppCalendarResponse {
   events: AppCalendarEvent[];
-  layers: Record<string, { name: string; color: string }>;
+  layers: Record<string, CalendarLayerDefinition>;
 }
 
 export interface UsosLatestGrade {
@@ -250,10 +257,6 @@ export interface AppCalendarEvent {
   room_number?: string | null;
   course_name?: Partial<LangDict> | null;
   classtype_name?: Partial<LangDict> | null;
-}
-export interface AppCalendarResponse {
-  events: AppCalendarEvent[];
-  layers: Record<string, { name: string; color: string }>;
 }
 
 // --- Oceny ---

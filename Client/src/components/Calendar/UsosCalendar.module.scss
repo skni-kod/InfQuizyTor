@@ -1,195 +1,396 @@
-@import '../../styles/variables'; // Use your global variables
+@use "../../styles/mixins" as m;
+@import "../../styles/variables";
 
-.calendarContainer {
-  padding: var(--space-6);
-  background-color: var(--bg1-dark); // Or use glass effect if preferred
+// Mapowanie zmiennych globalnych na lokalne potrzeby
+$bg-grid: var(--bg1-dark);
+$line-color: var(--bg3-dark);
+$text-color: var(--text-primary);
+$text-muted: var(--text-secondary);
+
+// Kolory kafelków - używamy wariacji primary/secondary
+$event-bg-class: var(--primary); // Zielony
+$event-bg-lecture: var(--info); // Niebieski
+$event-bg-lab: var(--secondary); // Ciemniejszy niebieski/bordo
+$event-bg-exam: var(--error); // Czerwony
+
+.usosCalendar {
+  background-color: $bg-grid;
+  color: $text-color;
   border-radius: var(--radius-lg);
-  color: var(--text-primary);
-  max-width: 600px; // Limit width
-  margin: var(--space-4) auto; // Center component
-  border: 1px solid var(--bg3-dark);
-
-  h2 {
-    text-align: center;
-    color: var(--primary);
-    margin-bottom: var(--space-6);
-    font-size: var(--text-xl);
-  }
-}
-
-// Loading, error, and no-events messages
-.loading, .error, .noEvents {
-  text-align: center;
-  padding: var(--space-8);
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.error {
-  color: var(--error);
-  font-weight: bold;
-  white-space: pre-wrap; // Allow error message line breaks
-}
-
-// Styling for each day's group of events
-.dayGroup {
-  margin-bottom: var(--space-6);
-
-  h3 {
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--bg3-dark);
-    padding-bottom: var(--space-2);
-    margin-bottom: var(--space-4);
-    font-size: var(--text-lg);
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-}
-
-// Day of week text style
-.dayOfWeek {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-weight: normal;
-  margin-left: var(--space-4);
-}
-
-// List containing events for a single day
-.eventList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-// Styling for a single event item
-.eventItem {
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) 0 var(--space-3) var(--space-3);
-  border-bottom: 1px dashed var(--bg3-dark);
-  position: relative;
-
-  &:last-child {
-    border-bottom: none; // Remove border from last item in list
-  }
-
-  // Colored border based on event type (adjust types based on user_events response)
-  border-left: 4px solid var(--tertiary); // Default color
-
-  // Example type colors (check actual values from user_events)
-  &.exam { border-left-color: var(--error); }
-  &.test { border-left-color: var(--warning); }
-  &.class, &.lecture, &.labclass, &.tutorial { border-left-color: var(--primary); } // Group common class types
-  &.meeting { border-left-color: var(--info); }
-  // Add more specific types if returned by the API
+  flex-direction: column;
+  height: 850px; /* Stała wysokość */
+  border: 1px solid $line-color;
+  font-family: var(--font-family);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-lg);
 }
 
-// Event time styling
-.eventTime {
-  font-weight: 600;
-  color: var(--text-secondary);
+/* --- Header --- */
+.header {
+  background-color: var(--primary); // Główny kolor w nagłówku
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   flex-shrink: 0;
-  min-width: 110px; // Adjust width for HH:MM - HH:MM
+
+  @include m.media-md {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.dateInfo {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--bg0-dark); // Kontrastowy tekst (ciemny na jasnym/żywym primary)
+  text-transform: capitalize;
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-2);
+
+  button {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--bg0-dark);
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+    &.active {
+      background: var(--bg0-dark);
+      color: var(--primary);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+.navGroup,
+.viewGroup {
+  display: flex;
+  gap: 6px;
+}
+
+/* --- Layers Bar --- */
+.layersBar {
+  background: var(--bg2-dark);
+  padding: 10px 20px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  border-bottom: 1px solid $line-color;
+  align-items: center;
+}
+
+.layerBadge {
+  background: transparent;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s;
+  font-weight: 600;
+
+  &:hover {
+    opacity: 1;
+    border-color: $text-color;
+    color: $text-color;
+  }
+
+  &.activeLayer {
+    opacity: 1;
+    // Te style nadpisuje JS dynamicznym kolorem, ale dajemy fallback
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* --- Body --- */
+.calendarBody {
+  flex-grow: 1;
+  overflow-y: auto;
+  position: relative;
+  background-color: $bg-grid;
+
+  /* Scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--tertiary) $bg-grid;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: $bg-grid;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--tertiary);
+    border-radius: 4px;
+    border: 2px solid $bg-grid;
+  }
+}
+
+/* --- TIME GRID VIEW --- */
+.timeGridContainer {
+  display: flex;
+  position: relative;
+  min-width: 600px;
+  padding-bottom: 30px;
+  min-height: 1000px; // Aby scroll działał
+}
+
+.hoursColumn {
+  width: 60px;
+  flex-shrink: 0;
+  position: relative;
+  border-right: 1px solid $line-color;
+  background: $bg-grid;
+  z-index: 20;
+}
+
+.hourLabel {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  font-size: 0.75rem;
+  color: $text-muted;
+  transform: translateY(-50%);
+  padding-right: 8px;
+  font-weight: 500;
+}
+
+.daysWrapper {
+  flex-grow: 1;
+  display: grid;
+  position: relative;
+}
+
+.dayColumn {
+  position: relative;
+  border-right: 1px solid $line-color;
+  min-height: 100%;
+}
+
+.dayHeader {
+  height: 50px;
+  border-bottom: 1px solid $line-color;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg2-dark);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  &.today {
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+    background-color: hsla(var(--hue), 70%, 55%, 0.05);
+  }
+}
+
+.dayName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.dayNum {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.gridLine {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background-color: $line-color;
+  opacity: 0.5;
+}
+
+.eventBlock {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  color: white;
+  font-size: 0.8rem;
+  border-left: 4px solid rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.2s, z-index 0.2s;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: scale(1.02);
+    z-index: 50;
+    box-shadow: var(--shadow-md);
+  }
+
+  &.lecture {
+    background-color: $event-bg-lecture;
+  }
+  &.lab {
+    background-color: $event-bg-lab;
+  }
+  &.class {
+    background-color: $event-bg-class;
+  }
+  &.exam,
+  &.colloquium {
+    background-color: $event-bg-exam;
+  }
+  &.sport {
+    background-color: var(--success);
+  }
+}
+
+.eventTime {
+  font-size: 0.7rem;
+  opacity: 0.9;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.eventTypeLabel {
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.7;
+  font-size: 0.65rem;
+  margin-top: auto;
   text-align: right;
 }
 
-// Event name styling
-.eventName {
-  flex-grow: 1; // Take available space
-  color: var(--text-primary);
-  text-align: left;
+.eventTitle {
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  font-size: 0.85rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-// "Wolne" label (unlikely needed for user_events)
-.dayOffLabel {
-  font-size: var(--text-xs);
-  font-weight: bold;
-  color: var(--warning);
-  background-color: hsla(40, 90%, 60%, 0.15);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-sm);
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-// Optional link styling
-.eventLink {
-   color: var(--info);
-   font-size: var(--text-lg);
-   text-decoration: none;
-   margin-left: auto; // Push to right if dayOffLabel is not present
-   padding-left: var(--space-2);
-   &:hover {
-     color: var(--primary);
-   }
-}
-.filterBar {
+.eventLoc {
+  font-size: 0.7rem;
+  opacity: 0.9;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-5);
   align-items: center;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--bg3-dark);
-}
-
-.filterLabel {
-  font-size: var(--text-sm);
+  gap: 4px;
+  margin-top: 2px;
   font-weight: 500;
-  color: var(--text-muted);
-  margin-right: var(--space-2);
 }
 
-.filterButton {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--bg3-dark);
-  background-color: var(--bg1-dark);
-  color: var(--text-secondary);
-  transition: all var(--transition-fast);
+/* --- MONTH VIEW --- */
+.monthContainer {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  height: 100%;
+  grid-auto-rows: 1fr;
+}
+.monthHeader {
+  text-align: center;
+  padding: 10px;
+  background: var(--bg2-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-bottom: 1px solid $line-color;
+  color: $text-muted;
+}
 
+.monthCell {
+  border: 1px solid $line-color;
+  padding: 6px;
+  position: relative;
+  cursor: pointer;
   &:hover {
     background-color: var(--bg2-dark);
-    color: var(--text-primary);
   }
-
-  &.active {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    color: var(--bg0-dark);
-    box-shadow: 0 0 10px hsla(var(--hue), 70%, 55%, 0.3);
+  &.today {
+    background: rgba(var(--hue), 70%, 55%, 0.1);
+    .monthDate {
+      color: var(--primary);
+      font-weight: 800;
+    }
   }
 }
 
-/* --- NOWE STYLE DLA KATEGORII WYDARZEŃ --- */
-/* Dodajemy kolorowe obramowanie po lewej stronie dla każdej kategorii */
-
-.eventItem {
-  border-left: 4px solid var(--tertiary); // Domyślny kolor dla 'other'
-  padding-left: var(--space-3);
+.monthDate {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-align: right;
+  padding-right: 4px;
+  color: $text-muted;
+}
+.monthEvents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.monthDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  &.lecture {
+    background-color: $event-bg-lecture;
+  }
+  &.lab {
+    background-color: $event-bg-lab;
+  }
+  &.class {
+    background-color: $event-bg-class;
+  }
+  &.exam {
+    background-color: $event-bg-exam;
+  }
+}
+.moreEvents {
+  font-size: 0.7rem;
+  color: $text-muted;
+  font-weight: 600;
 }
 
-.exam {
-  border-left-color: var(--error);
-  background-color: hsla(var(--hue-error), 70%, 55%, 0.05); // Lekkie tło
+.loader,
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: $text-muted;
+  gap: 12px;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
-
-.quiz {
-  border-left-color: var(--warning);
-}
-
-.sport {
-  border-left-color: var(--success);
-}
-
-.club {
-  border-left-color: var(--info);
-}
-
-.other {
-  border-left-color: var(--text-muted); // Kategoria 'Inne'
+.error {
+  color: var(--error);
 }

@@ -72,6 +72,10 @@ func main() {
 		apiGroup.POST("/flashcards/manual", handlers.HandleManualFlashcard)
 		apiGroup.GET("/topics/:id/content", handlers.HandleGetTopicContent)
 
+		apiGroup.GET("/calendar/all-events", handlers.HandleGetAllCalendarEvents)
+		apiGroup.GET("/calendar/usos-groups", handlers.HandleGetUserUsosGroups)
+		apiGroup.POST("/calendar/layers", handlers.HandleCreateCalendarLayer)
+
 		// Admin
 		adminGroup := apiGroup.Group("/admin")
 		adminGroup.Use(middleware.AdminRequired())

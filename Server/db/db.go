@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"log"
+	"time"
 
 	"github.com/skni-kod/InfQuizyTor/Server/config"
 	"github.com/skni-kod/InfQuizyTor/Server/models"
@@ -31,7 +32,6 @@ func InitDB(cfg config.Config) {
 		&models.Topic{},
 		&models.Flashcard{},
 		&models.QuizQuestion{},
-		&models.UserGroupRole{},
 		&models.CalendarLayer{},
 		&models.CalendarEvent{},
 		&models.QuizNode{},
@@ -165,6 +165,44 @@ func (r *GormUserRepository) CreateFlashcard(fc *models.Flashcard) error {
 }
 func (r *GormUserRepository) CreateQuizQuestion(q *models.QuizQuestion) error {
 	return r.DB.Create(q).Error
+} // --- Metody Kalendarza ---
+
+// GetLayersByUsosID pobiera warstwy prywatne użytkownika ORAZ wszystkie warstwy grupowe
+func (r *GormUserRepository) GetLayersByUsosID(userUsosID string) ([]models.CalendarLayer, error) {
+	var layers []models.CalendarLayer
+	// Pobierz warstwy prywatne użytkownika i wszystkie warstwy grupowe (uproszczone założenie dostępu)
+	// Aby uniknąć problemów z Joinami, na razie pobieramy prywatne i grupowe dla demo.
+	if err := r.DB.Where("owner_usos_id = ?", userUsosID).Or("type = ?", "group").Find(&layers).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []models.CalendarLayer{}, nil
+		}
+		return nil, err
+	}
+	return layers, nil
+}
+
+// GetEventsByLayerIDs pobiera wydarzenia dla danych warstw i zakresu dat
+func (r *GormUserRepository) GetEventsByLayerIDs(layerIDs []uint, start, end time.Time) ([]models.CalendarEvent, error) {
+	var events []models.CalendarEvent
+
+	// Zabezpieczenie przed pustą listą ID
+	if len(layerIDs) == 0 {
+		return []models.CalendarEvent{}, nil
+	}
+
+	// Filtrowanie po ID warstw ORAZ datach
+	query := r.DB.Where("layer_id IN (?)", layerIDs).
+		Where("start_time >= ?", start).
+		Where("start_time < ?", end).
+		Order("start_time ASC") // Dodano sortowanie dla porządku
+
+	if err := query.Find(&events).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []models.CalendarEvent{}, nil
+		}
+		return nil, err
+	}
+	return events, nil
 }
 func (r *GormUserRepository) CreateCalendarLayer(l *models.CalendarLayer) error {
 	return r.DB.Create(l).Error
@@ -194,14 +232,4 @@ func (r *GormUserRepository) GetApprovedQuizQuestionsByTopic(topicID uint) ([]mo
 		return nil, err
 	}
 	return q, nil
-}
-func (r *GormUserRepository) IsUserGroupLeader(userUsosID string, usosGroupID int) (bool, error) {
-	var role models.UserGroupRole
-	if err := r.DB.Where("user_usos_id = ? AND usos_group_id = ? AND role = ?", userUsosID, usosGroupID, "leader").First(&role).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
 }

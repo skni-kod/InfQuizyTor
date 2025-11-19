@@ -119,16 +119,6 @@ type UserAchievement struct {
 func (UserAchievement) TableName() string { return "user_achievements" }
 
 // --- MODELE KALENDARZA I GRUP ---
-
-type UserGroupRole struct {
-	ID          uint   `gorm:"primarykey"`
-	UserUsosID  string `gorm:"not null;index"`
-	UsosGroupID int    `gorm:"not null;index"`
-	Role        string `gorm:"not null"`
-}
-
-func (UserGroupRole) TableName() string { return "user_group_roles" }
-
 type CalendarLayer struct {
 	ID          uint   `gorm:"primarykey"`
 	Name        string `gorm:"not null"`
@@ -137,8 +127,6 @@ type CalendarLayer struct {
 	OwnerUsosID string `gorm:"index;null"`
 	UsosGroupID int    `gorm:"index;null"`
 }
-
-func (CalendarLayer) TableName() string { return "calendar_layers" }
 
 type CalendarEvent struct {
 	ID          uint      `gorm:"primarykey"`
@@ -183,6 +171,32 @@ type DashboardAchievement struct {
 	IconCode    string `json:"icon_code"`
 	UnlockedAt  string `json:"unlocked_at"`
 }
+type AppCalendarEvent struct {
+	ID            string   `json:"id"`
+	StartTime     string   `json:"start_time"`
+	EndTime       string   `json:"end_time,omitempty"`
+	LayerID       string   `json:"layerId"`
+	Title         string   `json:"title,omitempty"`
+	Type          string   `json:"type,omitempty"` // 'class' | 'exam' | 'colloquium' | 'sport' | 'private' | 'other'
+	Description   string   `json:"description,omitempty"`
+	URL           string   `json:"url,omitempty"`
+	BuildingName  LangDict `json:"building_name,omitempty"`
+	RoomNumber    string   `json:"room_number,omitempty"`
+	CourseName    LangDict `json:"course_name,omitempty"`
+	ClasstypeName LangDict `json:"classtype_name,omitempty"`
+	Name          LangDict `json:"name,omitempty"`
+}
+
+type AppCalendarResponse struct {
+	Events []AppCalendarEvent                 `json:"events"`
+	Layers map[string]CalendarLayerDefinition `json:"layers"`
+}
+type CalendarLayerDefinition struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Color    string `json:"color"`
+	IsSystem bool   `json:"isSystem"`
+}
 
 // --- TYPY DO DEKODOWANIA (USOS) ---
 
@@ -212,14 +226,15 @@ type UsosUserGroup struct {
 	CourseName   LangDict `json:"course_name"`
 	ClassType    LangDict `json:"class_type"`
 }
-
 type UsosActivity struct {
-	StartTime  string   `json:"start_time"`
-	EndTime    string   `json:"end_time"`
-	Name       LangDict `json:"name"`
-	Type       string   `json:"type"`
-	RoomNumber string   `json:"room_number"`
-	CourseID   string   `json:"course_id"`
+	StartTime     string   `json:"start_time"`
+	EndTime       string   `json:"end_time"`
+	Name          LangDict `json:"name"`
+	Type          string   `json:"type"`
+	RoomNumber    string   `json:"room_number"`
+	CourseID      string   `json:"course_id"`
+	ClasstypeName LangDict `json:"classtype_name,omitempty"`
+	CourseName    LangDict `json:"course_name"`
 }
 
 type GeneratedFlashcard struct {
