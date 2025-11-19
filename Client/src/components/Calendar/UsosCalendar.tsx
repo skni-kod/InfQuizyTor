@@ -10,14 +10,78 @@ import {
   FaMapMarkerAlt,
   FaSpinner,
   FaExclamationTriangle,
-  FaGraduationCap,
-  FaExclamationCircle,
-  FaVolleyballBall,
-  FaStickyNote,
-  FaUserClock,
 } from "react-icons/fa";
 
 export type ViewType = "day" | "week" | "month";
+
+const START_HOUR = 7;
+const END_HOUR = 21;
+const HOURS_COUNT = END_HOUR - START_HOUR + 1;
+const HEADER_HEIGHT = 50;
+const HOUR_HEIGHT = 60;
+
+// Bezpieczne parsowanie
+const parseDate = (dateStr: string | null | undefined): Date => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr); // Zakładamy, że format ISO został zapewniony w kontenerze
+};
+
+interface VisualEvent extends AppCalendarEvent {
+  visualLeft: number;
+  visualWidth: number;
+}
+
+const processOverlaps = (events: AppCalendarEvent[]): VisualEvent[] => {
+  const sorted = [...events].sort((a, b) => {
+    if (a.start_time === b.start_time) {
+      const endA = parseDate(a.end_time).getTime();
+      const endB = parseDate(b.end_time).getTime();
+      return endB - endA;
+    }
+    return a.start_time.localeCompare(b.start_time);
+  });
+
+  const processed: VisualEvent[] = [];
+  let cluster: VisualEvent[] = [];
+  let clusterEnd: number | null = null;
+
+  const flushCluster = () => {
+    if (cluster.length === 0) return;
+    const width = 100 / cluster.length;
+    cluster.forEach((ev, i) => {
+      ev.visualLeft = i * width;
+      ev.visualWidth = width;
+    });
+    cluster = [];
+    clusterEnd = null;
+  };
+
+  for (const ev of sorted) {
+    const start = parseDate(ev.start_time).getTime();
+    const end = ev.end_time
+      ? parseDate(ev.end_time).getTime()
+      : start + 90 * 60000;
+
+    if (clusterEnd !== null && start >= clusterEnd) {
+      flushCluster();
+    }
+
+    const visualEv: VisualEvent = {
+      ...ev,
+      visualLeft: 0,
+      visualWidth: 100,
+    };
+
+    cluster.push(visualEv);
+    processed.push(visualEv);
+
+    if (clusterEnd === null || end > clusterEnd) {
+      clusterEnd = end;
+    }
+  }
+  flushCluster();
+  return processed;
+};
 
 interface UsosCalendarProps {
   allEvents: AppCalendarEvent[];
@@ -33,11 +97,6 @@ interface UsosCalendarProps {
   onGoToDate: (date: Date, newView: ViewType) => void;
 }
 
-const START_HOUR = 7;
-const END_HOUR = 21;
-const HOURS_COUNT = END_HOUR - START_HOUR + 1;
-
-// --- Helpery ---
 const getMonday = (d: Date) => {
   const date = new Date(d);
   date.setHours(0, 0, 0, 0);
@@ -51,25 +110,6 @@ const isSameDate = (d1: Date, d2: Date) =>
   d1.getMonth() === d2.getMonth() &&
   d1.getFullYear() === d2.getFullYear();
 
-const getEventIcon = (type: string | undefined) => {
-  switch (type) {
-    case "class":
-    case "lecture":
-    case "lab":
-      return <FaGraduationCap />;
-    case "exam":
-    case "colloquium":
-      return <FaExclamationCircle />;
-    case "sport":
-      return <FaVolleyballBall />;
-    case "private":
-      return <FaUserClock />;
-    default:
-      return <FaStickyNote />;
-  }
-};
-
-// Helper do formatowania nagłówka daty
 const formatHeaderDate = (date: Date, view: ViewType) => {
   if (view === "month") {
     return date.toLocaleDateString("pl-PL", { month: "long", year: "numeric" });
@@ -79,21 +119,18 @@ const formatHeaderDate = (date: Date, view: ViewType) => {
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
 
-    // Jeśli ten sam miesiąc
     if (start.getMonth() === end.getMonth()) {
       return `${start.getDate()} - ${end.getDate()} ${start.toLocaleDateString(
         "pl-PL",
         { month: "long" }
       )} ${start.getFullYear()}`;
     }
-    // Różne miesiące
     return `${start.getDate()} ${start.toLocaleDateString("pl-PL", {
       month: "short",
     })} - ${end.getDate()} ${end.toLocaleDateString("pl-PL", {
       month: "short",
     })} ${end.getFullYear()}`;
   }
-  // Dzień
   return date.toLocaleDateString("pl-PL", {
     weekday: "long",
     day: "numeric",
@@ -115,8 +152,8 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
   onNavigate,
   onGoToDate,
 }) => {
-  const visibleEvents = useMemo(() => {
-    if (!allEvents) return [];
+  const { visibleEvents, processedEvents } = useMemo(() => {
+    if (!allEvents) return { visibleEvents: [], processedEvents: [] };
 
     const start =
       view === "week" ? getMonday(currentDate) : new Date(currentDate);
@@ -128,25 +165,36 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
     else if (view === "day") end.setDate(end.getDate() + 1);
     else end.setMonth(end.getMonth() + 1);
 
-    return allEvents.filter((ev) => {
-      const evDate = new Date(ev.start_time);
+    const filtered = allEvents.filter((ev) => {
+      const evDate = parseDate(ev.start_time);
       return evDate >= start && evDate < end;
     });
+
+    const processed = view !== "month" ? processOverlaps(filtered) : [];
+    return { visibleEvents: filtered, processedEvents: processed };
   }, [allEvents, currentDate, view]);
 
-  const getEventStyle = (ev: AppCalendarEvent) => {
-    const start = new Date(ev.start_time);
+  const getEventStyle = (ev: VisualEvent) => {
+    const start = parseDate(ev.start_time);
     const end = ev.end_time
-      ? new Date(ev.end_time)
+      ? parseDate(ev.end_time)
       : new Date(start.getTime() + 90 * 60000);
 
-    const startHour = start.getHours() + start.getMinutes() / 60;
-    const endHour = end.getHours() + end.getMinutes() / 60;
+    const startMinutes = start.getHours() * 60 + start.getMinutes();
+    const endMinutes = end.getHours() * 60 + end.getMinutes();
+    const offsetMinutes = START_HOUR * 60;
 
-    const top = (startHour - START_HOUR) * 60 + 40;
-    const height = Math.max((endHour - startHour) * 60, 40);
+    const top =
+      ((startMinutes - offsetMinutes) / 60) * HOUR_HEIGHT + HEADER_HEIGHT;
+    const height = ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT;
 
-    return { top: `${top}px`, height: `${height}px` } as React.CSSProperties;
+    return {
+      top: `${top}px`,
+      height: `${Math.max(height, 25)}px`,
+      left: `${ev.visualLeft}%`,
+      width: `${ev.visualWidth}%`,
+      position: "absolute",
+    } as React.CSSProperties;
   };
 
   const renderTimeGrid = () => {
@@ -167,12 +215,13 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
             <div
               key={i}
               className={styles.hourLabel}
-              style={{ top: `${i * 60 + 40}px` }}
+              style={{ top: `${i * HOUR_HEIGHT + HEADER_HEIGHT}px` }}
             >
               {START_HOUR + i}:00
             </div>
           ))}
         </div>
+
         <div
           className={styles.daysWrapper}
           style={{ gridTemplateColumns: `repeat(${daysToShow}, 1fr)` }}
@@ -196,12 +245,12 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
                 <div
                   key={h}
                   className={styles.gridLine}
-                  style={{ top: `${h * 60 + 40}px` }}
+                  style={{ top: `${h * HOUR_HEIGHT + HEADER_HEIGHT}px` }}
                 />
               ))}
 
-              {visibleEvents
-                .filter((ev) => isSameDate(new Date(ev.start_time), day))
+              {processedEvents
+                .filter((ev) => isSameDate(parseDate(ev.start_time), day))
                 .map((ev) => (
                   <div
                     key={ev.id}
@@ -209,21 +258,21 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
                       styles[ev.type || "class"]
                     }`}
                     style={getEventStyle(ev)}
-                    title={`${ev.title}\n${ev.room_number}`}
+                    title={`${ev.title}\n${ev.room_number || ""}`}
                   >
                     <div className={styles.eventTime}>
-                      {new Date(ev.start_time).toLocaleTimeString([], {
+                      {parseDate(ev.start_time).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </div>
                     <div className={styles.eventTitle}>
-                      {ev.title || ev.course_name?.pl}
+                      {ev.course_name?.pl}
                     </div>
                     <div className={styles.eventTypeLabel}>
                       {ev.classtype_name?.pl
                         ? ev.classtype_name.pl.slice(0, 3).toUpperCase()
-                        : "ZAJ"}
+                        : ev.type || "ZAJ"}
                     </div>
                     {ev.room_number && (
                       <div className={styles.eventLoc}>
@@ -244,7 +293,6 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1);
-    // JS getDay(): 0=Niedziela, my chcemy 0=Poniedziałek
     const startingDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
 
     const days = [];
@@ -254,7 +302,7 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
       const dayEvents = visibleEvents.filter((ev) =>
-        isSameDate(new Date(ev.start_time), date)
+        isSameDate(parseDate(ev.start_time), date)
       );
 
       days.push(
@@ -313,7 +361,6 @@ const UsosCalendar: React.FC<UsosCalendarProps> = ({
     <div className={styles.usosCalendar}>
       <div className={styles.header}>
         <div className={styles.dateInfo}>
-          {/* Używamy nowej funkcji formatującej */}
           {formatHeaderDate(currentDate, view)}
         </div>
         <div className={styles.controls}>

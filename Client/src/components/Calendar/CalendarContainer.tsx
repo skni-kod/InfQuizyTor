@@ -21,18 +21,23 @@ const CalendarContainer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeLayerIDs, setActiveLayerIDs] = useState<Set<string>>(new Set());
 
+  // --- FUNKCJA POBIERANIA DANYCH ---
   const fetchCalendarData = useCallback(async () => {
     if (!authState.user) return;
 
     setLoading(true);
     setError(null);
 
-    // ZMIANA: Pobieramy tylko 7 dni wstecz, aby priorytetyzować aktualny i przyszły czas
-    // Backend teraz obsługuje większe "days", więc pobieramy 60 dni w przód.
-    const start = new Date();
-    start.setDate(start.getDate() - 7);
+    // Pobieramy dane dla aktualnie wybranego tygodnia (widocznego w kalendarzu)
+    // Backend wymusza 7 dni, więc musimy prosić dokładnie o ten tydzień, który oglądamy.
+    const start = new Date(currentDate);
+    // Ustawiamy na początek tygodnia (poniedziałek), żeby pobrać pełny widok
+    const day = start.getDay();
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+    start.setDate(diff);
+
     const startStr = start.toISOString().split("T")[0];
-    const days = "60"; // Pobieramy 2 miesiące danych
+    const days = "7"; // Prosimy o 7 dni, bo tyle daje USOS
 
     const backendApiUrl = "/api/calendar/all-events";
     const params = new URLSearchParams({ start: startStr, days: days });
@@ -48,6 +53,7 @@ const CalendarContainer: React.FC = () => {
 
       const data: AppCalendarResponse = await response.json();
 
+      // Normalizacja dat
       const normalizedEvents = (data.events || []).map((ev) => ({
         ...ev,
         start_time: ev.start_time ? ev.start_time.replace(" ", "T") : "",
@@ -55,23 +61,27 @@ const CalendarContainer: React.FC = () => {
       }));
 
       setAllEvents(normalizedEvents);
-      setLayers(data.layers || {});
 
-      if (
-        activeLayerIDs.size === 0 &&
-        data.layers &&
-        Object.keys(data.layers).length > 0
-      ) {
-        setActiveLayerIDs(new Set(Object.keys(data.layers)));
-      }
+      const fetchedLayers = data.layers || {};
+      setLayers(fetchedLayers);
+
+      // Automatycznie włączamy warstwy, jeśli żadna nie jest wybrana
+      setActiveLayerIDs((prev) => {
+        if (prev.size > 0) return prev;
+        if (Object.keys(fetchedLayers).length > 0) {
+          return new Set(Object.keys(fetchedLayers));
+        }
+        return prev;
+      });
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Błąd ładowania");
     } finally {
       setLoading(false);
     }
-  }, [authState.user]);
+  }, [authState.user, currentDate]); // ZALEŻNOŚĆ OD currentDate JEST KLUCZOWA
 
+  // Pobieraj dane przy zmianie usera LUB zmianie daty (nawigacji)
   useEffect(() => {
     if (authState.authLoading) {
       setLoading(true);
@@ -81,7 +91,7 @@ const CalendarContainer: React.FC = () => {
       setError("Zaloguj się, aby zobaczyć plan.");
       setLoading(false);
     }
-  }, [authState.user, authState.authLoading, fetchCalendarData]);
+  }, [fetchCalendarData, authState.authLoading, authState.user]);
 
   const toggleFilter = (layerId: string) => {
     setActiveLayerIDs((prev) => {
@@ -99,6 +109,7 @@ const CalendarContainer: React.FC = () => {
     else if (view === "week") newDate.setDate(newDate.getDate() + sign * 7);
     else newDate.setDate(newDate.getDate() + sign);
     setCurrentDate(newDate);
+    // useEffect wykryje zmianę currentDate i pobierze nowe dane
   };
 
   const goToDate = (date: Date, newView: ViewType) => {
@@ -106,10 +117,12 @@ const CalendarContainer: React.FC = () => {
     setView(newView);
   };
 
-  const filteredEvents = useMemo(
-    () => allEvents.filter((event) => activeLayerIDs.has(event.layerId)),
-    [allEvents, activeLayerIDs]
-  );
+  const filteredEvents = useMemo(() => {
+    if (activeLayerIDs.size === 0 && Object.keys(layers).length > 0) {
+      return allEvents;
+    }
+    return allEvents.filter((event) => activeLayerIDs.has(event.layerId));
+  }, [allEvents, activeLayerIDs, layers]);
 
   return (
     <UsosCalendar

@@ -1,17 +1,20 @@
 @use "../../styles/mixins" as m;
 @import "../../styles/variables";
 
-// Mapowanie zmiennych globalnych na lokalne potrzeby
+// Zmienne
 $bg-grid: var(--bg1-dark);
 $line-color: var(--bg3-dark);
 $text-color: var(--text-primary);
 $text-muted: var(--text-secondary);
 
-// Kolory kafelków - używamy wariacji primary/secondary
-$event-bg-class: var(--primary); // Zielony
-$event-bg-lecture: var(--info); // Niebieski
-$event-bg-lab: var(--secondary); // Ciemniejszy niebieski/bordo
-$event-bg-exam: var(--error); // Czerwony
+$header-height: 50px;
+$hour-height: 60px;
+
+// Kolory
+$event-bg-class: var(--primary);
+$event-bg-lecture: var(--info);
+$event-bg-lab: var(--secondary);
+$event-bg-exam: var(--error);
 
 .usosCalendar {
   background-color: $bg-grid;
@@ -20,18 +23,17 @@ $event-bg-exam: var(--error); // Czerwony
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 850px; /* Stała wysokość */
+  height: 850px;
   border: 1px solid $line-color;
   font-family: var(--font-family);
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: 1200px;
   box-shadow: var(--shadow-lg);
 }
 
 /* --- Header --- */
 .header {
-  background-color: var(--primary); // Główny kolor w nagłówku
+  background-color: var(--primary);
   padding: var(--space-3) var(--space-4);
   display: flex;
   flex-direction: column;
@@ -48,7 +50,7 @@ $event-bg-exam: var(--error); // Czerwony
 .dateInfo {
   font-weight: 800;
   font-size: 1.25rem;
-  color: var(--bg0-dark); // Kontrastowy tekst (ciemny na jasnym/żywym primary)
+  color: var(--bg0-dark);
   text-transform: capitalize;
 }
 
@@ -76,7 +78,6 @@ $event-bg-exam: var(--error); // Czerwony
     &.active {
       background: var(--bg0-dark);
       color: var(--primary);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
   }
 }
@@ -96,6 +97,7 @@ $event-bg-exam: var(--error); // Czerwony
   overflow-x: auto;
   border-bottom: 1px solid $line-color;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .layerBadge {
@@ -108,21 +110,17 @@ $event-bg-exam: var(--error); // Czerwony
   cursor: pointer;
   opacity: 0.7;
   transition: all 0.2s;
-  font-weight: 600;
+  white-space: nowrap;
 
   &:hover {
     opacity: 1;
     border-color: $text-color;
-    color: $text-color;
   }
-
   &.activeLayer {
     opacity: 1;
-    // Te style nadpisuje JS dynamicznym kolorem, ale dajemy fallback
     background: var(--primary);
     border-color: var(--primary);
     color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -132,10 +130,6 @@ $event-bg-exam: var(--error); // Czerwony
   overflow-y: auto;
   position: relative;
   background-color: $bg-grid;
-
-  /* Scrollbar */
-  scrollbar-width: thin;
-  scrollbar-color: var(--tertiary) $bg-grid;
 
   &::-webkit-scrollbar {
     width: 8px;
@@ -155,9 +149,9 @@ $event-bg-exam: var(--error); // Czerwony
 .timeGridContainer {
   display: flex;
   position: relative;
-  min-width: 600px;
+  min-width: 800px;
+  height: 910px;
   padding-bottom: 30px;
-  min-height: 1000px; // Aby scroll działał
 }
 
 .hoursColumn {
@@ -167,6 +161,7 @@ $event-bg-exam: var(--error); // Czerwony
   border-right: 1px solid $line-color;
   background: $bg-grid;
   z-index: 20;
+  margin-top: $header-height;
 }
 
 .hourLabel {
@@ -177,23 +172,23 @@ $event-bg-exam: var(--error); // Czerwony
   color: $text-muted;
   transform: translateY(-50%);
   padding-right: 8px;
-  font-weight: 500;
 }
 
 .daysWrapper {
   flex-grow: 1;
   display: grid;
   position: relative;
+  overflow: hidden;
 }
 
 .dayColumn {
   position: relative;
   border-right: 1px solid $line-color;
-  min-height: 100%;
+  height: 100%;
 }
 
 .dayHeader {
-  height: 50px;
+  height: $header-height;
   border-bottom: 1px solid $line-color;
   display: flex;
   flex-direction: column;
@@ -203,6 +198,7 @@ $event-bg-exam: var(--error); // Czerwony
   position: sticky;
   top: 0;
   z-index: 30;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
   &.today {
     color: var(--primary);
@@ -226,29 +222,29 @@ $event-bg-exam: var(--error); // Czerwony
   width: 100%;
   height: 1px;
   background-color: $line-color;
-  opacity: 0.5;
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 .eventBlock {
   position: absolute;
-  left: 3px;
-  right: 3px;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  border-radius: 6px;
   overflow: hidden;
   color: white;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   border-left: 4px solid rgba(0, 0, 0, 0.2);
   box-shadow: var(--shadow-sm);
   z-index: 10;
   cursor: pointer;
-  transition: transform 0.2s, z-index 0.2s;
+  transition: all 0.2s;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 
   &:hover {
     transform: scale(1.02);
-    z-index: 50;
+    z-index: 50 !important;
     box-shadow: var(--shadow-md);
   }
 
@@ -265,20 +261,14 @@ $event-bg-exam: var(--error); // Czerwony
   &.colloquium {
     background-color: $event-bg-exam;
   }
-  &.sport {
-    background-color: var(--success);
-  }
 }
 
 .eventTime {
   font-size: 0.7rem;
   opacity: 0.9;
-  display: flex;
-  justify-content: space-between;
   margin-bottom: 3px;
   font-weight: 600;
 }
-
 .eventTypeLabel {
   font-weight: 800;
   text-transform: uppercase;
@@ -287,18 +277,12 @@ $event-bg-exam: var(--error); // Czerwony
   margin-top: auto;
   text-align: right;
 }
-
 .eventTitle {
   font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 2px;
   font-size: 0.85rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
 .eventLoc {
   font-size: 0.7rem;
   opacity: 0.9;
@@ -306,16 +290,17 @@ $event-bg-exam: var(--error); // Czerwony
   align-items: center;
   gap: 4px;
   margin-top: 2px;
-  font-weight: 500;
 }
 
 /* --- MONTH VIEW --- */
 .monthContainer {
-  display: grid;
+  display: grid; /* To naprawia pionową listę */
   grid-template-columns: repeat(7, 1fr);
-  height: 100%;
   grid-auto-rows: 1fr;
+  height: 100%;
+  width: 100%;
 }
+
 .monthHeader {
   text-align: center;
   padding: 10px;
@@ -323,14 +308,18 @@ $event-bg-exam: var(--error); // Czerwony
   font-weight: 700;
   font-size: 0.85rem;
   border-bottom: 1px solid $line-color;
+  border-right: 1px solid $line-color;
   color: $text-muted;
 }
 
 .monthCell {
-  border: 1px solid $line-color;
+  border-right: 1px solid $line-color;
+  border-bottom: 1px solid $line-color;
   padding: 6px;
   position: relative;
   cursor: pointer;
+  min-height: 100px;
+
   &:hover {
     background-color: var(--bg2-dark);
   }
@@ -343,14 +332,20 @@ $event-bg-exam: var(--error); // Czerwony
   }
 }
 
+.monthCellEmpty {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid $line-color;
+  border-bottom: 1px solid $line-color;
+}
+
 .monthDate {
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 6px;
   text-align: right;
-  padding-right: 4px;
   color: $text-muted;
 }
+
 .monthEvents {
   display: flex;
   flex-wrap: wrap;
@@ -389,7 +384,6 @@ $event-bg-exam: var(--error); // Czerwony
   color: $text-muted;
   gap: 12px;
   font-size: 1.2rem;
-  font-weight: 500;
 }
 .error {
   color: var(--error);

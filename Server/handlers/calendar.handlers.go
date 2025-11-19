@@ -19,57 +19,69 @@ import (
 
 // systemLayers definiuje systemowe, nieusuwalne warstwy.
 var systemLayers = map[string]models.CalendarLayer{
-	"usos-class": {ID: 999991, Name: "Zajęcia Dydaktyczne USOS", Color: "#005846", Type: "system", OwnerUsosID: ""},
-	"usos-exam":  {ID: 999992, Name: "Egzaminy/Kolokwia USOS", Color: "#D32F2F", Type: "system", OwnerUsosID: ""},
+	"usos-class": {ID: 999991, Name: "Zajęcia Dydaktyczne USOS", Color: "#3498DB", Type: "system", OwnerUsosID: ""},
+	"usos-exam":  {ID: 999992, Name: "Egzaminy/Kolokwia USOS", Color: "#E74C3C", Type: "system", OwnerUsosID: ""},
 }
 
 // HandleGetAllCalendarEvents implementuje pełną logikę pobierania wydarzeń.
 func HandleGetAllCalendarEvents(c *gin.Context) {
 	userUsosID := c.MustGet("user_usos_id").(string)
 
-	// Domyślne parametry
+	// Domyślne parametry z frontendu
 	startStr := c.DefaultQuery("start", time.Now().Format("2006-01-02"))
-	daysStr := c.DefaultQuery("days", "30")
+	daysStr := c.DefaultQuery("days", "7")
 	days, _ := strconv.Atoi(daysStr)
 
-	// Walidacja dni (pozwalmy na więcej, żeby front mógł pobrać zapas)
-	if days < 1 {
-		days = 7
+	// Walidacja dni dla bazy danych (lokalnie możemy pobrać więcej)
+	dbDays := days
+	if dbDays < 1 {
+		dbDays = 7
 	}
-	if days > 90 {
-		days = 90
-	} // Max 3 miesiące na raz
+	if dbDays > 90 {
+		dbDays = 90
+	}
 
 	start, err := time.Parse("2006-01-02", startStr)
 	if err != nil {
 		start = time.Now()
 	}
-	end := start.AddDate(0, 0, days)
+	end := start.AddDate(0, 0, dbDays)
 
 	// 1. POBIERANIE DANYCH Z USOS
-	// UWAGA: Zwiększamy limit zapytania do USOS, aby pobrać szerszy kontekst.
-	// Endpoint tt/user zazwyczaj obsługuje zakresy większe niż 7 dni (w przeciwieństwie do classgroup).
-	usosDays := days
-	if usosDays > 60 {
-		usosDays = 60
-	} // Bezpieczny limit dla API USOS
+	// --- NAPRAWA BŁĘDU 400 ---
+	// USOS API 'tt/user' często ma limit 7 dni.
+	// Wymuszamy max 7 dni dla zapytania do USOS, niezależnie od tego, o ile prosi frontend.
+	usosDays := 7
 
-	usosFields := "start_time|end_time|name|type|url|building_name|room_number|course_name|classtype_name"
+	// Pola, o które pytamy USOS (bez classtype_name, bo bywa problematyczne)
+	usosFields := "start_time|end_time|name|type|url|building_name|room_number|course_name"
 	queryParams := fmt.Sprintf("start=%s&days=%d&fields=%s", start.Format("2006-01-02"), usosDays, usosFields)
 
 	var usosActivities []models.UsosActivity
-	// Wykonanie zapytania do USOS
-	if resp, err := services.UsosService.MakeSignedRequest(userUsosID, "tt/user", queryParams); err == nil && resp.StatusCode == http.StatusOK {
+
+	log.Printf("Calendar: Pobieranie danych z USOS dla user=%s, start=%s, days=%d", userUsosID, start.Format("2006-01-02"), usosDays)
+
+	resp, err := services.UsosService.MakeSignedRequest(userUsosID, "tt/user", queryParams)
+	if err != nil {
+		log.Printf("Calendar: Błąd sieciowy USOS: %v", err)
+	} else {
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		// Ignorujemy błąd parsowania, jeśli JSON jest pusty lub niepoprawny, lista będzie pusta
-		_ = json.Unmarshal(bodyBytes, &usosActivities)
-	} else {
-		log.Printf("Ostrzeżenie: Błąd pobierania kalendarza USOS dla %s: %v", userUsosID, err)
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("Calendar: Błąd API USOS (Status %d): %s", resp.StatusCode, string(bodyBytes))
+			// Nie zwracamy błędu do klienta, żeby chociaż dane z DB się wyświetliły
+		} else {
+			if err := json.Unmarshal(bodyBytes, &usosActivities); err != nil {
+				log.Printf("Calendar: Błąd parsowania JSON USOS: %v", err)
+			} else {
+				log.Printf("Calendar: Sukces! Pobrano %d wydarzeń z USOS", len(usosActivities))
+			}
+		}
 	}
 
 	// 2. POBIERANIE DANYCH Z BAZY (Warstwy i Eventy)
-	var dbEvents []models.CalendarEvent = []models.CalendarEvent{} // Domyślnie pusta lista
+	var dbEvents []models.CalendarEvent = []models.CalendarEvent{}
 
 	dbLayers, _ := db.UserRepository.GetLayersByUsosID(userUsosID)
 
@@ -92,35 +104,30 @@ func HandleGetAllCalendarEvents(c *gin.Context) {
 		layerID := "usos-class"
 		eventType := "class"
 
-		// Logika rozpoznawania typu zajęć
 		nameLower := strings.ToLower(act.Name.PL)
 		typeLower := strings.ToLower(act.Type)
-		classTypeLower := strings.ToLower(act.ClasstypeName.PL)
 
-		if classTypeLower == "" {
-			classTypeLower = typeLower
-		}
-
-		if strings.Contains(classTypeLower, "wykład") {
+		// Prosta detekcja typu (bo classtype_name może nie być dostępne)
+		if strings.Contains(nameLower, "wykład") || strings.Contains(typeLower, "lecture") {
 			eventType = "lecture"
-		} else if strings.Contains(classTypeLower, "laboratorium") || strings.Contains(classTypeLower, "projekt") {
+		} else if strings.Contains(nameLower, "laboratorium") || strings.Contains(nameLower, "projekt") || strings.Contains(typeLower, "lab") {
 			eventType = "lab"
-		} else if typeLower == "exam" || strings.Contains(nameLower, "kolokwium") || strings.Contains(nameLower, "egzamin") || strings.Contains(nameLower, "wejściówka") {
+		} else if typeLower == "exam" || strings.Contains(nameLower, "kolokwium") || strings.Contains(nameLower, "egzamin") {
 			layerID = "usos-exam"
 			eventType = "colloquium"
 		}
 
 		events = append(events, models.AppCalendarEvent{
-			ID:            act.StartTime + act.CourseID,
-			LayerID:       layerID,
-			Type:          eventType,
-			StartTime:     act.StartTime,
-			EndTime:       act.EndTime,
-			Title:         act.Name.PL, // Często nazwa zajęć jest bardziej opisowa niż nazwa kursu w widoku kalendarza
-			Description:   act.CourseName.PL,
-			RoomNumber:    act.RoomNumber,
-			CourseName:    act.CourseName,
-			ClasstypeName: act.ClasstypeName,
+			ID:          act.StartTime + act.CourseID,
+			LayerID:     layerID,
+			Type:        eventType,
+			StartTime:   act.StartTime,
+			EndTime:     act.EndTime,
+			Title:       act.Name.PL,
+			Description: act.CourseName.PL,
+			RoomNumber:  act.RoomNumber,
+			CourseName:  act.CourseName,
+			// ClasstypeName: act.ClasstypeName,
 		})
 	}
 
@@ -164,7 +171,7 @@ func HandleGetAllCalendarEvents(c *gin.Context) {
 	})
 }
 
-// HandleGetUserUsosGroups (DODANE - brakujące w Twoim błędzie)
+// HandleGetUserUsosGroups
 func HandleGetUserUsosGroups(c *gin.Context) {
 	userUsosID := c.MustGet("user_usos_id").(string)
 	groups, err := services.UsosService.GetUserGroups(userUsosID)
@@ -182,7 +189,7 @@ type CreateLayerRequest struct {
 	UsosGroupID int    `json:"usos_group_id"`
 }
 
-// HandleCreateCalendarLayer (DODANE - brakujące w Twoim błędzie)
+// HandleCreateCalendarLayer
 func HandleCreateCalendarLayer(c *gin.Context) {
 	userUsosID := c.MustGet("user_usos_id").(string)
 	var req CreateLayerRequest
