@@ -76,6 +76,9 @@ func main() {
 		apiGroup.GET("/calendar/usos-groups", handlers.HandleGetUserUsosGroups)
 		apiGroup.POST("/calendar/layers", handlers.HandleCreateCalendarLayer)
 
+		// Groups
+		apiGroup.GET("/groups/all", handlers.HandleGetAllUserGroups)
+
 		// Admin
 		adminGroup := apiGroup.Group("/admin")
 		adminGroup.Use(middleware.AdminRequired())

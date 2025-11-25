@@ -233,3 +233,11 @@ func (r *GormUserRepository) GetApprovedQuizQuestionsByTopic(topicID uint) ([]mo
 	}
 	return q, nil
 }
+func (r *GormUserRepository) GetUserTokenByUsosID(usosID string) (*models.Token, error) {
+	var token models.Token
+	// Używamy gorm.First, które zwróci gorm.ErrRecordNotFound, jeśli nie znajdzie rekordu.
+	if err := r.DB.Where("user_usos_id = ?", usosID).First(&token).Error; err != nil {
+		return nil, err
+	}
+	return &token, nil
+}

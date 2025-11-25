@@ -15,6 +15,7 @@ import IdCardsWidget from "../components/Widgets/IdCardsWidget";
 import EctsCreditsWidget from "../components/Widgets/EctsCreditsWidget";
 import CustomGroupsWidget from "../components/Widgets/CustomGroupsWidget";
 import BuildingIndexWidget from "../components/Widgets/BuildingIndexWidget";
+import UsosGroups from "../components/Widgets/UsosGroups";
 // import CalendarContainer from "../components/Calendar/CalendarContainer";
 
 const widgets: React.FC[] = [
@@ -26,6 +27,7 @@ const widgets: React.FC[] = [
   EctsCreditsWidget,
   CustomGroupsWidget,
   BuildingIndexWidget,
+  UsosGroups,
   // CalendarContainer,
 ];
 

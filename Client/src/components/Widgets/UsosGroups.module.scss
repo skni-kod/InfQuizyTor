@@ -1,0 +1,189 @@
+@import "../../styles/_variables.scss";
+
+// Lokalne mapowanie dla badge'y do globalnych kolorów motywu
+$color-wyk: var(--info);
+$color-lab: var(--success);
+$color-cw: var(--warning);
+$color-sem: var(--error);
+
+.loading,
+.error,
+.empty {
+  text-align: center;
+  font-size: var(--text-base);
+  margin-top: var(--space-6);
+  color: var(--text-secondary);
+}
+
+.error {
+  color: var(--error);
+}
+
+.groupsContainer {
+  // Kontener główny
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pageTitle {
+  // Styl nagłówka strony
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  border-bottom: 2px solid var(--primary);
+  display: inline-block;
+  padding-bottom: var(--space-2);
+}
+
+.termSection {
+  // Kontener dla pojedynczego semestru
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.termHeader {
+  // Nagłówek semestru (Clickable)
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg2-dark);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-lg);
+
+  &:hover {
+    background-color: var(--bg3-dark);
+  }
+
+  &.active {
+    background-color: var(--bg3-dark);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--text-lg);
+  }
+
+  .toggleIcon {
+    font-size: var(--text-xl);
+    color: var(--primary);
+    font-weight: bold;
+  }
+}
+
+.groupsGrid {
+  // Siatka dla kart wewnątrz aktywnego semestru
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg1-dark); // Tło siatki
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+// Stylizujemy elementy wewnątrz komponentu Card
+
+.groupHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  // Używamy tego w body Card (grupa: typ i numer)
+}
+
+.groupNumber {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.badge {
+  // Styl Badge (Typ zajęć)
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--bg0-dark); // Ciemny tekst na kolorowym tle
+
+  // Mapowanie lokalnych badge'y do globalnych kolorów motywu
+  &.WYK {
+    background-color: $color-wyk;
+  }
+  &.LAB {
+    background-color: $color-lab;
+  }
+  &.CW,
+  &.CW_R {
+    background-color: $color-cw;
+  }
+  &.SEM {
+    background-color: $color-sem;
+  }
+  &.defaultBadge {
+    background-color: var(--bg3-dark);
+    color: var(--text-secondary);
+  }
+}
+
+.details {
+  // Sekcja z rolą i prowadzącymi
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: var(--space-3) 0;
+
+  .roleInfo {
+    margin-bottom: var(--space-2);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .lecturers {
+    background-color: var(--bg2-dark);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+
+    strong {
+      display: block;
+      margin-bottom: var(--space-1);
+      font-size: var(--text-xs);
+      color: var(--primary);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: var(--text-secondary);
+
+      li {
+        margin-bottom: var(--space-1);
+      }
+    }
+  }
+}
+
+.actions {
+  // Stopka Card (Link USOSweb)
+  margin-top: auto; // Wypycha element na dół Card
+  padding-top: var(--space-3);
+  text-align: right;
+
+  .usosLink {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: 500;
+    font-size: var(--text-sm);
+
+    &:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+  }
+}

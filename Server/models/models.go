@@ -246,3 +246,49 @@ type GeneratedQuizQuestion struct {
 	Options      []string `json:"options"`
 	CorrectIndex int      `json:"correctIndex"`
 }
+
+// UsosGroupMember reprezentuje prowadzącego lub uczestnika
+type UsosGroupMember struct {
+	ID        string `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Title     string `json:"titles,omitempty"` // Opcjonalne
+}
+
+// UsosGroupDetails to pełna struktura grupy z dokumentacji
+type UsosGroupDetails struct {
+	CourseUnitID string            `json:"course_unit_id"`
+	GroupNumber  int               `json:"group_number"`
+	ClassType    LangDict          `json:"class_type"`
+	ClassTypeID  string            `json:"class_type_id"`
+	CourseID     string            `json:"course_id"`
+	CourseName   LangDict          `json:"course_name"`
+	GroupURL     string            `json:"group_url"`
+	TermID       string            `json:"term_id"`
+	Lecturers    []UsosGroupMember `json:"lecturers"`
+	Participants []UsosGroupMember `json:"participants"`      // Wymaga uprawnień uczestnika/prowadzącego
+	Relationship string            `json:"relationship_type"` // participant lub lecturer
+}
+
+// UsosGroupsResponse mapuje odpowiedź z services/groups/user
+// USOS zwraca strukturę: { "groups": { "TERM_ID": [Group1, Group2] }, "terms": [...] }
+type UsosGroupsResponse struct {
+	Groups map[string][]UsosGroupDetails `json:"groups"`
+	Terms  []UsosTerm                    `json:"terms"`
+}
+
+type UsosTerm struct {
+	ID        string   `json:"id"`
+	Name      LangDict `json:"name"`
+	StartDate string   `json:"start_date"`
+	EndDate   string   `json:"end_date"`
+}
+
+type UserToken struct {
+	UserUsosID        string    `db:"user_usos_id"`
+	AccessToken       string    `db:"access_token"`
+	AccessTokenSecret string    `db:"access_token_secret"`
+	Scopes            []string  `db:"scopes"` // Musi pasować do typu TEXT[] w Postgres
+	CreatedAt         time.Time `db:"created_at"`
+	UpdatedAt         time.Time `db:"updated_at"`
+}
