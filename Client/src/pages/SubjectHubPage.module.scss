@@ -85,4 +85,65 @@
   padding: var(--space-4);
   background: var(--bg1-dark);
   border-radius: var(--radius-lg);
+} // W SubjectHubPage.module.scss
+
+.hubContainer {
+  padding: var(--space-6) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// ...
+
+.tabContent {
+  flex-grow: 1; /* Pozwól na rozszerzenie, aby wypełnić resztę miejsca */
+  overflow-y: auto; /* Scrollowanie w przypadku przepełnienia wertykalnego */
+  padding-top: var(--space-5);
+}
+
+.graphContainer {
+  width: 100%;
+  height: 100%; /* Ważne, aby QuizGraph mógł się rozciągnąć */
+  /* Dodaj subtelne marginesy/cienie, aby oddzielić graf od reszty */
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  // background-color: var(--bg2-dark); /* Opcjonalnie, jeśli QuizGraph jest przezroczysty */
+}
+// W SubjectHubPage.module.scss
+
+.tabButton {
+  /* ... istniejące style ... */
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition-fast);
+  background: none; /* Upewnij się, że nie ma tła */
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-secondary);
+  }
+
+  &.tabActive {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+
+    // Dodatkowy efekt, aby była bardziej "wysunięta"
+    transform: translateY(1px);
+  }
+}
+// W SubjectHubPage.module.scss (na końcu pliku)
+
+.errorText {
+  color: var(--color-danger); /* Zakładając, że masz taką zmienną */
+  font-size: var(--text-lg);
+  font-weight: 500;
+  margin-top: var(--space-8);
+  text-align: center;
 }

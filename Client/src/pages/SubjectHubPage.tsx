@@ -8,57 +8,80 @@ import ResourceStudio from "../components/Studio/ResourceStudio";
 import TopicViewerModal from "../components/Studio/TopicViewerModal";
 import { FaArrowLeft } from "react-icons/fa";
 
-// POPRAWKA: Typ MOCK_SUBJECT_DATA to teraz 'Subject'
-const MOCK_SUBJECT_DATA: Subject = {
-  ID: 1,
-  UsosID: "s1",
-  Name: "Analiza Matematyczna",
-};
-
 const SubjectHubPage: React.FC = () => {
   const { subjectId } = useParams(); // subjectId to UsosID
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("path");
-
-  // POPRAWKA: Stan przechowuje teraz typ 'Subject'
-  const [currentSubject, setCurrentSubject] =
-    useState<Subject>(MOCK_SUBJECT_DATA);
+  const [currentSubject, setCurrentSubject] = useState<Subject | null>(null); // Zmieniono na null
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(true); // Ustaw na true na początku
+  const [error, setError] = useState<string | null>(null);
 
   const [viewingTopic, setViewingTopic] = useState<Topic | null>(null);
 
-  const fetchSubjectData = async () => {
-    if (!subjectId) return;
+  const fetchSubjectData = async (id: string) => {
     setLoading(true);
+    setError(null);
+
+    // KLUCZOWE POPRAWKI:
+    // 1. Dekodowanie URI: Używamy decodeURIComponent, aby UsosID z URL był poprawny.
+    const decodedSubjectId = decodeURIComponent(id);
+
+    // 2. Opcja credentials: 'include' jest KLUCZOWA do wysłania ciasteczek sesyjnych
+    const fetchOptions: RequestInit = {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
     try {
-      // TODO: Zaimplementuj /api/subjects/:id
-      // Na razie używamy mocka, ale upewniamy się, że pasuje do typu
-      const mockSubject = { ...MOCK_SUBJECT_DATA, UsosID: subjectId, ID: 0 }; // ID z bazy byłoby nieznane
-      setCurrentSubject(mockSubject);
-
-      // --- POPRAWKA: fetchTopics ---
-      // Stary URL: /api/topics?subject_id=${subjectId}
-      const topicsRes = await fetch(
-        `/api/subjects/${subjectId}/topics`, // Zgodny z main.go
-        {
-          credentials: "include",
-        }
+      // 1. Fetch Danych Przedmiotu
+      const subjectResponse = await fetch(
+        `/api/subjects/${decodedSubjectId}`,
+        fetchOptions
       );
-      // --- KONIEC POPRAWKI ---
 
-      if (!topicsRes.ok) throw new Error("Nie udało się pobrać tematów");
-      const topicsData: Topic[] = await topicsRes.json();
+      if (!subjectResponse.ok) {
+        // Poprawka: Jeśli dostaniemy 401, informujemy użytkownika o konieczności zalogowania.
+        if (subjectResponse.status === 401) {
+          throw new Error("Wymagane ponowne logowanie (Sesja wygasła).");
+        }
+        throw new Error(`Błąd ładowania przedmiotu: ${subjectResponse.status}`);
+      }
+      const subjectData: Subject = await subjectResponse.json();
+      setCurrentSubject(subjectData);
+
+      // 2. Fetch Tematów
+      const topicsResponse = await fetch(
+        `/api/subjects/${decodedSubjectId}/topics`,
+        fetchOptions
+      );
+      if (!topicsResponse.ok) {
+        throw new Error(`Błąd ładowania tematów: ${topicsResponse.status}`);
+      }
+      const topicsData: Topic[] = await topicsResponse.json();
       setTopics(topicsData);
-    } catch (error) {
-      console.error("Błąd ładowania danych przedmiotu:", error);
+    } catch (e) {
+      console.error("Błąd ładowania danych przedmiotu:", e);
+      // Ustawienie błędu dla frontendu
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Wystąpił nieznany błąd podczas ładowania danych.");
+      }
+      setCurrentSubject(null);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSubjectData();
+    if (subjectId) {
+      fetchSubjectData(subjectId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectId]);
 
   const handleNodeClick = (topic: Topic) => {
@@ -74,12 +97,16 @@ const SubjectHubPage: React.FC = () => {
   };
 
   const refreshTopics = () => {
-    fetchSubjectData();
+    fetchSubjectData(subjectId!);
   };
 
-  if (loading) {
+  if (error || !currentSubject) {
     return (
-      <div className={styles.loadingScreen}>Ładowanie danych przedmiotu...</div>
+      <div className={styles.hubContainer}>
+        <p className={styles.errorText}>
+          {error || "Nie znaleziono przedmiotu."}
+        </p>
+      </div>
     );
   }
 
@@ -123,12 +150,12 @@ const SubjectHubPage: React.FC = () => {
           {activeTab === "path" && (
             <div className={styles.graphContainer}>
               <QuizGraph
-                subject={currentSubject} // Przekazujemy cały obiekt Subject
-                UsosID={currentSubject.UsosID} // Prop UsosID
+                subject={currentSubject}
+                UsosID={currentSubject.UsosID}
                 topics={topics}
                 onNodeClick={handleNodeClick}
                 onBack={handleBackToDashboard}
-                subjectColor={"var(--primary)"} // Przekaż domyślny kolor
+                subjectColor={"var(--primary)"}
               />
             </div>
           )}

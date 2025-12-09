@@ -1211,3 +1211,60 @@ func (h *SubjectHandler) HandleGetCourseUnitDetails(c *gin.Context) {
 	// 3. Odesłanie odpowiedzi
 	utils.SendSuccess(c, http.StatusOK, response)
 }
+func (h *SubjectHandler) HandleGetSubjectByUsosID(c *gin.Context) {
+	usosID := c.Param("usos_id")
+	if usosID == "" {
+		utils.SendError(c, http.StatusBadRequest, "Brak parametru 'usos_id'")
+		return
+	}
+	session := sessions.Default(c)
+	token, ok := session.Get("usos_token").(models.UsosOAuthToken)
+
+	// LINIA KRYTYCZNA: Jeśli tokena brakuje, zwracamy 401.
+	if !ok || token.AccessToken == "" {
+		utils.SendError(c, http.StatusUnauthorized, "Brak tokenu USOS w sesji. Wymagane zalogowanie.")
+		return // To jest źródło błędu 401!
+	}
+
+	// 1. Pobierz wszystkie grupy i kursy użytkownika z USOS API
+	// Ponieważ h.UsosService jest typu services.UsosAPIService, a nie services.GormUsosService,
+	// musimy użyć globalnego UsosService z pakietu services, który ma metodę GetAllUserGroups.
+	// Alternatywnie, UsosAPIService musiałby zostać rozszerzony o tę metodę.
+	// Dla uproszczenia, używamy globalnego serwisu.
+	// W przyszłości rozważ refaktoryzację, aby SubjectHandler przyjmował również GormUsosService.
+	groupsResponse, err := services.UsosService.GetAllUserGroups(token.AccessToken, token.AccessSecret)
+	if err != nil {
+		log.Printf("Błąd pobierania grup z USOS dla użytkownika: %v", err)
+		utils.SendError(c, http.StatusInternalServerError, "Błąd pobierania grup z USOS: "+err.Error())
+		return
+	}
+
+	// 2. Przeszukaj otrzymane dane (groupsResponse)
+	var foundSubject *models.Subject = nil
+
+	// Iteracja przez grupy w poszukiwaniu pasującego UsosID
+	for _, termGroups := range groupsResponse.Groups {
+		for _, group := range termGroups {
+			if group.CourseID == usosID {
+				// Znaleziono pasujący kurs/przedmiot!
+				// Tworzymy uproszczony model Subject, który frontend oczekuje
+				foundSubject = &models.Subject{
+					UsosID: group.CourseID,
+					Name:   group.CourseName["pl"], // Używamy nazwy polskiej
+				}
+				break
+			}
+		}
+		if foundSubject != nil {
+			break
+		}
+	}
+
+	if foundSubject == nil {
+		utils.SendError(c, http.StatusNotFound, "Przedmiot o podanym UsosID nie został znaleziony w aktywnych grupach USOS.")
+		return
+	}
+
+	// 3. Sukces: Zwróć uproszczony model przedmiotu
+	utils.SendSuccess(c, http.StatusOK, foundSubject)
+}

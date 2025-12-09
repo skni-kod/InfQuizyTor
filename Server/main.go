@@ -65,14 +65,13 @@ func main() {
 		apiGroup.GET("/dashboard/progress", handlers.HandleGetDashboardProgress)
 		apiGroup.GET("/dashboard/leaderboard", handlers.HandleGetDashboardLeaderboard)
 		apiGroup.GET("/dashboard/achievements", handlers.HandleGetDashboardAchievements)
-
 		// Subjects & Topics
-		apiGroup.GET("/subjects", handlers.HandleGetSubjects)
 		apiGroup.POST("/subjects/sync", handlers.HandleSyncSubjects)
-		apiGroup.GET("/subjects/:usos_id/topics", handlers.HandleGetTopicsByUsosID)
+		apiGroup.GET("/subjects", handlers.HandleGetSubjects)
 		apiGroup.POST("/topics", handlers.HandleCreateTopic)
+		apiGroup.GET("/subjects/:usos_id/topics", handlers.HandleGetTopicsByUsosID)
 		apiGroup.GET("/subjects/:usos_id/graph", handlers.HandleGetCourseGraph)
-
+		apiGroup.GET("/subjects/:usos_id", subjectHandler.HandleGetSubjectByUsosID)
 		// ➡️ POPRAWKA: Rejestracja nowego handlera Gin dla szczegółów jednostki kursu
 		// Endpoint oczekiwany przez frontend: /api/subjects/unit-details?course_unit_id=...
 		apiGroup.GET("/subjects/unit-details", subjectHandler.HandleGetCourseUnitDetails)
