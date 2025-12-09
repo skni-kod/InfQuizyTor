@@ -1,0 +1,565 @@
+[{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.GetRequestToken undefined (type *services.GormUsosService has no field or method GetRequestToken)",
+	"source": "compiler",
+	"startLineNumber": 71,
+	"startColumn": 59,
+	"endLineNumber": 71,
+	"endColumn": 74
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.GetAuthorizationURL undefined (type *services.GormUsosService has no field or method GetAuthorizationURL)",
+	"source": "compiler",
+	"startLineNumber": 87,
+	"startColumn": 39,
+	"endLineNumber": 87,
+	"endColumn": 58
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.GetAccessToken undefined (type *services.GormUsosService has no field or method GetAccessToken)",
+	"source": "compiler",
+	"startLineNumber": 117,
+	"startColumn": 57,
+	"endLineNumber": 117,
+	"endColumn": 71
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.GetUserInfo undefined (type *services.GormUsosService has no field or method GetUserInfo)",
+	"source": "compiler",
+	"startLineNumber": 125,
+	"startColumn": 40,
+	"endLineNumber": 125,
+	"endColumn": 51
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.MakeSignedRequest undefined (type *services.GormUsosService has no field or method MakeSignedRequest)",
+	"source": "compiler",
+	"startLineNumber": 234,
+	"startColumn": 36,
+	"endLineNumber": 234,
+	"endColumn": 53
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.GetUserGroups undefined (type *services.GormUsosService has no field or method GetUserGroups)",
+	"source": "compiler",
+	"startLineNumber": 347,
+	"startColumn": 38,
+	"endLineNumber": 347,
+	"endColumn": 51
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.MakeSignedRequest undefined (type *services.GormUsosService has no field or method MakeSignedRequest)",
+	"source": "compiler",
+	"startLineNumber": 442,
+	"startColumn": 36,
+	"endLineNumber": 442,
+	"endColumn": 53
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.MakeSignedRequest undefined (type *services.GormUsosService has no field or method MakeSignedRequest)",
+	"source": "compiler",
+	"startLineNumber": 532,
+	"startColumn": 36,
+	"endLineNumber": 532,
+	"endColumn": 53
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.GeminiService.GenerateContent undefined (type *services.GeminiAIService has no field or method GenerateContent)",
+	"source": "compiler",
+	"startLineNumber": 717,
+	"startColumn": 48,
+	"endLineNumber": 717,
+	"endColumn": 63
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.GetAllUserGroups undefined (type *services.GormUsosService has no field or method GetAllUserGroups)",
+	"source": "compiler",
+	"startLineNumber": 873,
+	"startColumn": 40,
+	"endLineNumber": 873,
+	"endColumn": 56
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "services.UsosService.MakeSignedRequest undefined (type *services.GormUsosService has no field or method MakeSignedRequest)",
+	"source": "compiler",
+	"startLineNumber": 904,
+	"startColumn": 36,
+	"endLineNumber": 904,
+	"endColumn": 53
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: services.UsosAPIService",
+	"source": "compiler",
+	"startLineNumber": 993,
+	"startColumn": 23,
+	"endLineNumber": 993,
+	"endColumn": 37
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/handlers/handlers.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: services.UsosAPIService",
+	"source": "compiler",
+	"startLineNumber": 999,
+	"startColumn": 39,
+	"endLineNumber": 999,
+	"endColumn": 53
+},{
+	"resource": "/c:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/main.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "IncompatibleAssign",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "IncompatibleAssign"
+		}
+	},
+	"severity": 8,
+	"message": "cannot use cfg (variable of struct type config.Config) as string value in argument to services.InitGeminiService",
+	"source": "compiler",
+	"startLineNumber": 29,
+	"startColumn": 29,
+	"endLineNumber": 29,
+	"endColumn": 32
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "cfg.UsosAPIURL undefined (type config.Config has no field or method UsosAPIURL)",
+	"source": "compiler",
+	"startLineNumber": 54,
+	"startColumn": 23,
+	"endLineNumber": 54,
+	"endColumn": 33
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "cfg.UsosScopes undefined (type config.Config has no field or method UsosScopes)",
+	"source": "compiler",
+	"startLineNumber": 56,
+	"startColumn": 23,
+	"endLineNumber": 56,
+	"endColumn": 33
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "cfg.UsosAPIBaseURL undefined (type config.Config has no field or method UsosAPIBaseURL, but does have field UsosApiBaseURL)",
+	"source": "compiler",
+	"startLineNumber": 60,
+	"startColumn": 23,
+	"endLineNumber": 60,
+	"endColumn": 37
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "config.AuthorizeURL undefined (type *oauth1.Config has no field or method AuthorizeURL)",
+	"source": "compiler",
+	"startLineNumber": 80,
+	"startColumn": 20,
+	"endLineNumber": 80,
+	"endColumn": 32
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingLitField",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingLitField"
+		}
+	},
+	"severity": 8,
+	"message": "unknown field Secret in struct literal of type oauth1.Token",
+	"source": "compiler",
+	"startLineNumber": 82,
+	"startColumn": 44,
+	"endLineNumber": 82,
+	"endColumn": 50
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: models.UsosUser",
+	"source": "compiler",
+	"startLineNumber": 86,
+	"startColumn": 151,
+	"endLineNumber": 86,
+	"endColumn": 159
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: models.UsosUser",
+	"source": "compiler",
+	"startLineNumber": 119,
+	"startColumn": 82,
+	"endLineNumber": 119,
+	"endColumn": 90
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: models.UsosUser",
+	"source": "compiler",
+	"startLineNumber": 134,
+	"startColumn": 22,
+	"endLineNumber": 134,
+	"endColumn": 30
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: models.UsosCourse",
+	"source": "compiler",
+	"startLineNumber": 159,
+	"startColumn": 40,
+	"endLineNumber": 159,
+	"endColumn": 50
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: models.UsosCalendarEvent",
+	"source": "compiler",
+	"startLineNumber": 212,
+	"startColumn": 26,
+	"endLineNumber": 212,
+	"endColumn": 43
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingLitField",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingLitField"
+		}
+	},
+	"severity": 8,
+	"message": "unknown field Type in struct literal of type models.CalendarEvent",
+	"source": "compiler",
+	"startLineNumber": 238,
+	"startColumn": 4,
+	"endLineNumber": 238,
+	"endColumn": 8
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "UndeclaredImportedName",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "UndeclaredImportedName"
+		}
+	},
+	"severity": 8,
+	"message": "undefined: genai.GenerateContentConfig",
+	"source": "compiler",
+	"startLineNumber": 444,
+	"startColumn": 19,
+	"endLineNumber": 444,
+	"endColumn": 40
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/services/services.go",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"code": {
+		"value": "MissingFieldOrMethod",
+		"target": {
+			"$mid": 1,
+			"path": "/golang.org/x/tools/internal/typesinternal",
+			"scheme": "https",
+			"authority": "pkg.go.dev",
+			"fragment": "MissingFieldOrMethod"
+		}
+	},
+	"severity": 8,
+	"message": "resp.Candidates[0].Content.Parts[0].Text undefined (type genai.Part has no field or method Text)",
+	"source": "compiler",
+	"startLineNumber": 462,
+	"startColumn": 47,
+	"endLineNumber": 462,
+	"endColumn": 51
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Client/src/components/Quiz/QuizGraph.tsx",
+	"owner": "typescript",
+	"code": "6133",
+	"severity": 4,
+	"message": "'event' is declared but its value is never read.",
+	"source": "ts",
+	"startLineNumber": 174,
+	"startColumn": 21,
+	"endLineNumber": 174,
+	"endColumn": 26,
+	"tags": [
+		1
+	]
+},{
+	"resource": "/C:/Users/sebci/Documents/GitHub/InfQuizyTor/Server/go.mod",
+	"owner": "_generated_diagnostic_collection_name_#9",
+	"severity": 4,
+	"message": "github.com/dghubble/oauth1 should be direct",
+	"source": "go mod tidy",
+	"startLineNumber": 27,
+	"startColumn": 36,
+	"endLineNumber": 27,
+	"endColumn": 47
+}]

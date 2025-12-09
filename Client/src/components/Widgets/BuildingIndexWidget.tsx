@@ -1,9 +1,9 @@
 import React from "react";
 import { useUsosApi } from "../../hooks/useUsosApi";
 import { UsosBuilding } from "../../assets/types";
-import Card from "../Common/Card";
 import styles from "./BuildingIndexWidget.module.scss";
 import { FaMapMarkerAlt, FaRegImage } from "react-icons/fa";
+import Widget from "../Common/Widget";
 
 const BuildingIndexWidget: React.FC = () => {
   const apiPath = "services/geo/building_index";
@@ -83,11 +83,16 @@ const BuildingIndexWidget: React.FC = () => {
     content = <p>Nie znaleziono żadnych budynków.</p>;
   }
 
-  // Ustawiamy wysokość Card, aby lista była przewijalna
+  // Ustawiamy wysokość Widget, aby lista była przewijalna
   return (
-    <Card title="Budynki Uczelni" className={styles.widgetCard}>
+    <Widget
+      title="Budynki Uczelni"
+      collapsible={true}
+      defaultCollapsed={true}
+      className={styles.widgetWidget}
+    >
       {content}
-    </Card>
+    </Widget>
   );
 };
 

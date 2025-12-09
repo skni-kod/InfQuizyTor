@@ -1,7 +1,7 @@
 import React from "react";
 import { useUsosApi } from "../../hooks/useUsosApi";
 import { UsosLatestGrade } from "../../assets/types";
-import Card from "../Common/Card";
+import Widget from "../Common/Widget";
 import styles from "./LatestGradesWidget.module.scss"; // Nowy plik SCSS
 
 const LatestGradesWidget: React.FC = () => {
@@ -66,7 +66,11 @@ const LatestGradesWidget: React.FC = () => {
     content = <p>Nie znaleziono żadnych nowych ocen.</p>;
   }
 
-  return <Card title="Ostatnie Oceny">{content}</Card>;
+  return (
+    <Widget title="Ostatnie Oceny" collapsible={true} defaultCollapsed={true}>
+      {content}
+    </Widget>
+  );
 };
 
 export default LatestGradesWidget;

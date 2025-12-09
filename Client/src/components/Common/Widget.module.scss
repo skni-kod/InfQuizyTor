@@ -1,0 +1,130 @@
+@use "../../styles/mixins" as m;
+@import "../../styles/variables";
+
+.widget {
+  // Poprawna nazwa klasy dla głównego elementu Widgeta
+  // --- EFEKT SZKŁA (GLASSMORPHISM) ---
+  // Domyślny styl Widgeta
+  @include m.glass-effect(15px, rgba(20, 20, 25, 0.65));
+
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden; // Ważne dla zaokrągleń
+
+  // Ramka i Cień
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+
+  &:hover {
+    border-color: var(--primary); // Podświetlenie ramki
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); // Głębszy cień
+  }
+  &.collapsed {
+    height: fit-content !important;
+    min-height: fit-content !important;
+    max-height: fit-content !important;
+  }
+}
+
+.widgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+
+  // Nagłówek nieco jaśniejszy/wyróżniony
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  // KLUCZOWA ZMIANA: Dodajemy kursor 'grab' TYLKO do uchwytu
+  cursor: grab;
+}
+
+.widgetTitle {
+  margin: 0;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.widgetButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  font-size: var(--text-base);
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.widgetContent {
+  flex-grow: 1;
+  padding: 16px; // Domyślny padding
+  overflow-y: auto;
+}
+
+// --- NOWE KLASY DLA WIDGETU W TRYBIE KARTY (CARD) ---
+
+.cardLayout {
+  // 1. Zastąp styl Widgeta stylem Card
+  @include m.glass-effect(0px, var(--bg1-dark)); // Powrót do stałego tła
+  background-color: var(--bg1-dark);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--bg3-dark);
+  border-radius: var(--radius-md); // Mniejsze zaokrąglenia
+  padding: var(--space-6); // Padding dla Card
+
+  // 2. Ukryj nagłówek Widgeta (bo UsosGroups ma własny, wewnętrzny tytuł)
+  .widgetHeader {
+    display: none;
+  }
+
+  // Wymuś, by wewnętrzny div.widgetContent miał 0 padding, bo jest już na .cardLayout
+  .widgetContent {
+    padding: 0;
+    overflow-y: visible;
+  }
+
+  // 3. Dodaj efekt klikalności
+  &.clickable {
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+  }
+}
+.widgetContent {
+  flex-grow: 1;
+  padding: 16px; // Domyślny padding
+  overflow-y: auto;
+
+  // NOWE STYLE DLA ZWIJANIA:
+  // Używamy max-height do płynnej animacji wysokości
+  max-height: 1000px; // Ustaw dużą wartość, aby zawsze pomieścić zawartość
+  transition: max-height var(--transition-slow) ease,
+    padding var(--transition-slow) ease, opacity var(--transition-slow) ease;
+  padding-top: 16px;
+  padding-bottom: 16px;
+
+  .collapsed & {
+    // W trybie zwiniętym
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    flex-grow: 0; // Usuń flex-grow
+    overflow: hidden; // Ukryj scrollbar
+  }
+}

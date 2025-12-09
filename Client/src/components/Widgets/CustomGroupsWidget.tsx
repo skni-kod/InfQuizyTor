@@ -4,7 +4,7 @@ import {
   UsosCustomGroup,
   // Usunięto nieużywane importy
 } from "../../assets/types";
-import Card from "../Common/Card";
+import Widget from "../Common/Widget";
 import styles from "./CustomGroupsWidget.module.scss";
 import {
   FaUsers,
@@ -52,7 +52,7 @@ const CustomGroupsWidget: React.FC = () => {
     content = <p>Nie znaleziono żadnych grup niestandardowych.</p>;
   }
 
-  return <Card title="Twoje Grupy (BETA)">{content}</Card>;
+  return <Widget title="Twoje Grupy (BETA)">{content}</Widget>;
 };
 
 export default CustomGroupsWidget;

@@ -25,12 +25,18 @@ func main() {
 	db.InitDB(cfg)
 	defer db.CloseDB()
 
+	// Inicjalizacja serwisów
 	services.InitUsosService(cfg)
 	services.InitGeminiService(cfg)
+
+	// Wstrzyknięcie serwisów do handlerów
+	usosService := services.NewUsosAPIService(cfg.UsosConsumerKey, cfg.UsosConsumerSecret)
+	subjectHandler := handlers.NewSubjectHandler(usosService) // Używamy NewSubjectHandler z nowym UsosAPIService
 
 	router := gin.Default()
 	router.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
+	// Konfiguracja CORS i Sesji (bez zmian)
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{cfg.FrontendURL}
 	corsConfig.AllowCredentials = true
@@ -40,7 +46,7 @@ func main() {
 	store := cookie.NewStore([]byte(cfg.SessionSecret))
 	router.Use(sessions.Sessions("usos_session", store))
 
-	// Auth
+	// Auth (bez zmian)
 	authGroup := router.Group("/auth/usos")
 	{
 		authGroup.GET("/login", handlers.HandleUsosLogin)
@@ -54,7 +60,7 @@ func main() {
 	{
 		apiGroup.GET("/users/me", handlers.HandleGetUserMe)
 
-		// --- DASHBOARD ENDPOINTS ---
+		// --- DASHBOARD ENDPOINTS (bez zmian) ---
 		apiGroup.GET("/dashboard/upcoming", handlers.HandleGetUpcomingEvents)
 		apiGroup.GET("/dashboard/progress", handlers.HandleGetDashboardProgress)
 		apiGroup.GET("/dashboard/leaderboard", handlers.HandleGetDashboardLeaderboard)
@@ -67,7 +73,13 @@ func main() {
 		apiGroup.POST("/topics", handlers.HandleCreateTopic)
 		apiGroup.GET("/subjects/:usos_id/graph", handlers.HandleGetCourseGraph)
 
-		// Content Generation
+		// ➡️ POPRAWKA: Rejestracja nowego handlera Gin dla szczegółów jednostki kursu
+		// Endpoint oczekiwany przez frontend: /api/subjects/unit-details?course_unit_id=...
+		apiGroup.GET("/subjects/unit-details", subjectHandler.HandleGetCourseUnitDetails)
+
+		// Usunięto: http.HandleFunc("/subjects/", handlers.SubjectRouter)
+
+		// Content Generation (bez zmian)
 		apiGroup.POST("/topics/upload", handlers.HandleContentUpload)
 		apiGroup.POST("/flashcards/manual", handlers.HandleManualFlashcard)
 		apiGroup.GET("/topics/:id/content", handlers.HandleGetTopicContent)
@@ -76,10 +88,10 @@ func main() {
 		apiGroup.GET("/calendar/usos-groups", handlers.HandleGetUserUsosGroups)
 		apiGroup.POST("/calendar/layers", handlers.HandleCreateCalendarLayer)
 
-		// Groups
+		// Groups (bez zmian)
 		apiGroup.GET("/groups/all", handlers.HandleGetAllUserGroups)
 
-		// Admin
+		// Admin (bez zmian)
 		adminGroup := apiGroup.Group("/admin")
 		adminGroup.Use(middleware.AdminRequired())
 		{
@@ -88,7 +100,7 @@ func main() {
 			adminGroup.POST("/reject-flashcard/:id", handlers.HandleRejectFlashcard)
 		}
 
-		// Proxy Fallback
+		// Proxy Fallback (bez zmian)
 		apiGroup.GET("/services/*proxyPath", handlers.HandleApiProxy)
 	}
 

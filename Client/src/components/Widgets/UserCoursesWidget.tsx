@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useUsosApi } from "../../hooks/useUsosApi";
-import {
-  UsosUserCoursesResponse,
-  UsosTerm,
-  UsosCourseEdition,
-} from "../../assets/types";
-import Card from "../Common/Card";
+import { UsosUserCoursesResponse, UsosCourseEdition } from "../../assets/types";
+// Zastąpienie Card na Widget
+import Widget from "../Common/Widget";
 import styles from "./UserCoursesWidget.module.scss";
 import {
   FaCheckCircle,
@@ -16,22 +13,17 @@ import {
 
 const UserCoursesWidget: React.FC = () => {
   const apiPath = "services/courses/user";
-  // Prosimy o listę semestrów ORAZ o edycje kursów z konkretnymi polami
-  // To jest przykład zagnieżdżonego selektora pól w API USOS
-
   const fields = "terms|course_editions";
   const { data, loading, error } = useUsosApi<UsosUserCoursesResponse>(
     apiPath,
     fields
   );
 
-  // Będziemy trzymać w stanie ID aktywnego (wybranego) semestru
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
 
-  // Ustaw domyślny semestr (pierwszy z listy) po załadowaniu danych
   useEffect(() => {
     if (data?.terms && data.terms.length > 0) {
-      setSelectedTermId(data.terms[0].id); // Domyślnie najnowszy semestr
+      setSelectedTermId(data.terms[0].id);
     }
   }, [data]);
 
@@ -59,7 +51,6 @@ const UserCoursesWidget: React.FC = () => {
         return null;
     }
   };
-
   let content: React.ReactNode;
 
   if (loading) {
@@ -68,18 +59,25 @@ const UserCoursesWidget: React.FC = () => {
     content = (
       <p className={styles.error}>Błąd ładowania przedmiotów: {error}</p>
     );
-  } else if (!data || data.terms.length === 0 || !data.course_editions) {
-    content = <p>Nie znaleziono żadnych zapisów na przedmioty.</p>;
+  } else if (!data || data.terms.length === 0) {
+    content = <p>Nie znaleziono żadnych przedmiotów w semestrach.</p>;
   } else {
-    // Dane są, możemy renderować
+    // Dane są, renderujemy
     const coursesForSelectedTerm: UsosCourseEdition[] =
       (selectedTermId ? data.course_editions[selectedTermId] : []) || [];
 
+    // Sortowanie przedmiotów alfabetycznie
+    coursesForSelectedTerm.sort((a, b) => {
+      const nameA = a.course_name.pl || a.course_name.en || "";
+      const nameB = b.course_name.pl || b.course_name.en || "";
+      return nameA.localeCompare(nameB, "pl", { sensitivity: "base" });
+    });
+
     content = (
       <div className={styles.courseWidget}>
-        {/* Pasek z przełącznikami semestrów */}
+        {/* Zakładki z semestrami */}
         <nav className={styles.termNav}>
-          {data.terms.map((term: UsosTerm) => (
+          {data.terms.map((term) => (
             <button
               key={term.id}
               className={`${styles.termButton} ${
@@ -92,6 +90,8 @@ const UserCoursesWidget: React.FC = () => {
           ))}
         </nav>
 
+        {/* Lista przedmiotów dla wybranego semestru (bez zmian) */}
+        {/* ... */}
         {/* Lista przedmiotów dla wybranego semestru */}
         {coursesForSelectedTerm.length > 0 ? (
           <ul className={styles.courseList}>
@@ -127,7 +127,16 @@ const UserCoursesWidget: React.FC = () => {
     );
   }
 
-  return <Card title="Moje Przedmioty (BETA)">{content}</Card>;
+  // Zwracamy JEDEN Widget jako kontener
+  return (
+    <Widget
+      title="Moje Przedmioty (BETA)"
+      collapsible={true}
+      defaultCollapsed={true}
+    >
+      {content}
+    </Widget>
+  );
 };
 
 export default UserCoursesWidget;

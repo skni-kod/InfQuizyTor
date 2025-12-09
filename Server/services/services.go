@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dghubble/oauth1"
 	"github.com/gomodule/oauth1/oauth" // Używamy 'gomodule'
 	"github.com/google/generative-ai-go/genai"
 	"github.com/skni-kod/InfQuizyTor/Server/config"
@@ -442,4 +444,88 @@ func (s *GormUsosService) GetAllUserGroups(accessToken, accessSecret string) (mo
 	// Jeśli żadne żądanie nie zadziałało, zwracamy ostatni napotkany błąd.
 	log.Println("USOS API: Wszystkie warianty fields zawiodły.")
 	return models.UsosGroupsResponse{}, fmt.Errorf("nie udało się pobrać grup USOS po próbie wszystkich wariantów fields. Ostatni błąd: %w", lastError)
+}
+
+const UsosAPIBaseURL = "https://usosapps.prz.edu.pl/services"
+const CourseUnitFields = "id|course_name|course_id|term_id|profile_url|classtype_id|learning_outcomes|assessment_criteria|topics|teaching_methods|bibliography|groups"
+
+// UsosAPIService definiuje interfejs do interakcji z USOS API.
+type UsosAPIService interface {
+	GetCourseUnitDetails(ctx context.Context, unitID string, token models.UsosOAuthToken) (*models.UsosCourseUnitDetails, error)
+}
+
+type usosAPIService struct {
+	ConsumerKey    string
+	ConsumerSecret string
+}
+
+// NewUsosAPIService tworzy nową instancję serwisu USOS.
+func NewUsosAPIService(consumerKey, consumerSecret string) UsosAPIService {
+	return &usosAPIService{
+		ConsumerKey:    consumerKey,
+		ConsumerSecret: consumerSecret,
+	}
+}
+
+// GetCourseUnitDetails wywołuje services/courses/unit i dekoduje odpowiedź.
+func (s *usosAPIService) GetCourseUnitDetails(ctx context.Context, unitID string, token models.UsosOAuthToken) (*models.UsosCourseUnitDetails, error) {
+	config := oauth1.NewConfig(s.ConsumerKey, s.ConsumerSecret)
+	oauthToken := oauth1.NewToken(token.AccessToken, token.AccessSecret)
+
+	httpClient := config.Client(ctx, oauthToken)
+
+	url := fmt.Sprintf("%s/courses/unit?unit_id=%s&fields=%s&format=json",
+		UsosAPIBaseURL,
+		unitID,
+		CourseUnitFields,
+	)
+
+	resp, err := httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error executing USOS request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("USOS API returned status %d for unit %s", resp.StatusCode, unitID)
+	}
+
+	var unitDetails models.UsosCourseUnitDetails
+	if err := json.NewDecoder(resp.Body).Decode(&unitDetails); err != nil {
+		return nil, fmt.Errorf("error decoding USOS response: %w", err)
+	}
+
+	if unitDetails.ID == "" {
+		return nil, errors.New("unit ID not found in USOS response")
+	}
+
+	return &unitDetails, nil
+}
+
+// ParseLangDictToStringArray konwertuje treść LangDict (zwykle wieloliniową) do listy stringów.
+// Ta funkcja pomocnicza jest teraz publiczna i może być wywołana przez handler.
+func ParseLangDictToStringArray(langDict models.LangDict) []string {
+	if len(langDict) == 0 {
+		return []string{}
+	}
+	// Preferujemy polski ("pl")
+	content, ok := langDict["pl"]
+	if !ok {
+		// Użyj pierwszego dostępnego języka, jeśli "pl" nie istnieje
+		for _, v := range langDict {
+			content = v
+			break
+		}
+	}
+
+	// Dzielenie treści na podstawie nowej linii
+	lines := strings.Split(content, "\n")
+	result := make([]string, 0)
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

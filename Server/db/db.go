@@ -18,6 +18,10 @@ type GormUserRepository struct {
 	DB *gorm.DB
 }
 
+func (r *GormUserRepository) UpsertUser(user *models.User) any {
+	panic("unimplemented")
+}
+
 func InitDB(cfg config.Config) {
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
 	if err != nil {

@@ -1,6 +1,6 @@
 import React from "react";
 import { useUsosApi } from "../../hooks/useUsosApi";
-import Card from "../Common/Card";
+import Widget from "../Common/Widget";
 import styles from "./EctsCreditsWidget.module.scss";
 
 const EctsCreditsWidget: React.FC = () => {
@@ -30,7 +30,15 @@ const EctsCreditsWidget: React.FC = () => {
     content = <p>Nie można było pobrać sumy ECTS.</p>;
   }
 
-  return <Card title="Wykorzystane ECTS">{content}</Card>;
+  return (
+    <Widget
+      title="Wykorzystane ECTS"
+      collapsible={true}
+      defaultCollapsed={true}
+    >
+      {content}
+    </Widget>
+  );
 };
 
 export default EctsCreditsWidget;

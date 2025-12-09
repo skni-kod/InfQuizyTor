@@ -19,98 +19,71 @@ $color-sem: var(--error);
   color: var(--error);
 }
 
-.groupsContainer {
-  // Kontener główny
+// Nowy kontener dla zawartości widgeta (zastępuje .groupsContainer)
+.groupsWidgetContent {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.pageTitle {
-  // Styl nagłówka strony
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin-bottom: var(--space-4);
-  border-bottom: 2px solid var(--primary);
-  display: inline-block;
-  padding-bottom: var(--space-2);
-}
-
-.termSection {
-  // Kontener dla pojedynczego semestru
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.termHeader {
-  // Nagłówek semestru (Clickable)
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--bg2-dark);
-  cursor: pointer;
+// --- NOWA NAWIGACJA ZAKŁADKOWA ---
+.termNav {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--bg3-dark);
+}
+
+.termButton {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--bg1-dark);
+  border: 1px solid var(--bg1-dark);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   transition: all var(--transition-fast);
-  border-radius: var(--radius-lg);
 
   &:hover {
-    background-color: var(--bg3-dark);
+    background-color: var(--bg2-dark);
   }
 
   &.active {
-    background-color: var(--bg3-dark);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--text-lg);
-  }
-
-  .toggleIcon {
-    font-size: var(--text-xl);
     color: var(--primary);
-    font-weight: bold;
+    border-color: var(--primary);
+    background-color: var(--bg2-dark);
   }
 }
+// --- KONIEC NOWEJ NAWIGACJI ---
+
+// Usunięto: .groupsContainer, .termSection, .termHeader, .toggleIcon
 
 .groupsGrid {
-  // Siatka dla kart wewnątrz aktywnego semestru
+  // Układ siatki dla kart grup
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--bg1-dark); // Tło siatki
-  border-bottom-left-radius: var(--radius-lg);
-  border-bottom-right-radius: var(--radius-lg);
+  padding: var(--space-2) 0;
 }
-
-// Stylizujemy elementy wewnątrz komponentu Card
 
 .groupHeaderContent {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-3);
-  // Używamy tego w body Card (grupa: typ i numer)
-}
-
-.groupNumber {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  font-weight: 600;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--bg3-dark);
 }
 
 .badge {
-  // Styl Badge (Typ zajęć)
+  // Styl dla typu zajęć (np. WYK, LAB)
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-lg);
   font-size: var(--text-xs);
-  text-transform: uppercase;
   font-weight: 700;
-  color: var(--bg0-dark); // Ciemny tekst na kolorowym tle
+  color: var(--text-inverted); // Biały tekst na kolorowym tle
 
   // Mapowanie lokalnych badge'y do globalnych kolorów motywu
   &.WYK {
@@ -130,6 +103,12 @@ $color-sem: var(--error);
     background-color: var(--bg3-dark);
     color: var(--text-secondary);
   }
+}
+
+.groupNumber {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary);
 }
 
 .details {
@@ -160,30 +139,42 @@ $color-sem: var(--error);
       list-style: none;
       padding: 0;
       margin: 0;
-      color: var(--text-secondary);
-
       li {
-        margin-bottom: var(--space-1);
+        line-height: 1.4;
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
       }
     }
   }
 }
 
 .actions {
-  // Stopka Card (Link USOSweb)
-  margin-top: auto; // Wypycha element na dół Card
+  // Sekcja linków (na dole karty)
+  margin-top: auto; // Pchnie linki na dół
   padding-top: var(--space-3);
+  border-top: 1px dashed var(--bg3-dark);
   text-align: right;
+}
 
-  .usosLink {
-    text-decoration: none;
+.usosLink {
+  color: var(--info);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+
+  &:hover {
     color: var(--primary);
-    font-weight: 500;
-    font-size: var(--text-sm);
-
-    &:hover {
-      color: var(--primary);
-      text-decoration: underline;
-    }
+    text-decoration: underline;
   }
+}
+
+.noGroups {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--bg3-dark);
+  border-radius: var(--radius-md);
 }

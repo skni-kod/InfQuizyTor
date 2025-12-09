@@ -24,7 +24,7 @@ const SubjectHubPage: React.FC = () => {
   const [currentSubject, setCurrentSubject] =
     useState<Subject>(MOCK_SUBJECT_DATA);
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [viewingTopic, setViewingTopic] = useState<Topic | null>(null);
 

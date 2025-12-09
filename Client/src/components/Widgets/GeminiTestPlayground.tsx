@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import Card from "../Common/Card";
+import Widget from "../Common/Widget";
 import styles from "./GeminiTestPlayground.module.scss";
 import { FaWandMagicSparkles, FaSpinner } from "react-icons/fa6";
 
 // Definiujemy typy generowania, które obsłuży nasz backend
-type GenerationType = "flashcards" | "quiz" | "summary";
+type GenerationType = "flashCards" | "quiz" | "summary";
 
 const GeminiTestPlayground: React.FC = () => {
   const [inputText, setInputText] = useState<string>("");
@@ -34,7 +34,7 @@ const GeminiTestPlayground: React.FC = () => {
         },
         body: JSON.stringify({
           text: inputText,
-          type: type, // Wysyłamy typ: 'flashcards', 'quiz' lub 'summary'
+          type: type, // Wysyłamy typ: 'flashCards', 'quiz' lub 'summary'
         }),
       });
 
@@ -57,9 +57,11 @@ const GeminiTestPlayground: React.FC = () => {
   };
 
   return (
-    <Card
+    <Widget
       title="Plac Zabaw AI (Testowanie Gemini)"
-      className={styles.playgroundCard}
+      collapsible={true}
+      defaultCollapsed={true}
+      className={styles.playgroundWidget}
     >
       <div className={styles.playgroundContainer}>
         <div className={styles.inputSection}>
@@ -74,7 +76,7 @@ const GeminiTestPlayground: React.FC = () => {
           />
           <div className={styles.buttonGroup}>
             <button
-              onClick={() => handleGenerateClick("flashcards")}
+              onClick={() => handleGenerateClick("flashCards")}
               disabled={loading}
             >
               <FaWandMagicSparkles /> Generuj Fiszki
@@ -112,7 +114,7 @@ const GeminiTestPlayground: React.FC = () => {
           </div>
         </div>
       </div>
-    </Card>
+    </Widget>
   );
 };
 

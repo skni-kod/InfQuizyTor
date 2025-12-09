@@ -15,6 +15,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/generative-ai-go/genai"
+	"github.com/lib/pq"
 	"github.com/skni-kod/InfQuizyTor/Server/db" // Importuj pakiet db
 	"github.com/skni-kod/InfQuizyTor/Server/models"
 	"github.com/skni-kod/InfQuizyTor/Server/services"
@@ -273,7 +274,7 @@ func HandleGetAllCalendarEvents(c *gin.Context) {
 		layerID := "usos-class"
 		eventType := "class"
 
-		nameLower := strings.ToLower(act.Name.PL)
+		nameLower := strings.ToLower(act.Name["pl"])
 		typeLower := strings.ToLower(act.Type)
 
 		// Prosta detekcja typu (bo classtype_name może nie być dostępne)
@@ -292,8 +293,8 @@ func HandleGetAllCalendarEvents(c *gin.Context) {
 			Type:        eventType,
 			StartTime:   act.StartTime,
 			EndTime:     act.EndTime,
-			Title:       act.Name.PL,
-			Description: act.CourseName.PL,
+			Title:       act.Name["pl"],
+			Description: act.CourseName["pl"],
 			RoomNumber:  act.RoomNumber,
 			CourseName:  act.CourseName,
 			// ClasstypeName: act.ClasstypeName,
@@ -468,9 +469,9 @@ func HandleSyncSubjects(c *gin.Context) {
 	for _, termCourses := range usosCourses.CourseEditions {
 		for _, course := range termCourses {
 			// Użyj funkcji z db.go, aby znaleźć lub utworzyć wpis
-			_, err := db.UserRepository.FindOrCreateSubjectByUsosID(course.CourseID, course.CourseName.PL)
+			_, err := db.UserRepository.FindOrCreateSubjectByUsosID(course.CourseID, course.CourseName["pl"])
 			if err != nil {
-				log.Printf("Błąd synchronizacji przedmiotu %s (ID: %s): %v", course.CourseName.PL, course.CourseID, err)
+				log.Printf("Błąd synchronizacji przedmiotu %s (ID: %s): %v", course.CourseName["pl"], course.CourseID, err)
 			}
 		}
 	}
@@ -582,9 +583,9 @@ func HandleGetUpcomingEvents(c *gin.Context) {
 		}
 
 		// Wybierz nazwę (PL lub EN)
-		title := act.Name.PL
+		title := act.Name["pl"]
 		if title == "" {
-			title = act.Name.EN
+			title = act.Name["pl"]
 		}
 
 		events = append(events, models.DashboardUpcomingEvent{
@@ -621,7 +622,7 @@ func HandleGetDashboardProgress(c *gin.Context) {
 	// Mapowanie
 	response := models.DashboardProgress{
 		Subject:  progress.Topic.Subject.Name,
-		Topic:    progress.Topic.Name,
+		Topic:    progress.Topic.Title,
 		Progress: progress.Progress,
 		Required: 80, // Można to przenieść do bazy danych (Topic.PassingScore)
 	}
@@ -939,7 +940,7 @@ func HandleCreateTopic(c *gin.Context) {
 
 	topic := &models.Topic{
 		SubjectID:       req.SubjectID,
-		Name:            req.Name,
+		Title:           req.Name, // Zmieniono Name na Title
 		CreatedByUsosID: userUsosID,
 	}
 
@@ -984,4 +985,229 @@ func HandleGetUserMe(c *gin.Context) {
 		"last_name":  user.LastName,
 		"email":      user.Email,
 	})
+}
+
+// SubjectHandler przechowuje zależności dla handlera.
+type SubjectHandler struct {
+	// Używamy UsosAPIService jako interfejsu (poprawa błędu "NotAType")
+	UsosService services.UsosAPIService
+	// Tutaj powinieneś przechowywać również serwis do bazy danych, aby pobrać token
+}
+
+// NewSubjectHandler tworzy nowy SubjectHandler.
+// Przyjmuje interfejs UsosAPIService
+func NewSubjectHandler(usosS services.UsosAPIService) *SubjectHandler {
+	return &SubjectHandler{UsosService: usosS}
+}
+
+// GetSubjectGraphData obsługuje GET /api/subjects/unit-details?course_unit_id={id}
+func (h *SubjectHandler) GetSubjectGraphData(w http.ResponseWriter, r *http.Request) {
+	unitID := r.URL.Query().Get("course_unit_id")
+	if unitID == "" {
+		http.Error(w, "Parameter 'course_unit_id' is required.", http.StatusBadRequest)
+		return
+	}
+
+	// --- MOCK POBIERANIA TOKENA ---
+	// Pamiętaj, aby ZASTĄPIĆ to rzeczywistą logiką pobierania tokena
+	// dla zalogowanego użytkownika (np. z sesji lub bazy danych).
+	mockToken := models.UsosOAuthToken{
+		AccessToken:  "YOUR_USER_ACCESS_TOKEN",
+		AccessSecret: "YOUR_USER_ACCESS_SECRET",
+	}
+	// --- KONIEC MOCKA ---
+
+	// Pobierz dane z USOS API
+	unitDetails, err := h.UsosService.GetCourseUnitDetails(r.Context(), unitID, mockToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Mapowanie danych z modelu USOS na format oczekiwany przez frontend
+	response := h.mapToGraphDataResponse(unitDetails)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// Zgodnie z oczekiwaniem frontendu: {status: "success", data: ...}
+	finalResponse := map[string]interface{}{
+		"status": "success",
+		"data":   response,
+	}
+	json.NewEncoder(w).Encode(finalResponse)
+}
+
+// mapToGraphDataResponse dokonuje transformacji danych z USOS na format frontendu.
+func (h *SubjectHandler) mapToGraphDataResponse(u *models.UsosCourseUnitDetails) models.GraphDataResponse {
+	// Poprawiono: używamy publicznej funkcji z pakietu services
+	parse := services.ParseLangDictToStringArray
+
+	resp := models.GraphDataResponse{
+		ID:  u.ID,
+		URL: u.ProfileURL,
+		// Zakładamy, że CourseName["pl"] istnieje
+		SubjectName: u.CourseName["pl"],
+	}
+
+	// Mapowanie treści LangDict na tablice stringów
+	resp.Nodes.Topics = parse(u.Topics)
+	resp.Nodes.LearningOutcomes = parse(u.LearningOutcomes)
+	resp.Nodes.AssessmentCriteria = parse(u.AssessmentCriteria)
+	resp.Nodes.Bibliography = parse(u.Bibliography)
+	resp.Nodes.TeachingMethods = parse(u.TeachingMethods)
+
+	return resp
+}
+
+// SubjectRouter obsługuje wszystkie ścieżki /api/subjects/
+// Dodano go do tego pliku, ponieważ błąd go sugerował.
+
+type User struct {
+	ID        uint   `gorm:"primarykey"`
+	UsosID    string `gorm:"unique;not null"`
+	FirstName string
+	LastName  string
+	Email     string `gorm:"unique"`
+	Role      string `gorm:"default:'student';not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (User) TableName() string { return "users" }
+
+type Token struct {
+	ID           uint   `gorm:"primarykey"`
+	UserUsosID   string `gorm:"unique;not null"`
+	AccessToken  string
+	AccessSecret string
+	Scopes       string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+func (Token) TableName() string { return "tokens" }
+
+// --- MODELE TREŚCI (AI / NAUKA) ---
+
+type Subject struct {
+	ID     uint   `gorm:"primarykey"`
+	UsosID string `gorm:"unique;not null"`
+	Name   string `gorm:"not null"`
+}
+
+func (Subject) TableName() string { return "subjects" }
+
+// Topic musi być zaktualizowany o SubjectID, CreatedByUsosID oraz relację Subject
+type Topic struct {
+	ID              uint          `gorm:"primarykey"`
+	SubjectID       uint          // ⬅️ Dodane: Standardowy klucz obcy dla relacji GORM
+	SubjectUsosID   string        `gorm:"not null"`
+	Title           string        `gorm:"not null"` // ⬅️ Poprawne pole zamiast 'Name'
+	CreatedByUsosID string        // ⬅️ Dodane: Kto utworzył (ID USOS)
+	Prerequisites   pq.Int64Array `gorm:"type:integer[]"`
+	EstimatedTime   int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+
+	Subject Subject `gorm:"foreignkey:SubjectID"` // ⬅️ Dodane: Relacja GORM
+}
+
+func (Topic) TableName() string { return "topics" }
+
+// --- MODELE USOS API ---
+
+type LangDict map[string]string
+
+type UsosGroupInfo struct {
+	ID          int      `json:"id"`
+	ClassType   LangDict `json:"class_type"`
+	GroupNumber int      `json:"group_number"`
+}
+
+type UsosCourseUnitDetails struct {
+	// Pola Primary
+	ID          string   `json:"id"`
+	CourseName  LangDict `json:"course_name"`
+	CourseID    string   `json:"course_id"`
+	TermID      string   `json:"term_id"`
+	ProfileURL  string   `json:"profile_url"`
+	ClassTypeID string   `json:"classtype_id"`
+
+	// Pola Secondary
+	LearningOutcomes   LangDict        `json:"learning_outcomes"`
+	AssessmentCriteria LangDict        `json:"assessment_criteria"`
+	Topics             LangDict        `json:"topics"`
+	TeachingMethods    LangDict        `json:"teaching_methods"`
+	Bibliography       LangDict        `json:"bibliography"`
+	Groups             []UsosGroupInfo `json:"groups"`
+}
+
+type UsosOAuthToken struct {
+	AccessToken  string
+	AccessSecret string
+}
+
+// --- MODELE FRONTENDU (Wymiana Danych) ---
+
+type GraphDataResponse struct {
+	ID          string `json:"id"`
+	URL         string `json:"url"`
+	SubjectName string `json:"subject_name"`
+	Nodes       struct {
+		Topics             []string `json:"topics"`
+		LearningOutcomes   []string `json:"learning_outcomes"`
+		AssessmentCriteria []string `json:"assessment_criteria"`
+		Bibliography       []string `json:"bibliography"`
+		TeachingMethods    []string `json:"teaching_methods"`
+	} `json:"nodes"`
+}
+
+func mapToGraphDataResponse(u *models.UsosCourseUnitDetails) models.GraphDataResponse {
+	// Używamy publicznej funkcji z pakietu services
+	parse := services.ParseLangDictToStringArray
+
+	resp := models.GraphDataResponse{
+		ID:  u.ID,
+		URL: u.ProfileURL,
+		// Zakładamy, że CourseName["pl"] istnieje, jeśli nie, będzie to pusty string
+		SubjectName: u.CourseName["pl"],
+	}
+
+	// Mapowanie treści LangDict na tablice stringów
+	resp.Nodes.Topics = parse(u.Topics)
+	resp.Nodes.LearningOutcomes = parse(u.LearningOutcomes)
+	resp.Nodes.AssessmentCriteria = parse(u.AssessmentCriteria)
+	resp.Nodes.Bibliography = parse(u.Bibliography)
+	resp.Nodes.TeachingMethods = parse(u.TeachingMethods)
+
+	return resp
+}
+func (h *SubjectHandler) HandleGetCourseUnitDetails(c *gin.Context) {
+	unitID := c.Query("course_unit_id")
+	if unitID == "" {
+		utils.SendError(c, http.StatusBadRequest, "Brak parametru 'course_unit_id'")
+		return
+	}
+
+	session := sessions.Default(c)
+	token, ok := session.Get("usos_token").(models.UsosOAuthToken)
+	if !ok || token.AccessToken == "" {
+		utils.SendError(c, http.StatusUnauthorized, "Brak tokenu USOS w sesji. Wymagane zalogowanie.")
+		return
+	}
+
+	// 1. Pobierz szczegóły jednostki kursowej z USOS
+	unitDetails, err := h.UsosService.GetCourseUnitDetails(c.Request.Context(), unitID, token)
+	if err != nil {
+		log.Printf("Błąd pobierania danych USOS dla jednostki %s: %v", unitID, err)
+		utils.SendError(c, http.StatusInternalServerError, "Błąd komunikacji z USOS API: "+err.Error())
+		return
+	}
+
+	// 2. Mapowanie danych na format frontendu
+	response := mapToGraphDataResponse(unitDetails)
+
+	// 3. Odesłanie odpowiedzi
+	utils.SendSuccess(c, http.StatusOK, response)
 }

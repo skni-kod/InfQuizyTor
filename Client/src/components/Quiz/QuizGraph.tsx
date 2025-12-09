@@ -1,251 +1,259 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./QuizGraph.module.scss";
-import { QuizNode, Subject, Topic, AppSubject } from "../../assets/types.tsx";
-import {
-  FaArrowLeft,
-  FaCheckCircle,
-  FaLock,
-  FaPlay,
-  FaSpinner,
-} from "react-icons/fa";
-import * as d3 from "d3-force";
-import useMeasure from "react-use-measure";
+import * as d3 from "d3";
+// POPRAWKA: Importujemy typy Subject i Topic
+import { Subject, Topic } from "../../assets/types";
 
-// --- Interfejsy ---
+// --- TYPY GRAFU ---
+
+interface GraphNode extends d3.SimulationNodeDatum {
+  id: string;
+  name: string;
+  topicData: Topic;
+  isRoot: boolean;
+  color: string;
+}
+
+interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
+  source: GraphNode | string;
+  target: GraphNode | string;
+}
 
 interface QuizGraphProps {
-  subject: Subject | AppSubject;
-  topics: Topic[]; // Lista odblokowanych tematów
-  onBack?: () => void;
+  subject: Subject;
+  topics: Topic[];
+  UsosID: string;
   onNodeClick: (topic: Topic) => void;
-  UsosID: string; // UsosID kursu
+  onBack: () => void;
   subjectColor: string;
 }
 
-// Interfejsy D3
-interface D3Node extends QuizNode {
-  x?: number;
-  y?: number;
-  vx?: number;
-  vy?: number;
-  fx?: number | null;
-  fy?: number | null;
-}
-interface D3Link {
-  source: number; // ID węzła (number)
-  target: number; // ID węzła (number)
-}
+// --- FUNKCJE POMOCNICZE: PRZETWARZANIE DANYCH ---
 
-// --- Komponent Węzła (Node) ---
-const GraphNode: React.FC<{
-  node: D3Node;
-  topics: Topic[]; // Lista odblokowanych tematów
-  onNodeClick: (topic: Topic) => void;
-}> = ({ node, topics, onNodeClick }) => {
-  const topic = topics.find((t) => t.Name === node.Title);
-  const status = topic ? "available" : "locked";
-  // TODO: Dodać logikę dla 'completed'
+const transformTopicsToGraph = (
+  subject: Subject,
+  topics: Topic[],
+  subjectColor: string
+): { nodes: GraphNode[]; links: GraphLink[] } => {
+  const nodes: GraphNode[] = [];
+  const links: GraphLink[] = [];
+  const nodeMap = new Map<string, GraphNode>();
 
-  const getStatusIcon = (s: "locked" | "available" | "completed") => {
-    switch (s) {
-      case "completed":
-        return <FaCheckCircle className={styles.icon} />;
-      case "available":
-        return <FaPlay className={styles.icon} />;
-      case "locked":
-        return <FaLock className={styles.icon} />;
-    }
+  // 1. Węzeł Główny (ROOT) - Przedmiot
+  const rootNode: GraphNode = {
+    id: subject.UsosID,
+    name: subject.Name,
+    // POPRAWKA BŁĘDU 2352: Dodano pole CreatedByUsosID, aby spełnić wymagania typu Topic.
+    topicData: {
+      ID: 0,
+      SubjectID: subject.ID,
+      Name: subject.Name,
+      CreatedByUsos: "",
+      CreatedByUsosID: "", // Wymagane
+    } as Topic,
+    isRoot: true,
+    color: subjectColor,
+    fx: 0,
+    fy: 0,
   };
+  nodes.push(rootNode);
+  nodeMap.set(rootNode.id, rootNode);
 
-  const handleClick = () => {
-    if (status !== "locked" && topic) {
-      onNodeClick(topic);
-    }
-  };
+  // 2. Węzły Tematów
+  for (const topic of topics) {
+    const topicIdString = `T${topic.ID}`;
+    const node: GraphNode = {
+      id: topicIdString,
+      name:
+        topic.Name.length > 20
+          ? topic.Name.substring(0, 17) + "..."
+          : topic.Name,
+      topicData: topic,
+      isRoot: false,
+      color: "#4a90e2",
+    };
+    nodes.push(node);
+    nodeMap.set(node.id, node);
 
-  return (
-    <g
-      className={`${styles.node} ${styles[status]}`}
-      transform={`translate(${node.x}, ${node.y})`}
-      onClick={handleClick}
-    >
-      <circle r={40} />
-      {getStatusIcon(status)}
-      <text x={0} y={60} textAnchor="middle" className={styles.nodeTitle}>
-        {node.Title}
-      </text>
-    </g>
-  );
+    // 3. Krawędź do węzła głównego
+    const link: GraphLink = {
+      source: rootNode.id,
+      target: node.id,
+    } as unknown as GraphLink;
+    links.push(link);
+  }
+
+  return { nodes, links };
 };
 
-// --- Główny Komponent QuizGraph ---
+// --- GŁÓWNY KOMPONENT ---
+
 const QuizGraph: React.FC<QuizGraphProps> = ({
   subject,
   topics,
-  onBack,
   onNodeClick,
-  UsosID,
   subjectColor,
 }) => {
-  const [ref, bounds] = useMeasure();
-  const [renderedNodes, setRenderedNodes] = useState<D3Node[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
-  // Stany do pobierania grafu
-  const [graphStructure, setGraphStructure] = useState<QuizNode[]>([]);
-  const [isLoadingGraph, setIsLoadingGraph] = useState(true);
-  const [graphError, setGraphError] = useState<string | null>(null);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
 
-  // Pobieranie struktury grafu
+  const graphData = React.useMemo(() => {
+    return transformTopicsToGraph(subject, topics, subjectColor);
+  }, [subject, topics, subjectColor]);
+
+  // Ustawienie wymiarów SVG
   useEffect(() => {
-    const fetchGraphStructure = async () => {
-      if (!UsosID) return;
-
-      setIsLoadingGraph(true);
-      setGraphError(null);
-      try {
-        // --- POPRAWKA: Używamy nowej trasy /api/subjects/... ---
-        // Stary URL: /api/courses/${UsosID}/graph
-        const res = await fetch(
-          `/api/subjects/${UsosID}/graph`, // Zgodny z main.go
-          {
-            credentials: "include",
-          }
-        );
-        // --- KONIEC POPRAWKI ---
-
-        if (!res.ok)
-          throw new Error(`Nie udało się pobrać grafu: ${res.status}`);
-        const data: QuizNode[] = await res.json();
-        setGraphStructure(data);
-      } catch (e: any) {
-        setGraphError(e.message || "Błąd ładowania grafu");
+    const updateSize = () => {
+      if (containerRef.current) {
+        setWidth(containerRef.current.clientWidth);
+        setHeight(containerRef.current.clientHeight);
       }
-      setIsLoadingGraph(false);
     };
 
-    fetchGraphStructure();
-  }, [UsosID]);
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 
-  // Krok 1: Przekształć dane w format D3
-  const graphData = useMemo(() => {
-    if (!bounds.width || !bounds.height || graphStructure.length === 0) {
-      return { nodes: [], links: [] };
-    }
-
-    const links: D3Link[] = [];
-
-    const rootNode: D3Node = {
-      ID: 0,
-      Title: "",
-      UsosCourseID: UsosID,
-      Dependencies: [],
-      x: bounds.width / 2,
-      y: bounds.height / 2,
-      fx: bounds.width / 2,
-      fy: bounds.height / 2,
-    };
-
-    const topicNodes: D3Node[] = graphStructure.map((node) => ({ ...node }));
-    const nodes = [rootNode, ...topicNodes];
-
-    for (const node of topicNodes) {
-      if (!node.Dependencies || node.Dependencies.length === 0) {
-        links.push({ source: 0, target: node.ID }); // Połącz z ROOT
-      } else {
-        node.Dependencies.forEach((depId: number) => {
-          links.push({ source: depId, target: node.ID });
-        });
-      }
-    }
-
-    return { nodes, links };
-  }, [graphStructure, bounds.width, bounds.height, UsosID]);
-
-  // Krok 2: Uruchom symulację D3
+  // --- Logika Rysowania D3 ---
   useEffect(() => {
-    if (!graphData.nodes.length) return;
+    if (
+      !svgRef.current ||
+      width === 0 ||
+      height === 0 ||
+      graphData.nodes.length === 0
+    )
+      return;
 
-    const nodesCopy = graphData.nodes.map((n) => ({ ...n }));
-    const linksCopy = graphData.links.map((l) => ({ ...l }));
+    const nodes = graphData.nodes.map((d) => ({ ...d }));
+    const links = graphData.links.map((d) => ({ ...d }));
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+
+    const g = svg.append("g");
 
     const simulation = d3
-      .forceSimulation(nodesCopy)
+      .forceSimulation<GraphNode, GraphLink>(nodes)
       .force(
         "link",
         d3
-          .forceLink(linksCopy)
-          .id((d: any) => d.ID)
+          .forceLink<GraphNode, GraphLink>(links)
+          .id((d) => d.id)
           .distance(120)
+          .strength(1)
       )
-      .force("charge", d3.forceManyBody().strength(-500))
-      .force("collide", d3.forceCollide(50));
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .on("tick", ticked);
 
-    simulation.stop();
-    simulation.tick(300);
-    setRenderedNodes([...nodesCopy]);
-  }, [graphData]);
+    // Rysowanie krawędzi
+    const linkElements = g
+      .append("g")
+      .attr("stroke", "#888")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke-width", 2);
 
-  // Znajdź pozycje końcowe dla linii (linków)
-  const renderedLinks = useMemo(() => {
-    return graphData.links.map((link) => {
-      const source = renderedNodes.find((n) => n.ID === link.source);
-      const target = renderedNodes.find((n) => n.ID === link.target);
-      return { source, target };
-    });
-  }, [graphData.links, renderedNodes]);
+    // Rysowanie węzłów (kół)
+    const nodeElements = g
+      .append("g")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .selectAll("circle")
+      .data(nodes)
+      .join("circle")
+      .attr("r", (d) => (d.isRoot ? 30 : 18))
+      .attr("fill", (d) => d.color)
+      .style("cursor", (d) => (d.isRoot ? "default" : "pointer"))
+      .on("click", (_event, d) => {
+        if (!d.isRoot) {
+          onNodeClick(d.topicData);
+        }
+      })
+      .call(drag as any);
+    // Rysowanie etykiet tekstowych
+    const labelElements = g
+      .append("g")
+      .attr("class", styles.labels)
+      .selectAll("text")
+      .data(nodes)
+      .join("text")
+      .text((d) => d.name)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", (d) => (d.isRoot ? "1.4em" : "0.9em"))
+      .attr("pointer-events", "none");
 
-  const subjectName = "Name" in subject ? subject.Name : subject.name;
+    function ticked() {
+      linkElements
+        .attr("x1", (d) => (d.source as GraphNode).x!)
+        .attr("y1", (d) => (d.source as GraphNode).y!)
+        .attr("x2", (d) => (d.target as GraphNode).x!)
+        .attr("y2", (d) => (d.target as GraphNode).y!);
+
+      nodeElements.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
+      labelElements.attr("x", (d) => d.x!).attr("y", (d) => d.y!);
+    }
+
+    // --- Dodanie funkcji Zoom/Pan ---
+    const zoomBehavior = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 4])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoomBehavior);
+    svg.call(zoomBehavior.translateTo, width / 2, height / 2);
+
+    simulation.alpha(1).restart();
+    setTimeout(() => simulation.stop(), 3000);
+
+    // --- Funkcja Drag D3 (Korekta typowania) ---
+    function drag(simulation: d3.Simulation<GraphNode, GraphLink>) {
+      type DragEvent = d3.D3DragEvent<SVGCircleElement, GraphNode, GraphNode>;
+
+      const dragstarted = (event: DragEvent) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+      };
+
+      const dragged = (event: DragEvent) => {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      };
+
+      const dragended = (event: DragEvent) => {
+        if (!event.active) simulation.alphaTarget(0);
+        if (!event.subject.isRoot) {
+          event.subject.fx = null;
+          event.subject.fy = null;
+        }
+      };
+
+      return d3
+        .drag<SVGCircleElement, GraphNode>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    }
+  }, [width, height, graphData, onNodeClick]);
 
   return (
-    <div className={styles.graphContainer}>
-      <header className={styles.header}>
-        {onBack && (
-          <button className={styles.backButton} onClick={onBack}>
-            <FaArrowLeft /> Wróć
-          </button>
-        )}
-        <h2 className={styles.title}>{subjectName} - Ścieżka Nauki</h2>
-      </header>
-      <div className={styles.svgWrapper} ref={ref}>
-        {/* Obsługa ładowania i błędów */}
-        {isLoadingGraph && (
-          <FaSpinner className={`${styles.spinner} icon-spin`} />
-        )}
-        {!isLoadingGraph && graphError && (
-          <div className={styles.error}>{graphError}</div>
-        )}
-
-        {!isLoadingGraph && !graphError && bounds.width > 0 && (
-          <svg width={bounds.width} height={bounds.height}>
-            <g
-              className={styles.links}
-              style={{ "--link-color": subjectColor } as React.CSSProperties}
-            >
-              {renderedLinks.map((link, i) => (
-                <line
-                  key={i}
-                  x1={link.source?.x}
-                  y1={link.source?.y}
-                  x2={link.target?.x}
-                  y2={link.target?.y}
-                />
-              ))}
-            </g>
-            <g className={styles.nodes}>
-              {renderedNodes
-                .filter((node) => node.ID !== 0) // Nie renderuj kotwicy ROOT
-                .map((node) => (
-                  <GraphNode
-                    key={node.ID}
-                    node={node}
-                    topics={topics} // Przekaż odblokowane tematy
-                    onNodeClick={onNodeClick}
-                  />
-                ))}
-            </g>
-          </svg>
-        )}
-      </div>
+    <div ref={containerRef} className={styles.graphWrapper}>
+      <svg ref={svgRef} width={width} height={height}></svg>
+      {topics.length === 0 && (
+        <div className={styles.noTopicsOverlay}>
+          <p>Brak tematów dla tego przedmiotu. Utwórz nowe w Studio Treści!</p>
+        </div>
+      )}
     </div>
   );
 };

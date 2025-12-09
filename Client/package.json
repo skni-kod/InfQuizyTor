@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@splinetool/react-spline": "^4.1.0",
-    "d3-force": "^3.0.0",
+    "@xyflow/react": "^12.10.0",
+    "d3": "^7.9.0",
     "lodash": "^4.17.21",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -25,8 +26,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@types/d3-force": "^3.0.10",
+    "@types/animejs": "^3.1.13",
+    "@types/d3": "^7.4.3",
     "@types/lodash": "^4.17.20",
+    "@types/minimatch": "^6.0.0",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",

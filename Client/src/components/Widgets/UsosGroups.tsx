@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./UsosGroups.module.scss";
-import Card from "../Common/Card"; // <-- Dodano import komponentu Card!
+// Zastępujemy Card na Widget
+import Widget from "../Common/Widget";
 // Importy dla FaExternalLinkAlt możesz dodać, jeśli chcesz ikonę przy linku USOSweb
 
 // --- Typy danych (upewnij się, że są zgodne z models.go) ---
@@ -44,11 +45,10 @@ const UsosGroups: React.FC = () => {
   const [data, setData] = useState<UsosGroupsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>(
-    {}
-  );
+  // Zmieniamy na ID aktywnego semestru, usuwamy logikę rozwijania
+  const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
 
-  // ... (Logika fetchGroups, useEffect, toggleTerm bez zmian)
+  // ... (Logika fetchGroups, useEffect)
   const fetchGroups = async () => {
     try {
       const response = await fetch("http://localhost:8080/api/groups/all", {
@@ -71,7 +71,8 @@ const UsosGroups: React.FC = () => {
       setData(result);
 
       if (result.terms && result.terms.length > 0) {
-        setExpandedTerms({ [result.terms[0].id]: true });
+        // Ustawiamy domyślny semestr (pierwszy z listy)
+        setSelectedTermId(result.terms[0].id);
       }
     } catch (err: any) {
       setError(err.message);
@@ -79,114 +80,128 @@ const UsosGroups: React.FC = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchGroups();
   }, []);
 
-  const toggleTerm = (termId: string) => {
-    setExpandedTerms((prev) => ({
-      ...prev,
-      [termId]: !prev[termId],
-    }));
-  };
   const getLang = (dict: LangDict) => dict?.pl || dict?.en || "";
 
+  // Zaczynamy budowanie zawartości widgeta
+  let content: React.ReactNode;
+
   if (loading)
-    return <div className={styles.loading}>Ładowanie grup USOS...</div>;
-  if (error) return <div className={styles.error}>Błąd: {error}</div>;
-  if (!data || !data.terms || data.terms.length === 0)
-    return <div className={styles.empty}>Brak grup zajęciowych.</div>;
+    content = <div className={styles.loading}>Ładowanie grup USOS...</div>;
+  else if (error) content = <div className={styles.error}>Błąd: {error}</div>;
+  else if (!data || !data.terms || data.terms.length === 0)
+    content = <div className={styles.empty}>Brak grup zajęciowych.</div>;
+  else {
+    // Filtrujemy tylko te semestry, które mają grupy (jak w UserCoursesWidget)
+    const termList = data.terms.filter(
+      (term) => (data.groups[term.id] || []).length > 0
+    );
+    const groupsForSelectedTerm =
+      (selectedTermId && data.groups[selectedTermId]) || [];
 
-  return (
-    <div className={styles.groupsContainer}>
-      {data.terms.map((term) => {
-        const termGroups = data.groups[term.id];
-        if (!termGroups || termGroups.length === 0) return null;
-
-        const isExpanded = expandedTerms[term.id];
-
-        return (
-          <div key={term.id} className={styles.termSection}>
-            <div
-              className={`${styles.termHeader} ${
-                isExpanded ? styles.active : ""
+    content = (
+      <div className={styles.groupsWidgetContent}>
+        {/* ZAKŁADKI SEMESTRÓW */}
+        <nav className={styles.termNav}>
+          {termList.map((term) => (
+            <button
+              key={term.id}
+              className={`${styles.termButton} ${
+                term.id === selectedTermId ? styles.active : ""
               }`}
-              onClick={() => toggleTerm(term.id)}
+              onClick={() => setSelectedTermId(term.id)}
             >
-              <h3>Grupy Zajęciowe {getLang(term.name)}</h3>
-              <span className={styles.toggleIcon}>
-                {isExpanded ? "−" : "+"}
-              </span>
-            </div>
+              {getLang(term.name)}
+            </button>
+          ))}
+        </nav>
 
-            {isExpanded && (
-              <div className={styles.groupsGrid}>
-                {/* Użycie komponentu Card dla każdej grupy */}
-                {termGroups.map((group) => (
-                  <Card
-                    key={`${group.course_unit_id}-${group.group_number}`}
-                    title={getLang(group.course_name)} // Tytuł karty to nazwa kursu
-                    className={styles.groupCardBody} // Klasa dla zawartości Card
+        {/* GRUPY ZAJĘCIOWE DLA AKTYWNEGO SEMESTRU */}
+        {groupsForSelectedTerm.length > 0 ? (
+          // groupsGrid zostaje, ale bez warunku isExpanded
+          <div className={styles.groupsGrid}>
+            {groupsForSelectedTerm.map((group) => (
+              <Widget
+                key={`${group.course_unit_id}-${group.group_number}`}
+                title={getLang(group.course_name)} // Tytuł karty to nazwa kursu
+                className={styles.groupCardBody} // Klasa dla zawartości Card
+              >
+                {/* Wewnętrzna sekcja nagłówkowa karty (Typ zajęć i numer) */}
+                <div className={styles.groupHeaderContent}>
+                  <span
+                    className={`${styles.badge} ${
+                      styles[group.class_type_id] || styles.defaultBadge
+                    }`}
                   >
-                    {/* Wewnętrzna sekcja nagłówkowa karty (Typ zajęć i numer) */}
-                    <div className={styles.groupHeaderContent}>
-                      <span
-                        className={`${styles.badge} ${
-                          styles[group.class_type_id] || styles.defaultBadge
-                        }`}
-                      >
-                        {getLang(group.class_type)}
-                      </span>
-                      <span className={styles.groupNumber}>
-                        Gr. {group.group_number}
-                      </span>
-                    </div>
+                    {getLang(group.class_type)}
+                  </span>
+                  <span className={styles.groupNumber}>
+                    Gr. {group.group_number}
+                  </span>
+                </div>
 
-                    <div className={styles.details}>
-                      <div className={styles.roleInfo}>
-                        Rola:{" "}
-                        <strong>
-                          {group.relationship_type === "lecturer"
-                            ? "Prowadzący"
-                            : "Student"}
-                        </strong>
-                      </div>
+                <div className={styles.details}>
+                  <div className={styles.roleInfo}>
+                    Rola:{" "}
+                    <strong>
+                      {group.relationship_type === "lecturer"
+                        ? "Prowadzący"
+                        : "Student"}
+                    </strong>
+                  </div>
 
-                      {/* Zabezpieczenie przed null */}
-                      {(group.lecturers || []).length > 0 && (
-                        <div className={styles.lecturers}>
-                          <strong>Prowadzący:</strong>
-                          <ul>
-                            {(group.lecturers || []).map((l) => (
-                              <li key={l.id}>
-                                {l.titles} {l.first_name} {l.last_name}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                  {/* Zabezpieczenie przed null */}
+                  {(group.lecturers || []).length > 0 && (
+                    <div className={styles.lecturers}>
+                      <strong>Prowadzący:</strong>
+                      <ul>
+                        {(group.lecturers || []).map((l) => (
+                          <li key={l.id}>
+                            {l.titles} {l.first_name} {l.last_name}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
+                  )}
+                </div>
 
-                    <div className={styles.actions}>
-                      {group.group_url && (
-                        <a
-                          href={group.group_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.usosLink}
-                        >
-                          Otwórz w USOSweb
-                        </a>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
+                <div className={styles.actions}>
+                  {group.group_url && (
+                    <a
+                      href={group.group_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.usosLink}
+                    >
+                      Otwórz w USOSweb
+                    </a>
+                  )}
+                </div>
+              </Widget>
+            ))}
           </div>
-        );
-      })}
-    </div>
+        ) : (
+          <p className={styles.noGroups}>
+            Brak grup zajęciowych w wybranym semestrze.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // WRAZ ZAWartość W JEDEN WIDGET
+  return (
+    <Widget
+      title="Twoje Grupy Zajęciowe"
+      collapsible={true}
+      defaultCollapsed={true}
+    >
+      {content}
+    </Widget>
   );
 };
 

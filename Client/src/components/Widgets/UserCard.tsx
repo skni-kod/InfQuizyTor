@@ -1,8 +1,8 @@
 import React from "react";
 import { useAppContext } from "../../contexts/AppContext";
-import Card from "../Common/Card";
 import styles from "./UserCard.module.scss"; // Załóżmy, że plik istnieje
 import { FaUser } from "react-icons/fa";
+import Widget from "../Common/Widget";
 
 const UserCard: React.FC = () => {
   // --- POPRAWKA ---
@@ -11,23 +11,32 @@ const UserCard: React.FC = () => {
 
   if (authState.authLoading) {
     return (
-      <Card title="Profil Użytkownika">
+      <Widget
+        title="Profil Użytkownika"
+        collapsible={true}
+        defaultCollapsed={true}
+      >
         <p>Ładowanie danych...</p>
-      </Card>
+      </Widget>
     );
   }
 
   if (!authState.user) {
     return (
-      <Card title="Błąd">
+      <Widget title="Błąd" collapsible={true} defaultCollapsed={true}>
         <p>Nie udało się załadować danych użytkownika.</p>
-      </Card>
+      </Widget>
     );
   }
 
   // Mamy użytkownika
   return (
-    <Card title="Witaj" className={styles.userCard}>
+    <Widget
+      title="Witaj"
+      collapsible={true}
+      defaultCollapsed={true}
+      className={styles.userCard}
+    >
       <FaUser className={styles.userIcon} />
       <div className={styles.userInfo}>
         <span className={styles.userName}>
@@ -35,7 +44,7 @@ const UserCard: React.FC = () => {
         </span>
         <span className={styles.userEmail}>{authState.user.email}</span>
       </div>
-    </Card>
+    </Widget>
   );
 };
 

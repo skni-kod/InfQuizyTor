@@ -1,7 +1,7 @@
 import React from "react";
 import { useUsosApi } from "../../hooks/useUsosApi";
 import { UsosCard } from "../../assets/types";
-import Card from "../Common/Card";
+import Widget from "../Common/Widget";
 import styles from "./IdCardsWidget.module.scss";
 
 // Importujmy ikony dla różnych typów kart
@@ -119,7 +119,15 @@ const IdCardsWidget: React.FC = () => {
     content = <p>Nie znaleziono żadnych aktywnych legitymacji.</p>;
   }
 
-  return <Card title="Twoje Legitymacje i Karty">{content}</Card>;
+  return (
+    <Widget
+      title="Twoje Legitymacje i Karty"
+      collapsible={true}
+      defaultCollapsed={true}
+    >
+      {content}
+    </Widget>
+  );
 };
 
 export default IdCardsWidget;

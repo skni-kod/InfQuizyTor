@@ -5,7 +5,7 @@ import {
   UsosTestRoot,
   UsosTerm,
 } from "../../assets/types";
-import Card from "../Common/Card";
+import Widget from "../Common/Widget";
 import styles from "./StudentTestsWidget.module.scss"; // Nowy plik SCSS
 import { FaClipboardList, FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -114,7 +114,15 @@ const StudentTestsWidget: React.FC = () => {
     );
   }
 
-  return <Card title="Sprawdziany i Oceny (BETA)">{content}</Card>;
+  return (
+    <Widget
+      title="Sprawdziany i Oceny (BETA)"
+      collapsible={true}
+      defaultCollapsed={true}
+    >
+      {content}
+    </Widget>
+  );
 };
 
 export default StudentTestsWidget;

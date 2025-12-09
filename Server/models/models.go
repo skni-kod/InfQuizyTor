@@ -9,6 +9,8 @@ import (
 
 // --- MODELE PODSTAWOWE ---
 
+// --- MODELE PODSTAWOWE (Baza Danych) ---
+
 type User struct {
 	ID        uint   `gorm:"primarykey"`
 	UsosID    string `gorm:"unique;not null"`
@@ -22,6 +24,7 @@ type User struct {
 
 func (User) TableName() string { return "users" }
 
+// Token przechowuje OAuth tokeny do USOS API.
 type Token struct {
 	ID           uint   `gorm:"primarykey"`
 	UserUsosID   string `gorm:"unique;not null"`
@@ -45,14 +48,73 @@ type Subject struct {
 func (Subject) TableName() string { return "subjects" }
 
 type Topic struct {
-	ID              uint    `gorm:"primarykey"`
-	SubjectID       uint    `gorm:"not null;index"`
-	Subject         Subject `gorm:"foreignKey:SubjectID"` // <--- NAPRAWIONO: Dodano relację
-	Name            string  `gorm:"not null"`
-	CreatedByUsosID string  `gorm:"not null"`
+	ID              uint          `gorm:"primarykey"`
+	SubjectID       uint          // Klucz obcy dla Subject
+	SubjectUsosID   string        `gorm:"not null"`
+	Title           string        `gorm:"not null"` // Wymagane, zamiast Name
+	CreatedByUsosID string        // Wymagane
+	Prerequisites   pq.Int64Array `gorm:"type:integer[]"`
+	EstimatedTime   int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+
+	Subject Subject `gorm:"foreignkey:SubjectID"` // Wymagana relacja
 }
 
 func (Topic) TableName() string { return "topics" }
+
+// --- MODELE USOS API ---
+
+// LangDict reprezentuje słownik z nazwami wielojęzycznymi USOS.
+type LangDict map[string]string
+
+// UsosGroupInfo jest uproszczoną wersją grupy.
+type UsosGroupInfo struct {
+	ID          int      `json:"id"`
+	ClassType   LangDict `json:"class_type"`
+	GroupNumber int      `json:"group_number"`
+}
+
+// UsosCourseUnitDetails odwzorowuje odpowiedź z services/courses/unit.
+type UsosCourseUnitDetails struct {
+	// Pola Primary
+	ID          string   `json:"id"`
+	CourseName  LangDict `json:"course_name"`
+	CourseID    string   `json:"course_id"`
+	TermID      string   `json:"term_id"`
+	ProfileURL  string   `json:"profile_url"`
+	ClassTypeID string   `json:"classtype_id"`
+
+	// Pola Secondary
+	LearningOutcomes   LangDict        `json:"learning_outcomes"`
+	AssessmentCriteria LangDict        `json:"assessment_criteria"`
+	Topics             LangDict        `json:"topics"` // Te dane nas interesują
+	TeachingMethods    LangDict        `json:"teaching_methods"`
+	Bibliography       LangDict        `json:"bibliography"`
+	Groups             []UsosGroupInfo `json:"groups"`
+}
+
+// UsosOAuthToken (pomocnicza struktura dla serwisu)
+type UsosOAuthToken struct {
+	AccessToken  string
+	AccessSecret string
+}
+
+// --- MODELE FRONTENDU (Wymiana Danych) ---
+
+// GraphDataResponse to struktura, której oczekuje frontend w SubjectHubPage.tsx
+type GraphDataResponse struct {
+	ID          string `json:"id"` // unit_id
+	URL         string `json:"url"`
+	SubjectName string `json:"subject_name"`
+	Nodes       struct {
+		Topics             []string `json:"topics"`
+		LearningOutcomes   []string `json:"learning_outcomes"`
+		AssessmentCriteria []string `json:"assessment_criteria"`
+		Bibliography       []string `json:"bibliography"`
+		TeachingMethods    []string `json:"teaching_methods"`
+	} `json:"nodes"`
+}
 
 type QuizNode struct {
 	gorm.Model
@@ -206,10 +268,7 @@ type UsosUserInfo struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 }
-type LangDict struct {
-	PL string `json:"pl"`
-	EN string `json:"en"`
-}
+
 type UsosCourseEdition struct {
 	CourseID   string   `json:"course_id"`
 	CourseName LangDict `json:"course_name"`
